@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nisarErrors"
+version = "0.0.1"
+description = "Error analysis code for NISAR Ice Velocity Mapping"
+authors = [
+    { name = "Ian Joughin", email = "irj@uw.edu" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+keywords = ["SAR", "NISAR", "InSAR", "ice velocity", "error analysis"]
+requires-python = ">=3.8"
+
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "gdal",
+    "utilities"
+]
+
+[tool.setuptools]
+packages = ["nisarerrors"]
+
+[project.urls]
+Homepage = "https://github.com/fastice/nisarErrors"
+Repository = "https://github.com/fastice/nisarErrors"
+
+[project.scripts]
+plotVerticalSensitivity = "nisarerrors.plotVerticalSensitivity:main"
+plotSquintError = "nisarerrors.plotSquintError:main"
