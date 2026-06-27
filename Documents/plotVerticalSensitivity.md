@@ -61,9 +61,15 @@ $$
 so $\beta = \gamma - \alpha/2$.
 
 $H_A$, $H_D$ here are each pass's **cross-track** heading at the pixel — the direction of
-steepest range change on the ground — not the along-track flight-direction heading. The two
-differ by a curved-Earth, incidence-angle-dependent amount (of order 10° at typical SAR incidence
-angles), not a clean $\pm90°$, and are not interchangeable in this formula.
+steepest ground-range change, computed rigorously from the imaging geometry (e.g. by
+finite-differencing the geocoding solution across the swath), not assumed. For the geometries
+checked here, this coincides with the true instantaneous flight-direction (velocity-vector)
+heading rotated by exactly $90°$ to within a few tenths of a degree — so where the true velocity
+vector is available, rotating it by $90°$ is an adequate stand-in. The distinction matters when
+flight direction is instead approximated from a coarser proxy (e.g. a frame footprint's long-axis
+direction, or any other geometric summary that is not the true instantaneous velocity vector),
+which is not guaranteed to track the rigorous cross-track heading nearly as closely and should
+not be substituted into this formula without checking.
 
 ---
 
@@ -114,6 +120,15 @@ For $\sigma_{p_A}=\sigma_{p_D}$, $\sigma_{v_x}$ and $\sigma_{v_y}$ are the **row
 $\mathbf{A}$ — a fundamentally different combination of $\mathbf{A}$'s entries than the row
 *sums* of §2.1, which is why the two error classes have qualitatively different
 $\gamma$/$\alpha$ dependence.
+
+The covariance formula above keeps $\sigma_{p_A}$ and $\sigma_{p_D}$ separate, so it is exact for
+any incidence angles $\psi_A,\psi_D$. The figure below, however, converts a single raw
+per-measurement noise level $\sigma_{dr}$ into $\sigma_p$ using one mean incidence angle,
+$\psi_{\text{mean}}=(\psi_A+\psi_D)/2$, applied identically to both looks — exact only when
+$\psi_A=\psi_D$. For the three example geometries this is a good approximation (both passes use
+the same sensor, with $\psi_A,\psi_D$ within a few tenths of a degree of each other); a fully
+general treatment would instead scale $\sigma_{p_A}$ and $\sigma_{p_D}$ independently by their
+own incidence angles before combining them in the covariance formula.
 
 At $\alpha=90°$ exactly, $\sin\alpha=1,\cos\alpha=0$, and $\mathbf{A}$ collapses to
 

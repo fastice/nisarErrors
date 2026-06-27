@@ -18,12 +18,16 @@ Squint is the angular deviation, in the ground-projected plane, of the true LOS 
 the broadside direction assumed by the inversion:
 
 $$
-\text{squint} = \big(\text{heading}(\hat\ell_{\text{LOS}}) - \text{heading}(\hat\ell_{\text{track}})\big)_{\pm180°} - 90°
+\text{squint} = \big(\text{heading}(\hat\ell_{\text{LOS}}) - \text{heading}(\hat\ell_{\text{track}})\big)_{\pm180°} - 90°\,L,
+\qquad L=\begin{cases}+1 & \text{left-looking}\\-1 & \text{right-looking}\end{cases}
 $$
 
 where $\hat\ell_{\text{LOS}}$ and $\hat\ell_{\text{track}}$ are the ground-projected LOS and
-along-track (velocity) unit vectors, and the heading difference is wrapped to $\pm180°$ before
-subtracting the nominal $90°$ broadside offset.
+along-track (velocity) unit vectors, the heading difference is wrapped to $\pm180°$, and $L$ is
+the look-direction sign — the nominal (zero-squint) broadside offset is $+90°$ for a left-looking
+antenna and $-90°$ for a right-looking one. All measurements in this document are from
+left-looking NISAR data ($L=+1$); the right-looking case is stated for completeness but not
+independently validated here.
 
 Squint cannot, in general, be computed from orbit state vectors alone. It depends on the
 spacecraft's attitude — a data product distinct from orbit position/velocity, since nothing
@@ -49,12 +53,13 @@ southern Greenland):
 For the three Greenland tracks evaluated here, ascending squint is systematically
 $\sim0.18°$ larger than descending; whether this asymmetry is a general property of the
 satellite's pointing/yaw-steering behavior or specific to these tracks has not been established
-from a wider sample. Within a single frame, squint varies nearly linearly with slant range (a
-$\sim0.3°$–$0.4°$ spread across one swath; linear-fit residual std $\sim0.0085°$) and is nearly
-constant in azimuth (std $\sim0.009°$) and height ($\sim0.013°$); across consecutive sub-frames of
-the same track it drifts by only $\sim0.03°$. The behavior over a much wider heading/latitude
-range than these mid-latitude examples span — in particular near a track's high-latitude turning
-point, where heading changes rapidly — has not been characterized.
+from a wider sample. Within a single frame, squint varies nearly linearly with slant range, from
+about $1.5°$ at near range to about $1.9°$ at far range across one swath (a spread of
+$\sim0.3°$–$0.4°$; linear-fit residual std $\sim0.0085°$), and is nearly constant in azimuth (std
+$\sim0.009°$) and height ($\sim0.013°$); across consecutive sub-frames of the same track it drifts
+by only $\sim0.03°$. The behavior over a much wider heading/latitude range than these mid-latitude
+examples span — in particular near a track's high-latitude turning point, where heading changes
+rapidly — has not been characterized.
 
 ---
 
@@ -101,10 +106,23 @@ then $\mathbf{M} = R(s)$ exactly, where $R(s)$ is the $2\times2$ rotation matrix
 **Proof sketch.** The forward model's coefficient matrix
 $N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}$
 has rows equal to the two looks' ground-projected unit vectors, at angles $\beta$ and
-$\alpha+\beta$; the inversion matrix is $\mathbf{A}=N^{-1}$. Squint rotates each look's own row by
-that look's own squint angle. If both rotate by the same angle $s$, this is equivalent to right-
-multiplying the whole matrix by a global rotation: $N_{\text{true}}=N_0\,R(s)$. Then
+$\alpha+\beta$ (measured counterclockwise from a fixed reference direction); the inversion matrix
+is $\mathbf{A}=N^{-1}$. With $\beta=\phi-H_A$ and $\alpha=H_A-H_D$ (§"Geometric setup" in
+[plotVerticalSensitivity.md](plotVerticalSensitivity.md)), increasing a look's heading $H_i$ by
+$s$ *decreases* its row angle by $s$ — for look $A$, $\beta\to\beta-s$; for look $D$,
+$\alpha+\beta\to(\alpha+\beta)-s$ once $\alpha$'s unchanged value is substituted back in, given
+equal squint on both looks. A row vector at angle $\theta$, right-multiplied by the standard
+counterclockwise rotation matrix $R(s)=\begin{pmatrix}\cos s&-\sin s\\\sin s&\cos s\end{pmatrix}$,
+becomes $(\cos(\theta-s),\sin(\theta-s))$ — i.e. right-multiplication by $R(s)$ is exactly the
+operation that decreases a row's angle by $s$. Applying this to both rows simultaneously,
+$N_{\text{true}}=N_0\,R(s)$, and therefore
 $\mathbf{M}=\mathbf{A}_0\mathbf{A}_{\text{true}}^{-1}=N_0^{-1}N_{\text{true}}=R(s)$. $\blacksquare$
+
+(The sign here is tied to the specific convention $\beta=\phi-H_A$: a heading correction is
+defined as *added* to the assumed broadside heading, and $\beta$ depends on heading with a minus
+sign. Under a convention where heading enters with the opposite sign, the same physical
+correction would appear as $\mathbf{M}=R(-s)$ instead — the rotation is real and exact either
+way, but its algebraic sign is convention-dependent, not free-standing.)
 
 This explains why, in the figures below, the dominant effect of squint on the velocity solution
 is a near-constant *rotation* of the computed flow direction, close in magnitude to the mean of
@@ -207,13 +225,16 @@ conversion uses `thetaRReZReH` (`common/initRoutines.c:918`), a pure range/Earth
 satellite-height triangle with no heading term; its along-track baseline component is driven to
 near zero by construction in `common/svBase.c`'s `svBaseTCN()`/`svBnBp()` (lines 271–385); and
 for NISAR's ISCE flat-earth processing path the baseline being corrected is already just a small
-residual orbit-error term, not the full physical separation. Combined, the current analysis
-finds **no C-code change is warranted for NISAR's processing chain today** — both exposures
-bound out at sub-percent speed error and the small, near-constant direction bias of §4. A
-detailed, file-by-file implementation design for the exact correction (§4), including how it
-would be extracted, merged across sub-frames, and threaded into the C-code chain if ever needed,
-is maintained in `mosaicSource/CLAUDE.md` §"Squint (residual Doppler) sensitivity" rather than
-here, since that design is specific to GrIMP's geodat/Python pipeline.
+residual orbit-error term, not the full physical separation. Combined, the current analysis finds
+**no C-code change is warranted for the crossing geometries evaluated here** — three mid-latitude
+Greenland crossing pairs, where both exposures bound out at sub-percent speed error and the
+small, near-constant direction bias of §4. This conclusion is scoped to those geometries: §1
+notes that squint's behavior near a track's high-latitude turning point, where heading changes
+rapidly, has not been characterized, and the conclusion should not be assumed to extend there
+without checking. A detailed, file-by-file implementation design for the exact correction (§4),
+including how it would be extracted, merged across sub-frames, and threaded into the C-code chain
+if ever needed, is maintained in `mosaicSource/CLAUDE.md` §"Squint (residual Doppler) sensitivity"
+rather than here, since that design is specific to GrIMP's geodat/Python pipeline.
 
 ---
 
