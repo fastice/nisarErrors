@@ -1,32 +1,44 @@
-# plotVerticalSensitivity — Reference
+# Error Propagation in Two-Look Crossing-Orbit Velocity Inversion
 
-This page is a reference for how `mosaic3d`'s crossing-orbit velocity inversion responds to two
-qualitatively different error sources — uncompensated vertical motion, and independent
-range/phase measurement noise — as a function of crossing geometry and pixel position. It
-documents the derivation, the figure, and the findings for both InSAR phase and speckle-tracked
-range/azimuth offsets. It is not a how-to-run guide — see the bottom of the page for the CLI
-invocation.
+A surface velocity vector has two horizontal components, but a single SAR pass measures only one
+scalar quantity at each point: the line-of-sight (LOS) component of motion. Recovering both
+horizontal components requires combining two LOS measurements taken from different viewing
+geometries — typically an ascending and a descending pass whose ground tracks cross. This
+document derives how two distinct classes of measurement error propagate through that
+combination, as a function of the crossing geometry and the pixel's position relative to it.
+
+It is a theory reference, not a usage guide — see the bottom of the page for the CLI invocation
+of the companion plotting tool.
 
 ---
 
-## 1. Setup
+## 1. Geometric setup
 
-`mosaic3d`'s crossing-orbit inversion (`common/initRoutines.c`'s `computeA`/`computeVxy`,
-documented in full in `mosaicSource/Documents/mosaic3d.md` §"Full Inversion") solves
+Let $\hat n_A$ and $\hat n_D$ be the unit vectors, projected onto the ground plane, of the two
+LOS directions at a given point (subscripts $A$, $D$ for the two passes — ascending/descending is
+the typical case, but the derivation only requires two distinct viewing directions). Each pass
+supplies one scalar measurement
 
 $$
-\begin{pmatrix} v_x \\ v_y \end{pmatrix} =
-\left(\mathbf{I} - \mathbf{A}\mathbf{B}\right)^{-1} \mathbf{A}
+p_i = \hat n_i \cdot \vec v, \qquad i \in \{A, D\}
+$$
+
+where $\vec v = (v_x, v_y)$ is the horizontal velocity and $p_i$ is the LOS displacement rate
+already scaled to horizontal-velocity units. Writing $\hat n_A$ at angle $\beta$ and $\hat n_D$
+at angle $\alpha+\beta$ (both measured from a common reference direction), the forward model is
+
+$$
+\begin{pmatrix} p_A \\ p_D \end{pmatrix} =
+\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}
+\begin{pmatrix} v_x \\ v_y \end{pmatrix}
+$$
+
+$\alpha$ is the heading difference between the two passes (the *crossing angle*) and $\beta$ is
+the pixel's azimuth relative to pass $A$'s heading. Inverting (determinant $\sin\alpha$):
+
+$$
+\begin{pmatrix} v_x \\ v_y \end{pmatrix} = \mathbf{A}
 \begin{pmatrix} p_A \\ p_D \end{pmatrix}, \qquad
-\mathbf{D} = (\mathbf{I}-\mathbf{AB})^{-1}\mathbf{A}
-$$
-
-where $p_A$, $p_D$ are the ascending/descending LOS measurements scaled to horizontal-velocity
-units (m/yr), and $\mathbf{B}$ is the DEM-slope correction. This page (and `plotVerticalSensitivity.py`)
-uses the **flat-terrain approximation** ($\mathbf{B}=0$, i.e. $\mathbf{D}=\mathbf{A}$), since the
-question here is the pure crossing-geometry sensitivity, not DEM-slope effects:
-
-$$
 \mathbf{A} = \frac{1}{\sin^2\!\alpha}
 \begin{pmatrix}
 \cos\beta - \cos\alpha\cos(\alpha+\beta) & \cos(\alpha+\beta) - \cos\alpha\cos\beta \\
@@ -34,190 +46,162 @@ $$
 \end{pmatrix}
 $$
 
-with $\alpha = H_A - H_D$ (heading difference) and $\beta = \phi - H_A$ ($\phi$ = pixel azimuth
-in polar-stereographic coordinates, $H_A$ = ascending heading). For the sensitivity analysis
-below it's more natural to define $H_{\text{mean}}=(H_A+H_D)/2$ and
-$\gamma = \phi - H_{\text{mean}}$ (pixel azimuth relative to the *mean* heading, rather than to
-$H_A$ alone) — full derivation in `mosaic3d.md` §"Error Analysis: Crossing-Geometry Sensitivity".
+This is the flat-terrain form of the inversion; a full treatment adds a slope-dependent
+correction term that couples the vertical component of motion along a sloped surface back into
+the horizontal solution, but that correction is set aside here so the analysis isolates the pure
+crossing-geometry effect.
 
-$H_A$, $H_D$ are the **cross-track** heading at the pixel (`common/computeHeading.c`), not the
-along-track flight direction — these differ by a curved-Earth, incidence-angle-dependent amount
-(confirmed ~6°–16° for this dataset), not a clean ±90°, so flight-direction heading cannot be
-substituted. `headingAndIncidence()` ports `computeHeading.c`'s lookDir-aware formula onto real
-orbital state vectors via `utilities.geodatrxa.geodatrxa.llzPtToRA()` (a verified line-for-line
-port of `llToImageNew.c`'s zero-Doppler Newton solve).
+For the sensitivity analysis below it is more convenient to reference the pixel azimuth $\phi$ to
+the *mean* heading $H_{\text{mean}}=(H_A+H_D)/2$ rather than to pass $A$ alone:
 
-Three real ascending/descending crossing pairs (northern/central/southern Greenland) provide the
-example geometries, with $H_A$, $H_D$, $\alpha$, incidence angle $\psi$, and the real pixel
-position $\gamma_{\text{real}}$ all computed at runtime from real `geodat26x16.geojson` files
-(not assumed/idealized values):
+$$
+\gamma = \phi - H_{\text{mean}}
+$$
 
-| Region | $\alpha$ | $\psi_{\text{mean}}$ | $\gamma_{\text{real}}$ |
-|---|---|---|---|
-| North | 100.8° | 37.8° | 288.3° |
-| Central | 106.4° | 37.7° | 271.2° |
-| South | 123.4° | 37.9° | 268.6° |
+so $\beta = \gamma - \alpha/2$.
+
+$H_A$, $H_D$ here are each pass's **cross-track** heading at the pixel — the direction of
+steepest range change on the ground — not the along-track flight-direction heading. The two
+differ by a curved-Earth, incidence-angle-dependent amount (of order 10° at typical SAR incidence
+angles), not a clean $\pm90°$, and are not interchangeable in this formula.
 
 ---
 
-## 2. The two error sources, and how each sensitivity is calculated
+## 2. Two regimes of error propagation
 
-### 2a. Common-mode error (e.g. uncompensated vertical motion)
+How an error in $p_A,p_D$ propagates into $(v_x,v_y)$ depends qualitatively on whether the error
+is the *same* physical quantity contaminating both measurements, or *independent* noise in each.
 
-A common-mode error is the **same physical quantity contributing to both** $p_A$ and $p_D$. The
-leading example is uncompensated vertical motion $v_z^{\text{SMB}}$ (unmodeled tide or
-submergence/emergence correction — see `mosaic3d.md` §"Vertical-Motion Correction Sign
-Convention"): a vertical rate $v_z^{\text{SMB}}$ projects onto each LOS via that image's own
-incidence angle, contributing
-$\delta_A = v_z^{\text{SMB}}\cot\psi_A$, $\delta_D = v_z^{\text{SMB}}\cot\psi_D$ to $p_A, p_D$
-respectively (**not** simply $v_z^{\text{SMB}}\times1$ — that only holds at $\psi=45°$).
+### 2.1 Common-mode error
 
-For equal contributions $\delta$ to both measurements (the case plotted: $\delta=1$ m/yr of
-uncompensated $v_z^{\text{SMB}}$, scaled per-region by each image's real incidence angle via
-$\cot\psi_A,\cot\psi_D$), $\mathbf{A}\cdot(\delta_A,\delta_D)^T$ reduces via sum-to-product
-identities to a clean closed form:
+A common-mode error is a single physical quantity $\delta$ contributing to both measurements,
+generally with different projection factors $w_A,w_D$ for the two geometries:
+$\Delta p_A = w_A\delta$, $\Delta p_D=w_D\delta$. The leading physical example is uncompensated
+vertical motion $v_z$: a vertical rate projects onto each LOS through that pass's own incidence
+angle $\psi_i$, contributing $w_i=\cot\psi_i$ (not simply $1$, which would hold only at
+$\psi=45°$).
+
+For **equal** contributions ($w_A=w_D=1$, i.e. $\delta$ contaminates both measurements equally),
+$\mathbf{A}\cdot(\delta,\delta)^T$ reduces via sum-to-product identities to closed form:
 
 $$
 \Delta v_x = \frac{\delta\,\cos\gamma}{\cos(\alpha/2)}, \qquad
 \Delta v_y = \frac{\delta\,\sin\gamma}{\cos(\alpha/2)}
-\qquad\Rightarrow\qquad
+\qquad\Longrightarrow\qquad
 \frac{\Delta v_y}{\Delta v_x} = \tan\gamma
 $$
 
-**Key result:** the split between $v_x$/$v_y$ depends *only* on $\gamma$ (pixel position relative
-to mean heading) — $\alpha$ drops out of the ratio entirely. $\alpha$ instead sets the *overall
-amplitude* via $1/\cos(\alpha/2)$, which diverges as $\alpha\to180°$ (near-antiparallel headings —
-the typical same-platform ascending/descending case) and is modest ($1/\cos45°=\sqrt2$) at
-$\alpha=90°$ (orthogonal crossing). Near-antiparallel geometry amplifies a common-mode bias the
-most, regardless of where the pixel sits; pixel position only determines *which* of $v_x$/$v_y$
-absorbs more of it.
+The split between $v_x$ and $v_y$ depends **only on $\gamma$** — the pixel's position relative to
+the mean heading — and is independent of $\alpha$. The crossing angle $\alpha$ instead sets the
+overall *amplitude*, via $1/\cos(\alpha/2)$: this diverges as $\alpha\to180°$ (near-antiparallel
+headings, the typical same-platform ascending/descending case) and is modest
+($1/\cos45°=\sqrt2$) at $\alpha=90°$ (orthogonal crossing). Near-antiparallel crossing geometry
+amplifies a common-mode bias the most, regardless of pixel position; pixel position only
+determines which velocity component absorbs more of it.
 
-In code: `sensitivities()` computes this directly as `A @ [cotPsiA, cotPsiD]` rather than via the
-closed form, so it is exact (not a small-angle or other approximation) for any $\alpha,\beta$.
+### 2.2 Independent error
 
-### 2b. Independent (uncorrelated) error in $p_A$, $p_D$ separately
-
-This is the case of random, uncorrelated measurement noise in each LOS separately
-($\sigma_{p_A},\sigma_{p_D}$ independent — e.g. random range/phase measurement noise). Variance
-propagates as the diagonal of the output covariance:
+Independent (uncorrelated) noise $\sigma_{p_A},\sigma_{p_D}$ in the two measurements separately —
+e.g. random measurement noise with no shared physical source — propagates as the diagonal of the
+output covariance:
 
 $$
 \sigma_{v_x}^2 = A_{00}^2\,\sigma_{p_A}^2 + A_{01}^2\,\sigma_{p_D}^2, \qquad
 \sigma_{v_y}^2 = A_{10}^2\,\sigma_{p_A}^2 + A_{11}^2\,\sigma_{p_D}^2
 $$
 
-i.e. for $\sigma_{p_A}=\sigma_{p_D}$, $\sigma_{v_x},\sigma_{v_y}$ are the **row norms** of
-$\mathbf{A}$ — a fundamentally different combination of $\mathbf{A}$'s entries than case (2a)'s
-row *sums*, which is why the two cases have qualitatively different $\gamma$/$\alpha$ dependence.
+For $\sigma_{p_A}=\sigma_{p_D}$, $\sigma_{v_x}$ and $\sigma_{v_y}$ are the **row norms** of
+$\mathbf{A}$ — a fundamentally different combination of $\mathbf{A}$'s entries than the row
+*sums* of §2.1, which is why the two error classes have qualitatively different
+$\gamma$/$\alpha$ dependence.
 
-**Key result:** at $\alpha=90°$ exactly, $\sin\alpha=1,\cos\alpha=0$ and $\mathbf{A}$ collapses to
-$\begin{pmatrix}\cos\beta&-\sin\beta\\\sin\beta&\cos\beta\end{pmatrix}$ — an orthonormal
-**rotation matrix** — so $\sigma_{v_x}=\sigma_{v_y}$ at *every* pixel position: perfectly
-isotropic error propagation. Departing from $\alpha=90°$ introduces $\gamma$-dependent
-anisotropy — e.g. at $\alpha=170°$ (near-antiparallel), the $\sigma_{v_x}/\sigma_{v_y}$ ratio
-ranges from $\approx0.12$ to $\approx8$ depending on $\gamma$, vs. exactly 1 at every $\gamma$
-for $\alpha=90°$.
+At $\alpha=90°$ exactly, $\sin\alpha=1,\cos\alpha=0$, and $\mathbf{A}$ collapses to
 
-The figure's left column converts a raw, per-measurement range-offset error $\sigma_{dr}$
-(metres, over a `REPEAT_DAYS`-day repeat cycle) into $\sigma_p$ (m/yr) via
-$\sigma_p = \frac{365.25}{\Delta t\,\sin\psi}\,\sigma_{dr}$ — the same scaling `mosaic3d` itself
-applies to range offsets (`mosaic3d.md` Step 2) — using each region's real incidence angle.
+$$
+\mathbf{A}\Big|_{\alpha=90°} = \begin{pmatrix}\cos\beta&-\sin\beta\\\sin\beta&\cos\beta\end{pmatrix}
+$$
 
-**Practical implication of both results together:** crossing geometry near $\alpha=90°$ is
-*doubly* favorable — it minimizes amplification of common-mode bias *and* gives uniform,
-isotropic sensitivity to independent measurement noise, regardless of pixel position.
-Same-platform ascending/descending pairs ($\alpha$ near 180°) are the worst case on both counts.
-The three real Greenland crossing geometries above ($\alpha=101°$–$123°$) sit meaningfully closer
-to the favorable 90° case than to the unfavorable 180° case.
+— an orthonormal **rotation matrix**. A rotation preserves vector length, so
+$\sigma_{v_x}=\sigma_{v_y}$ at *every* pixel position: perfectly isotropic error propagation,
+independent of $\gamma$. Departing from $\alpha=90°$ introduces $\gamma$-dependent anisotropy —
+at $\alpha=170°$ (near-antiparallel), the $\sigma_{v_x}/\sigma_{v_y}$ ratio ranges from
+$\approx0.12$ to $\approx8$ depending on $\gamma$, versus exactly $1$ at every $\gamma$ for
+$\alpha=90°$.
+
+### 2.3 Practical implication
+
+Crossing geometry near $\alpha=90°$ is *doubly* favorable: it minimizes amplification of
+common-mode bias (amplitude factor $1/\cos45°=\sqrt2$, vs. divergent near $180°$) **and** gives
+uniform, isotropic sensitivity to independent noise, regardless of pixel position.
+Same-platform ascending/descending pairs ($\alpha$ near $180°$) are the worst case on both
+counts, though which velocity component a given common-mode bias falls on is set entirely by
+$\gamma$, not by $\alpha$.
 
 ---
 
-## Figure — both sensitivities vs. pixel position, for three real crossing geometries
+## Figure
 
 ![vertical sensitivity](images/verticalSensitivity.png)
 
-Left column: independent-error sensitivity $\sigma_{v_x},\sigma_{v_y}$ (m/yr, per metre of raw,
-independent, equal range-offset/phase-equivalent noise in each LOS, for a 12-day repeat — see
-§3 below for what "metre of raw error" means differently for phase vs. offsets). Right column:
-common-mode response $\Delta v_x,\Delta v_y$ per 1 m/yr of uncompensated $v_z^{\text{SMB}}$.
-Both swept over pixel position $\gamma=\phi-H_{\text{mean}}$ (0°–360°), with a secondary top axis
-showing actual longitude and a dashed vertical line marking each region's real pixel position
-$\gamma_{\text{real}}$ relative to its real crossing point.
+Three real ascending/descending crossing geometries (drawn from northern, central, and southern
+Greenland, $\alpha=101°$–$123°$ — meaningfully closer to the favorable $90°$ case than to the
+unfavorable $180°$ case) illustrate both regimes side by side, swept over pixel position
+$\gamma$ (0°–360°), with a secondary axis showing the corresponding longitude and a marker at
+each region's actual crossing-point position. Left column: independent-error sensitivity
+$\sigma_{v_x},\sigma_{v_y}$ (m/yr, per metre of equivalent raw LOS noise over a 12-day repeat).
+Right column: common-mode response $\Delta v_x,\Delta v_y$ per 1 m/yr of uncompensated vertical
+motion.
 
-At the real crossing points (all three regions land near $\gamma_{\text{real}}\approx270°$–288°),
-the common-mode panel shows $\Delta v_y$ near its extremum and $\Delta v_x$ near zero — i.e. for
-these specific real geometries, uncompensated vertical motion biases $v_y$ much more than $v_x$.
-This was confirmed against a real `mosaic3d` run with an applied vertical correction, which
-showed exactly this pattern ($v_x$ insensitive, $v_y$ sensitive) — resolving an earlier apparent
-discrepancy that traced back to two now-fixed bugs in this script's example geometry (wrong
-heading-computation method; an invalid ascending/descending track pairing for the North region),
-not to any bug in `computeA`/`computeVxy` itself.
+At all three regions' real crossing-point positions ($\gamma\approx270°$–$288°$), the common-mode
+response is near its extremum in $v_y$ and near zero in $v_x$ — i.e. uncompensated vertical
+motion at these specific geometries biases the along-flow component much more than the
+across-flow one.
 
 ---
 
-## 3. Findings for phase vs. range/azimuth offsets
+## 3. Application to interferometric phase and cross-correlation offsets
 
-**The geometric sensitivity formulas above (§2a, §2b) are identical for phase and offsets** —
-confirmed directly in `mosaic3d.md`: Step 2 (`make3DOffsets`, range offsets) "[constructs] the
-same $\mathbf{A}$ and $\mathbf{B}$ matrices (same as Step 1)... The crossing-geometry error
-sensitivity... applies identically here — same $\mathbf{A}$, same $\gamma$/$\alpha$ dependence."
-Unlike the squint analysis (`Documents/plotSquintError.md`), where phase has a genuinely separate
-geometric exposure (the baseline-decomposition step), there is no such asymmetry here — both
-measurement types feed the same $p_A, p_D \to (v_x,v_y)$ machinery via the identical
-$\mathbf{A}$ matrix.
+Two distinct measurement techniques commonly supply the LOS displacement rate $p_i$ in the
+inversion above: interferometric phase, and incoherent cross-correlation (speckle) tracking of
+range/azimuth offsets. **The geometric sensitivity derived in §2 applies identically to both** —
+the inversion only sees $p_A,p_D$ and is indifferent to how they were measured. What differs is
+the scaling from the raw measurement to $p_i$, and — far more consequentially — the typical
+magnitude of the raw measurement noise itself.
 
-What *does* differ between phase and offsets is the **scaling from raw measurement to
-$p_A$/$p_D$**, and — much more importantly in practice — the **typical magnitude of the raw
-measurement noise itself**.
+**Interferometric phase** measures range change directly and very precisely:
+$p_i \propto \phi_i/\sin\psi_i$, and the equivalent raw range noise is
+$\sigma_{\delta r} = \frac{\lambda}{4\pi}\sigma_\phi$. At L-band ($\lambda\approx0.24$ m), even a
+generous $\sigma_\phi\sim0.5$ rad of unwrapped-phase noise corresponds to only
+$\sigma_{\delta r}\sim1$ cm of equivalent range noise.
 
-### Phase
+**Cross-correlation offset tracking** measures a pixel-grid displacement whose precision is set
+by chip size, correlation strength, and sub-pixel interpolation/oversampling of the correlation
+surface — typically dm-to-metre scale, one to two orders of magnitude noisier than phase's
+equivalent range precision.
 
-$$
-p_i = \frac{365.25}{\frac{4\pi}{\lambda_i}\,N_{\text{days},i}\,\sin\psi_i}\,\phi_i
-$$
+Because the geometric amplification factor (the row norms of $\mathbf{A}$ plotted above) is
+identical for both techniques, but their raw noise levels differ by orders of magnitude, the same
+crossing-geometry sensitivity translates into a much smaller absolute velocity error for phase
+than for offset tracking at the same pixel and geometry. This is the underlying reason
+phase-derived estimates are generally weighted more heavily than offset-derived ones in
+combined/mosaicked products, wherever phase coherence permits unwrapping — not because the
+geometry treats the two differently, but because phase is intrinsically a quieter measurement of
+the same physical quantity.
 
-The input noise $\sigma_\phi$ combines baseline-parameter covariance (propagated through the 6×6
-covariance matrix from the baseline fit) and tiepoint noise $\sigma_{\text{tp}}$
-(`computePhiZM3d`, `mosaic3d.md` §"Phase Error"):
+---
 
-$$
-\sigma_\phi = \sqrt{\mathbf{v}^T \mathbf{C}\, \mathbf{v} + \min(\pi,\,\sigma_{\text{tp}})^2}
-$$
+## Implementation notes (GrIMP `mosaic3d`)
 
-Converting $\sigma_\phi$ to an equivalent raw range-noise (the "metre of $dr$" unit this page's
-figure is plotted in) is exactly $\sigma_{\delta r} = \frac{\lambda}{4\pi}\sigma_\phi$. At
-L-band ($\lambda\approx0.24$ m), even a generous $\sigma_\phi\sim0.5$ rad of unwrapped-phase
-noise corresponds to only $\sigma_{\delta r}\sim1$ cm of equivalent range noise — phase is an
-intrinsically very precise measurement of $\delta r$. (This is an illustrative order-of-magnitude
-figure, not a verified measurement from a specific real `mosaic3d` run.)
-
-### Range/azimuth offsets (speckle tracking)
-
-$$
-p_A = \frac{365.25\,\Delta r_A}{\Delta t_A \sin\psi_A}
-$$
-
-The input noise combines the interpolated offset-field uncertainty, DEM-induced range error, and
-baseline-parameter uncertainty (`mosaic3d.md` §"Step 2", point 6):
-
-$$
-\sigma_R = \sqrt{\sigma_{\text{off}}^2 + \sigma_{\text{dem}}^2 + \sigma_{\text{base}}^2}
-$$
-
-Speckle-tracked offset noise is set by cross-correlation precision (chip size, correlation,
-oversampling — NISAR ATBD §5.4), which is typically dm-to-metre scale, not cm scale.
-
-### Practical implication
-
-Because the *geometric amplification factor* (row-norm of $\mathbf{A}$, plotted in the figure's
-left column) is identical for both measurement types, but phase's typical equivalent range noise
-is roughly one to two orders of magnitude smaller than offsets' typical range-offset noise, the
-**same crossing-geometry sensitivity translates into a much smaller absolute velocity error for
-phase than for offsets** at the same pixel/geometry. This is consistent with why `mosaic3d`'s
-error-weighted combination (`mosaic3d.md` §"Error-Weighted Combination") generally favors phase
-over offsets where both are available and coherence permits phase unwrapping — not because the
-geometry treats them differently, but because phase is simply a quieter measurement of the same
-underlying quantity.
+This derivation matches GrIMP's `mosaic3d` crossing-orbit inversion exactly: `computeA`/
+`computeVxy` in `mosaicSource/common/initRoutines.c` (full algorithm description in
+`mosaicSource/Documents/mosaic3d.md` §"Full Inversion" and §"Error Analysis: Crossing-Geometry
+Sensitivity"), with $\alpha,\beta$ built from `common/computeHeading.c`'s cross-track heading.
+Phase's $p_i$ scaling and noise model is `computePhiZM3d` (`mosaic3d.md` §"Phase Error"); offset
+tracking's is `make3DOffsets.c` (`mosaic3d.md` §"Step 2"). The companion script
+`plotVerticalSensitivity.py` evaluates the formulas above using real ascending/descending heading
+and incidence-angle values computed from orbital state vectors for three example Greenland
+crossing pairs, via a faithful port of `computeHeading.c`'s formula
+(`headingAndIncidence()`, using `utilities.geodatrxa.geodatrxa.llzPtToRA()`).
 
 ---
 
@@ -233,9 +217,9 @@ plotVerticalSensitivity [--projectDir DIR] [-o OUTPUT.png] [--show]
 | `-o, --output PATH` | `verticalSensitivity.png` | Output plot path. |
 | `--show` | off | Display interactively in addition to saving. |
 
-The per-region track/frame relative paths (`REGIONS` in the script) are GIT64/NISAR-Greenland
-example-specific and not currently overridable from the command line — edit the script directly
-for a different project's example pairs.
+The per-region track/frame relative paths (`REGIONS` in the script) are example-specific and not
+currently overridable from the command line — edit the script directly for a different project's
+example pairs.
 
 ## Code
 

@@ -1,262 +1,219 @@
-# plotSquintError — Reference
+# Squint Error in Broadside-Assumed Crossing-Orbit Velocity Inversion
 
-This page is a reference for the question: **does `mosaic3d`'s assumption of zero-Doppler
-(broadside) acquisition geometry introduce a material error in computed $(v_x, v_y)$, given
-that real NISAR acquisitions carry a small residual squint?** It documents the measurement
-methodology, the propagation mechanism, the quantitative findings for both InSAR phase and
-speckle-tracked range/azimuth offsets, and the resulting recommendation. It is not a how-to-run
-guide — see the bottom of the page for the CLI invocation.
+The two-look crossing-orbit velocity inversion derived in
+[plotVerticalSensitivity.md](plotVerticalSensitivity.md) assumes each pass images at exactly
+zero Doppler — i.e. that the true line-of-sight (LOS) at every pixel lies exactly broadside,
+perpendicular to the platform's velocity vector. Real SAR systems deviate from this by a small
+residual angle, the **squint**. This document derives how squint propagates into the velocity
+solution, gives an exact closed-form result for its dominant effect, and states the correction.
+
+It is a theory reference, not a usage guide — see the bottom of the page for the CLI invocation
+of the companion plotting tool.
 
 ---
 
-## 1. What squint is, and how it's measured here
+## 1. Definition and measurement of squint
 
-"Squint" as used here is the angular deviation of the true radar line-of-sight (LOS) from the
-idealized, exactly-broadside direction that GrIMP's own geometry code
-(`common/llToImageNew.c`, `common/computeHeading.c`) assumes. It is measured **directly from the
-official processor's own output**, not modeled or re-derived from orbit state vectors:
+Squint is the angular deviation, in the ground-projected plane, of the true LOS direction from
+the broadside direction assumed by the inversion:
 
 $$
-\text{squint} = \big(\text{heading}(\hat{\ell}_{\text{LOS}}) - \text{heading}(\hat{\ell}_{\text{along-track}})\big)_{\text{wrapped to }\pm180°} - 90°
+\text{squint} = \big(\text{heading}(\hat\ell_{\text{LOS}}) - \text{heading}(\hat\ell_{\text{track}})\big)_{\pm180°} - 90°
 $$
 
-where $\hat\ell_{\text{LOS}}$ and $\hat\ell_{\text{along-track}}$ are read directly from each RUNW
-product's `science/LSAR/RUNW/metadata/geolocationGrid` cube (`losUnitVectorX/Y`,
-`alongTrackUnitVectorX/Y`). These are official NISAR L1 processor outputs (NISAR ATBD, JPL
-D-95677 Rev A, §3.4–3.8) — not anything GrIMP computes independently. `measureSquint()` in
-`plotSquintError.py` implements exactly this lookup.
+where $\hat\ell_{\text{LOS}}$ and $\hat\ell_{\text{track}}$ are the ground-projected LOS and
+along-track (velocity) unit vectors, and the heading difference is wrapped to $\pm180°$ before
+subtracting the nominal $90°$ broadside offset.
 
-This sidesteps an earlier, invalidated approach that modeled squint as a *time shift* in the
-azimuth-time assignment (i.e. a nonzero-Doppler Newton solve). That model was wrong: the
-zero-Doppler azimuth-time assignment itself is correct and untouched (it is a tautology —
-$\vec V_{sat}(\eta_{0,T})\cdot(\vec T-\vec R_{sat}(\eta_{0,T}))=0$ by definition, NISAR ATBD
-§3.4.2). Squint instead shows up as a direct **angular** offset of the true LOS from the
-idealized broadside direction, at that same (unshifted) time/position — confirmed by the
-~91.5°–91.9° (not exactly 90°) angle between `losUnitVector` and `alongTrackUnitVector` in real
-products, independently verified via a full 3D ECEF dot product (not a 2D-projection artifact).
+Squint cannot, in general, be computed from orbit state vectors alone. It depends on the
+spacecraft's attitude — a data product distinct from orbit position/velocity, since nothing
+about an orbit's geometry constrains which way the antenna boresight points — and, in practice,
+on a residual correction empirically calibrated from the raw radar data itself (an antenna
+pointed and yaw-steered exactly according to its nominal law would still leave attitude knowledge
+errors that only a ground-based, data-driven calibration can resolve). Squint must therefore be
+obtained either from an attitude/Doppler-centroid data product, or by direct lookup from
+processor-supplied acquisition-geometry metadata, rather than re-derived from orbit mechanics.
 
-### Is squint computable from orbit state vectors alone, without reading the HDF5?
+For NISAR, this metadata is the per-pixel `losUnitVector` and `alongTrackUnitVector` fields in
+each RUNW product's geolocation grid (NISAR ATBD, JPL D-95677 Rev A, §3.4–3.8) — official Level-1
+processor output, already reflecting the true (squinted) acquisition geometry. Measured at scene
+center for three representative ascending/descending crossing pairs (northern, central, and
+southern Greenland):
 
-No. The NISAR ATBD (§3.8) splits Doppler centroid into a **geometric** component (computed from
-orbit *and attitude* — i.e. it needs the spacecraft attitude quaternion, a separate data product
-from orbit state vectors, to define antenna boresight) and a **measured** component (estimated
-directly from raw radar data via cross-correlation, then used to bias-correct the attitude
-product — "the geometry has already been steered to match the available data," §3.8.2). The true
-squint is therefore partly geometric and partly an empirically-calibrated correction layered on
-top of it; the two aren't separable from orbit state vectors alone. A from-scratch attempt to
-test this (comparing the true 3D ECEF dot product of LOS and satellite velocity, then testing
-whether using inertial instead of ECEF velocity closes the gap) closed only about half of a
-measured ~1.6° discrepancy, leaving a real, non-derivable residual. The practical conclusion:
-squint must be looked up from the product's own `geolocationGrid` (or an attitude/Doppler
-product), not computed from state vectors in C.
-
-### Measured values (scene-center, mid-height-level)
-
-| Region | squint (asc) | squint (desc) |
+| Region | squint (ascending) | squint (descending) |
 |---|---|---|
 | North | 1.658° | 1.494° |
 | Central | 1.667° | 1.481° |
 | South | 1.674° | 1.482° |
 
-Ascending is consistently **~0.18° higher** than descending across all three regions — systematic,
-not noise, plausibly related to look/flight-direction-dependent yaw-steering-law residuals (not
-mechanistically confirmed, just measured).
-
-**Within one frame**, squint varies nearly linearly with slant range (~1.5°–1.9° across one
-swath; linear-fit residual std only ~0.0085°), and is nearly constant across azimuth (std
-~0.009°) and height level (std ~0.013°). **Across sub-frames** of the same track (first vs. last
-in a 4-frame sequence), squint drifts only ~0.03° — very stable. Greenland tracks don't exercise
-enough heading/latitude range to determine whether squint could become non-monotonic over a much
-wider range (e.g. a long Antarctic track spanning many ascending/descending segments near the
-pole) — open question, not resolved by this data.
+For the three Greenland tracks evaluated here, ascending squint is systematically
+$\sim0.18°$ larger than descending; whether this asymmetry is a general property of the
+satellite's pointing/yaw-steering behavior or specific to these tracks has not been established
+from a wider sample. Within a single frame, squint varies nearly linearly with slant range (a
+$\sim0.3°$–$0.4°$ spread across one swath; linear-fit residual std $\sim0.0085°$) and is nearly
+constant in azimuth (std $\sim0.009°$) and height ($\sim0.013°$); across consecutive sub-frames of
+the same track it drifts by only $\sim0.03°$. The behavior over a much wider heading/latitude
+range than these mid-latitude examples span — in particular near a track's high-latitude turning
+point, where heading changes rapidly — has not been characterized.
 
 ---
 
-## 2. Mechanism: how squint propagates into $(v_x, v_y)$
+## 2. Propagation into the velocity solution
 
-`mosaic3d`'s crossing-orbit inversion (`common/initRoutines.c`'s `computeA`/`computeVxy`) builds
-its solving matrix from the assumed zero-squint headings of the ascending and descending images:
-
-$$
-\mathbf{A}_0 = \text{computeA}\big(H_A(0),\,H_D(0)\big)
-$$
-
-The true heading is $H_{\text{true}} = H_0 + \text{squint}$ (a direct additive correction, not a
-time-shift), giving
-
-$$
-\mathbf{A}_{\text{true}} = \text{computeA}\big(H_A(0)+\text{squint}_A,\ H_D(0)+\text{squint}_D\big)
-$$
-
-For a true velocity $\vec v_{\text{true}}$, `mosaic3d` actually computes
+Let $\mathbf{A}_0$ be the inversion matrix (§"Geometric setup" in
+[plotVerticalSensitivity.md](plotVerticalSensitivity.md)) built from the assumed broadside
+headings $H_A,H_D$, and $\mathbf{A}_{\text{true}}$ the matrix built from the true,
+squint-corrected headings $H_A+\text{squint}_A,\ H_D+\text{squint}_D$. For a true velocity
+$\vec v_{\text{true}}$, the broadside-assumed inversion computes
 
 $$
 \vec v_{\text{computed}} = \mathbf{A}_0\,\mathbf{A}_{\text{true}}^{-1}\,\vec v_{\text{true}} = \mathbf{M}\,\vec v_{\text{true}}
 $$
 
-This $\mathbf{M}$ is the error-propagation matrix used throughout this analysis.
+$\mathbf{M}$ is the identity only when squint is zero; otherwise it is the error-propagation
+matrix analyzed below.
+
+### Pure-axis error
+
+Two reference cases avoid the direction-dependence of defining a single "% error" for an
+arbitrary velocity direction: the true velocity purely along $\hat x$ or purely along $\hat y$,
+giving
+
+$$
+\%\text{error}_{v_x} = (M_{00}-1)\times100, \qquad
+\%\text{error}_{v_y} = (M_{11}-1)\times100
+$$
+
+### Error as a function of true flow direction
+
+For an arbitrary true-flow orientation $\theta$, $\mathbf M\hat v(\theta)$ has both a speed error,
+$(\lVert\mathbf{M}\hat v(\theta)\rVert-1)\times100$, and a direction error, the angle between
+$\mathbf{M}\hat v(\theta)$ and $\hat v(\theta)$. These are generally different functions of
+$\theta$ from the pure-axis cases above and from each other (§4).
 
 ---
 
-## Figure 1 — error vs. squint magnitude (pure-axis reference cases)
+## 3. Exact result: equal squint on both looks is a pure rotation
+
+**Proposition.** If both looks share the same squint angle, $\text{squint}_A=\text{squint}_D=s$,
+then $\mathbf{M} = R(s)$ exactly, where $R(s)$ is the $2\times2$ rotation matrix by angle $s$.
+
+**Proof sketch.** The forward model's coefficient matrix
+$N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}$
+has rows equal to the two looks' ground-projected unit vectors, at angles $\beta$ and
+$\alpha+\beta$; the inversion matrix is $\mathbf{A}=N^{-1}$. Squint rotates each look's own row by
+that look's own squint angle. If both rotate by the same angle $s$, this is equivalent to right-
+multiplying the whole matrix by a global rotation: $N_{\text{true}}=N_0\,R(s)$. Then
+$\mathbf{M}=\mathbf{A}_0\mathbf{A}_{\text{true}}^{-1}=N_0^{-1}N_{\text{true}}=R(s)$. $\blacksquare$
+
+This explains why, in the figures below, the dominant effect of squint on the velocity solution
+is a near-constant *rotation* of the computed flow direction, close in magnitude to the mean of
+the two looks' squint angles — not an arbitrary, orientation-dependent distortion. The departure
+from a pure rotation is governed entirely by the *difference* $\text{squint}_A-\text{squint}_D$;
+when that difference is small relative to the mean (as in the measured values above), $\mathbf M$
+is close to, but not exactly, $R\big((\text{squint}_A+\text{squint}_D)/2\big)$.
+
+---
+
+## Figure 1 — error vs. squint magnitude, pure-axis cases
 
 ![squint error vs scale factor](images/squintError.png)
 
-Each region's panel sweeps a **scale factor** applied to that region's own real,
-independently-measured $(\text{squint}_A, \text{squint}_D)$ pair (scale=1.0 reproduces the real
-measured values exactly, preserving the real asc/desc asymmetry — not an assumed shared squint
-for both images). Two reference cases are reported, each avoiding the
-direction-dependence/division-by-zero issue of defining a single "%error" for an arbitrary true
-velocity direction:
+Each panel sweeps a scale factor applied to one region's measured
+$(\text{squint}_A,\text{squint}_D)$ pair (1.0 reproduces the measured values exactly, preserving
+the real ascending/descending asymmetry). At the measured squint:
 
-$$
-\%\text{error}_{v_x} = (M_{00}-1)\times100 \quad (\vec v_{\text{true}}=\hat x), \qquad
-\%\text{error}_{v_y} = (M_{11}-1)\times100 \quad (\vec v_{\text{true}}=\hat y)
-$$
-
-**Result at the real measured squint (scale=1.0):**
-
-| Region | %error vx | %error vy |
+| Region | %error $v_x$ | %error $v_y$ |
 |---|---|---|
 | North | +0.05% | −0.18% |
 | Central | +0.08% | −0.26% |
 | South | +0.05% | −0.36% |
 
-All sub-percent. $v_y$ is consistently more sensitive than $v_x$ at these crossing geometries,
-consistent with the separate crossing-geometry sensitivity result documented in
-`mosaicSource/Documents/mosaic3d.md`'s "Error Analysis: Crossing-Geometry Sensitivity" section.
+All sub-percent; $v_y$ is consistently more sensitive than $v_x$ at these crossing geometries.
 
----
-
-## Figure 2 — error vs. true flow orientation, at the real measured squint
+## Figure 2 — error vs. true flow direction, at the measured squint
 
 ![squint error vs flow direction](images/squintErrorByDirection.png)
 
-The pure-axis numbers above are only two special cases. The fuller picture sweeps every possible
-true-flow orientation $\theta$ (0–360°, $\vec v_{\text{true}}=v(\cos\theta,\sin\theta)$) at the
-real measured squint (scale=1.0) and reports two complementary error measures:
-
-- **Speed % error**: $(\lVert\mathbf{M}\hat v(\theta)\rVert - 1)\times100$ — oscillates
-  sinusoidally with $\theta$ (period 180°), ranging from about −0.17%/+0.12% (North) to
-  −0.31%/+0.09% (South). The pure-axis numbers in Figure 1 are close to, but not exactly, the
-  extrema of this curve.
-- **Direction error**: the angle between $\mathbf{M}\hat v(\theta)$ and $\hat v(\theta)$ — this
-  is the more important finding. It is **nearly constant regardless of $\theta$**, at
-  approximately:
-
-| Region | direction error |
-|---|---|
-| North | 1.49°–1.66° |
-| Central | 1.48°–1.67° |
-| South | 1.46°–1.69° |
-
-**Why direction error is orientation-independent:** $\mathbf{M}$'s off-diagonal terms
-($M_{01}\approx-0.027$, $M_{10}\approx+0.027$ for North) are roughly an order of magnitude larger
-than its diagonal deviations from 1 ($M_{00}-1\approx0.0005$, $M_{11}-1\approx-0.0019$) — i.e.
-$\mathbf{M}$ is dominated by its antisymmetric part and is therefore close to a pure small-angle
-**rotation** matrix. A rotation matrix rotates every input vector by the same fixed angle
-regardless of that vector's own direction — which is exactly what's observed. Notably, that
-near-constant rotation angle (~1.5°–1.7°) is close to the squint angle itself.
-
-**Net takeaway:** squint's dominant effect on computed velocity is a near-constant ~1.5°–1.7°
-rotation bias in flow direction (independent of the true flow direction — a systematic bias, not
-noise that averages out), plus a smaller (<0.3%) orientation-dependent speed error. Both are
-small in absolute terms.
+Sweeping every true-flow orientation $\theta$ (0°–360°) at the measured squint: speed error
+oscillates sinusoidally with $\theta$ (period $180°$), ranging from about $-0.17\%/+0.12\%$
+(North) to $-0.31\%/+0.09\%$ (South). Direction error is nearly constant in $\theta$ — by the
+Proposition above, this is expected, since $\mathbf M$ is close to a pure rotation — at
+approximately $1.5°$–$1.7°$ for all three regions, consistent with the mean of each region's
+measured ascending/descending squint.
 
 ---
 
-## 3. Findings for range/azimuth offsets (speckle tracking)
+## 4. The exact correction
 
-**Conclusion: low risk, structurally self-consistent.**
+A rotation of the *output* $(v_x,v_y)$ by $-(\text{squint}_A+\text{squint}_D)/2$ removes most of
+the error when $\text{squint}_A\approx\text{squint}_D$ — for the measured values, this cuts the
+maximum matrix-element error from 2.75% to 0.20%, a $\sim14\times$ reduction — but it is not the
+correct general fix: it degrades as the two looks' squint values diverge, since beyond the
+common-rotation part captured by the Proposition, $\mathbf M$ also has a shear component
+proportional to $\text{squint}_A-\text{squint}_D$ that a single rotation cannot remove.
 
-`mosaic3d` converts a measured range/azimuth pixel offset into $(v_x,v_y)$ in a single geometric
-step: `common/computeHeading.c`'s cross-track heading feeds directly into `computeA`. No other
-geometric model is involved.
+The exact correction instead applies each look's own measured squint to that look's own heading
+**before** the inversion matrix is formed:
 
-The key argument is a tautology, not an approximation: the zero-Doppler condition that defines a
-pixel's assigned time, $\vec V_{sat}(\eta_{0,T})\cdot(\vec T-\vec R_{sat}(\eta_{0,T}))=0$, forces
-the **true** LOS to be **exactly** perpendicular to the **true** satellite velocity at that
-instant, by construction — regardless of whether squint exists elsewhere in the system. Since
-range-offset sensitivity to ground motion is governed by the (ground-projected) LOS direction and
-azimuth-offset sensitivity is governed by the (ground-projected) velocity direction — both
-evaluated at this same instant — these two sensitivity directions are exactly orthogonal in the
-data's own native geometry, independent of squint. "Assume range ⊥ azimuth" is therefore not an
-approximation that squint breaks for offsets.
+$$
+H_A \to H_A + \text{squint}_A, \qquad H_D \to H_D + \text{squint}_D
+$$
 
-The only real residual risk is narrower: whether GrIMP's own `computeHeading.c` (using its own
-`geodat`-derived state vectors) reproduces the **same** heading that the true acquisition
-geometry implies, closely enough. Figures 1 and 2 above directly bound this risk — they model
-exactly this "`computeHeading`'s assumed heading is off by the full measured squint" worst case —
-and even that worst-case bound is sub-percent in speed and ~1.5°–1.7° in direction. This is the
-analysis that applies to offsets.
+with $\alpha,\beta$ (and hence $\mathbf A$) computed from the corrected headings exactly as in the
+zero-squint case. This produces $\mathbf{A}_{\text{true}}$ directly — zero residual, to the
+precision of the measured squint — with no degradation as the two looks' squint values diverge,
+since the divergence is exactly what gets captured rather than averaged away.
 
 ---
 
-## 4. Findings for phase (interferometry)
+## 5. Application to interferometric phase vs. cross-correlation offsets
 
-**Conclusion: an additional, independent geometric exposure exists, but it is structurally
-guarded and practically negligible for NISAR's flat-earth processing path.**
+The pixel-grid position assigned to a target by zero-Doppler processing is defined purely by
+geometry — the condition that the true LOS be exactly perpendicular to the true platform
+velocity at the assigned time. This condition holds regardless of squint; squint is an angular
+property of the LOS at that time, not a shift in which time gets assigned. Consequently, the two
+sensitivity directions used to convert a measured displacement back into horizontal velocity —
+the ground-projected LOS direction for range, and the ground-projected velocity direction for
+azimuth — remain exactly orthogonal to each other in the data's own native geometry, independent
+of squint. A system that tracks pixel displacement directly (cross-correlation/speckle tracking)
+is therefore only exposed to squint through a mismatch between the *assumed* broadside heading
+used in the inversion and the *true* heading the data was actually acquired with — precisely the
+error quantified above, and bounded by it.
 
-Unlike offsets, phase goes through **two** geometric stages before reaching the same
-`computeHeading`-based inversion:
-
-1. **Baseline-to-range conversion** (`common/computePhiZ.c`, `common/computePhiFlatEarth.c`):
-   converts the inter-orbit baseline ($B_n$, $B_p$) into an equivalent range correction using
-
-   $$
-   \theta_{\text{flat}} = \text{thetaRReZReH}(\text{Range}, R_e, Re H_{\text{fixed}})
-   = \arccos\!\left(\frac{R^2+ReH^2-ReZ^2}{2\,R\,ReH}\right)
-   $$
-
-   — a pure spherical law-of-cosines formula on three **scalar distances** (slant range,
-   Earth-radius+target-height, Earth-radius+satellite-height; `common/initRoutines.c:918`). No
-   heading, no along-track direction, nothing cross-track enters this formula. It implicitly
-   assumes the satellite/target/Earth-center triangle is exactly 2D — i.e. the LOS lies exactly
-   in the plane perpendicular to the ground track — a hard-coded zero-squint assumption,
-   structurally independent of (and in addition to) whatever `computeHeading` does downstream.
-
-2. **Heading-based inversion** (same as offsets): the resulting range-equivalent value feeds into
-   the same `computeA`/`computeHeading` machinery, carrying the same (small, bounded) risk
-   described in §3.
-
-This means phase has a genuinely separate exposure that offsets don't have. However, two
-independent findings limit its practical impact for NISAR:
-
-**(a) The baseline itself is already constructed to have ~zero along-track component.**
-`common/svBase.c`'s `svBaseTCN()` computes the full 3D inter-orbit baseline in a TCN
-(tangential/cross-track/normal) frame, then `svOffsets()`/`svBnBp()` iteratively **solves for**
-the second image's matching time specifically to drive the along-track (tangential) baseline
-component to ~0 (`dt = dot(b,T)/C1`, converged to a `1e-11` tolerance, `svBase.c:364-381`). Only
-then are the cross-track/normal components rotated by $\theta_{\text{flat}}$ into $B_n$/$B_p$
-(`svBnBp()`, `svBase.c:271-280`) — the along-track component (`bTCN[0]`) is dropped from that
-rotation, but it has already been driven to near-zero by the solve that produced it, so little
-information is actually lost. This structurally guards against `thetaRReZReH`'s missing
-along-track term mattering much, by construction rather than by chance.
-
-**(b) For NISAR's flat-earth path specifically, $B_n$/$B_p$ are already a tiny residual, not the
-full physical baseline.** The ISCE/NISAR processor has already removed the bulk
-topographic/geometric phase upstream (see root `CLAUDE.md`'s "ISCE/NISAR flat-earth baseline
-path" and `applyFlatEarth`/`computePhiFlatEarth.c`); the $B_n$/$B_p$ that `mosaic3d` corrects for
-in this path is only the small residual orbit-error ramp left over, not the full inter-orbit
-separation. Any squint-induced projection error in step 1 above acts on an input that is already
-small by construction — a second-order-small effect on top of a structurally-guarded
-near-zero quantity. (This argument does **not** extend to legacy/non-NISAR full-physical-baseline
-ISCE processing through `computePhiZ.c` without `applyFlatEarth` — there the baseline is the real
-physical separation, and this analysis has not quantified that case. Flagged as a known,
-unquantified gap, not a current NISAR concern.)
+A system that forms an interferometric baseline correction has a second, independent exposure.
+Converting a baseline into an equivalent range correction requires decomposing the baseline into
+components parallel and perpendicular to the assumed LOS — a decomposition typically computed
+from a purely two-dimensional (range, satellite-height, Earth-radius) triangle, with no
+along-track or heading term at all. This implicitly assumes the LOS lies exactly in the plane
+perpendicular to the ground track, an independent zero-squint assumption not shared by direct
+pixel-offset tracking. Whether this second exposure is significant in a given system depends on
+(a) whether the baseline itself is constructed to have a negligible along-track component
+regardless of squint, and (b) the magnitude of the baseline being corrected for — a system that
+has already removed the bulk of the geometric/topographic phase upstream (leaving only a small
+residual baseline correction) is far less exposed than one correcting for the full physical
+inter-orbit separation.
 
 ---
 
-## 5. Overall recommendation
+## Implementation notes (GrIMP `mosaic3d`)
 
-**No C-code change is warranted for squint in the current NISAR processing chain.** Both legs
-(offsets via `computeHeading`'s tautological self-consistency; phase via the structurally-guarded,
-practically-negligible baseline exposure for the flat-earth path) bound out at sub-percent speed
-error and a small, near-constant ~1.5°–1.7° direction bias — real and systematic, but small. This
-finding should be treated as a documented, bounded limitation rather than a defect requiring a
-fix; revisit only if `mosaic3d` is extended to process legacy non-flat-earth ISCE data with a
-full physical baseline, or to a track geometry (e.g. polar Antarctic) where squint's
-latitude/heading dependence has not been characterized.
+`mosaic3d`'s zero-Doppler geometry (`common/llToImageNew.c`, `common/computeHeading.c`) assumes
+exact broadside acquisition; its crossing-orbit inversion (`computeA`/`computeVxy`,
+`common/initRoutines.c`) is the $\mathbf A$ of §1–§4 above. Range/azimuth offset tracking
+(`make3DOffsets.c`) corresponds to §5's first case. Interferometric phase
+(`computePhiZ.c`/`computePhiFlatEarth.c`) corresponds to §5's second case: the baseline-to-range
+conversion uses `thetaRReZReH` (`common/initRoutines.c:918`), a pure range/Earth-radius/
+satellite-height triangle with no heading term; its along-track baseline component is driven to
+near zero by construction in `common/svBase.c`'s `svBaseTCN()`/`svBnBp()` (lines 271–385); and
+for NISAR's ISCE flat-earth processing path the baseline being corrected is already just a small
+residual orbit-error term, not the full physical separation. Combined, the current analysis
+finds **no C-code change is warranted for NISAR's processing chain today** — both exposures
+bound out at sub-percent speed error and the small, near-constant direction bias of §4. A
+detailed, file-by-file implementation design for the exact correction (§4), including how it
+would be extracted, merged across sub-frames, and threaded into the C-code chain if ever needed,
+is maintained in `mosaicSource/CLAUDE.md` §"Squint (residual Doppler) sensitivity" rather than
+here, since that design is specific to GrIMP's geodat/Python pipeline.
 
 ---
 
@@ -277,5 +234,5 @@ plotSquintError [--projectDir DIR] [-o OUTPUT.png] [--outputByDirection OUTPUT2.
 
 [`nisarerrors/plotSquintError.py`](../nisarerrors/plotSquintError.py) — reuses `computeA`,
 `headingAndIncidence`, `latLonToPS3413`, and `REGIONS` from
-[`plotVerticalSensitivity.py`](../nisarerrors/plotVerticalSensitivity.py); reads real squint
-directly from each region's source RUNW HDF5 `geolocationGrid` cube (`measureSquint()`).
+[`plotVerticalSensitivity.py`](../nisarerrors/plotVerticalSensitivity.py); reads squint directly
+from each region's source RUNW HDF5 geolocation grid (`measureSquint()`).
