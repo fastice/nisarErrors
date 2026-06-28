@@ -22,7 +22,7 @@ $$
 \qquad L=\begin{cases}+1 & \text{left-looking}\\-1 & \text{right-looking}\end{cases}
 $$
 
-where $\hat\ell_{\text{LOS}}$ and $\hat\ell_{\text{track}}$ are the ground-projected LOS and
+where $`\hat\ell_{\text{LOS}}`$ and $`\hat\ell_{\text{track}}`$ are the ground-projected LOS and
 along-track (velocity) unit vectors, the heading difference is wrapped to $\pm180°$, and $L$ is
 the look-direction sign — the nominal (zero-squint) broadside offset is $+90°$ for a left-looking
 antenna and $-90°$ for a right-looking one. All measurements in this document are from
@@ -65,11 +65,11 @@ rapidly — has not been characterized.
 
 ## 2. Propagation into the velocity solution
 
-Let $\mathbf{A}_0$ be the inversion matrix (§"Geometric setup" in
+Let $`\mathbf{A}_0`$ be the inversion matrix (§"Geometric setup" in
 [plotVerticalSensitivity.md](plotVerticalSensitivity.md)) built from the assumed broadside
-headings $`H_A,H_D`$, and $\mathbf{A}_{\text{true}}$ the matrix built from the true,
+headings $`H_A,H_D`$, and $`\mathbf{A}_{\text{true}}`$ the matrix built from the true,
 squint-corrected headings $`H_A+\text{squint}_A,\ H_D+\text{squint}_D`$. For a true velocity
-$\vec v_{\text{true}}$, the broadside-assumed inversion computes
+$`\vec v_{\text{true}}`$, the broadside-assumed inversion computes
 
 $$
 \vec v_{\text{computed}} = \mathbf{A}_0\,\mathbf{A}_{\text{true}}^{-1}\,\vec v_{\text{true}} = \mathbf{M}\,\vec v_{\text{true}}
@@ -107,8 +107,8 @@ then $\mathbf{M} = R(s)$ exactly, where $R(s)$ is the $2\times2$ rotation matrix
 $N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}$
 has rows equal to the two looks' ground-projected unit vectors, at angles $\beta$ and
 $\alpha+\beta$ (measured counterclockwise from a fixed reference direction); the inversion matrix
-is $\mathbf{A}=N^{-1}$. With $\beta=\phi-H_A$ and $`\alpha=H_A-H_D`$ (§"Geometric setup" in
-[plotVerticalSensitivity.md](plotVerticalSensitivity.md)), increasing a look's heading $H_i$ by
+is $\mathbf{A}=N^{-1}$. With $`\beta=\phi-H_A`$ and $`\alpha=H_A-H_D`$ (§"Geometric setup" in
+[plotVerticalSensitivity.md](plotVerticalSensitivity.md)), increasing a look's heading $`H_i`$ by
 $s$ *decreases* its row angle by $s$ — for look $A$, $\beta\to\beta-s$; for look $D$,
 $\alpha+\beta\to(\alpha+\beta)-s$ once $\alpha$'s unchanged value is substituted back in, given
 equal squint on both looks. A row vector at angle $\theta$, right-multiplied by the standard
@@ -118,7 +118,7 @@ operation that decreases a row's angle by $s$. Applying this to both rows simult
 $`N_{\text{true}}=N_0\,R(s)`$, and therefore
 $`\mathbf{M}=\mathbf{A}_0\mathbf{A}_{\text{true}}^{-1}=N_0^{-1}N_{\text{true}}=R(s)`$. $\blacksquare$
 
-(The sign here is tied to the specific convention $\beta=\phi-H_A$: a heading correction is
+(The sign here is tied to the specific convention $`\beta=\phi-H_A`$: a heading correction is
 defined as *added* to the assumed broadside heading, and $\beta$ depends on heading with a minus
 sign. Under a convention where heading enters with the opposite sign, the same physical
 correction would appear as $\mathbf{M}=R(-s)$ instead — the rotation is real and exact either
@@ -141,13 +141,13 @@ Each panel sweeps a scale factor applied to one region's measured
 $`(\text{squint}_A,\text{squint}_D)`$ pair (1.0 reproduces the measured values exactly, preserving
 the real ascending/descending asymmetry). At the measured squint:
 
-| Region | %error $v_x$ | %error $v_y$ |
+| Region | %error $`v_x`$ | %error $`v_y`$ |
 |---|---|---|
 | North | +0.05% | −0.18% |
 | Central | +0.08% | −0.26% |
 | South | +0.05% | −0.36% |
 
-All sub-percent; $v_y$ is consistently more sensitive than $v_x$ at these crossing geometries.
+All sub-percent; $`v_y`$ is consistently more sensitive than $`v_x`$ at these crossing geometries.
 
 ## Figure 2 — error vs. true flow direction, at the measured squint
 
@@ -179,7 +179,7 @@ H_A \to H_A + \text{squint}_A, \qquad H_D \to H_D + \text{squint}_D
 $$
 
 with $\alpha,\beta$ (and hence $\mathbf A$) computed from the corrected headings exactly as in the
-zero-squint case. This produces $\mathbf{A}_{\text{true}}$ directly — zero residual, to the
+zero-squint case. This produces $`\mathbf{A}_{\text{true}}`$ directly — zero residual, to the
 precision of the measured squint — with no degradation as the two looks' squint values diverge,
 since the divergence is exactly what gets captured rather than averaged away.
 
