@@ -158,14 +158,18 @@ $\gamma$, not by $\alpha$.
 
 ![vertical sensitivity](images/verticalSensitivity.png)
 
-Three real ascending/descending crossing geometries (drawn from northern, central, and southern
-Greenland, $\alpha=101°$–$123°$ — meaningfully closer to the favorable $90°$ case than to the
-unfavorable $180°$ case) illustrate both regimes side by side, swept over pixel position
-$\gamma$ (0°–360°), with a secondary axis showing the corresponding longitude and a marker at
-each region's actual crossing-point position. Left column: independent-error sensitivity
-$`\sigma_{v_x},\sigma_{v_y}`$ (m/yr, per metre of equivalent raw LOS noise over a 12-day repeat).
-Right column: common-mode response $`\Delta v_x,\Delta v_y`$ per 1 m/yr of uncompensated vertical
-motion.
+**Figure.** Three rows, one per region (northern, central, southern Greenland — real crossing geometries with
+$\alpha=101°$–$123°$, meaningfully closer to the favorable $90°$ case than to the unfavorable
+$180°$ case), two columns. Both columns share the same x-axis, $\gamma$ (0°–360°) — the pixel's
+azimuth position relative to the mean of the two passes' headings, as defined in §1 — with a
+secondary axis showing the corresponding longitude and a dashed marker at each region's actual
+crossing-point position (where the two real orbit tracks intersect). Left column: the
+independent-error case of §2.2 — sensitivity $`\sigma_{v_x},\sigma_{v_y}`$ (m/yr) to one metre of
+equivalent raw, uncorrelated LOS measurement noise in each pass separately, over a 12-day repeat
+interval. Right column: the common-mode case of §2.1 — response $`\Delta v_x,\Delta v_y`$ (m/yr)
+to 1 m/yr of uncompensated common-mode vertical motion contaminating both passes equally. Both
+columns are swept across all $\gamma$ to show the full pixel-position dependence, not just the
+value at the real crossing point (marked separately).
 
 At all three regions' real crossing-point positions ($\gamma\approx270°$–$288°$), the common-mode
 response is near its extremum in $`v_y`$ and near zero in $`v_x`$ — i.e. uncompensated vertical

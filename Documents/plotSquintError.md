@@ -104,7 +104,7 @@ $\theta$ from the pure-axis cases above and from each other (§4).
 then $\mathbf{M} = R(s)$ exactly, where $R(s)$ is the $2\times2$ rotation matrix by angle $s$.
 
 **Proof sketch.** The forward model's coefficient matrix
-$N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}$
+$`N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}`$
 has rows equal to the two looks' ground-projected unit vectors, at angles $\beta$ and
 $\alpha+\beta$ (measured counterclockwise from a fixed reference direction); the inversion matrix
 is $\mathbf{A}=N^{-1}$. With $`\beta=\phi-H_A`$ and $`\alpha=H_A-H_D`$ (§"Geometric setup" in
@@ -112,7 +112,7 @@ is $\mathbf{A}=N^{-1}$. With $`\beta=\phi-H_A`$ and $`\alpha=H_A-H_D`$ (§"Geome
 $s$ *decreases* its row angle by $s$ — for look $A$, $\beta\to\beta-s$; for look $D$,
 $\alpha+\beta\to(\alpha+\beta)-s$ once $\alpha$'s unchanged value is substituted back in, given
 equal squint on both looks. A row vector at angle $\theta$, right-multiplied by the standard
-counterclockwise rotation matrix $R(s)=\begin{pmatrix}\cos s&-\sin s\\\sin s&\cos s\end{pmatrix}$,
+counterclockwise rotation matrix $`R(s)=\begin{pmatrix}\cos s&-\sin s\\\sin s&\cos s\end{pmatrix}`$,
 becomes $(\cos(\theta-s),\sin(\theta-s))$ — i.e. right-multiplication by $R(s)$ is exactly the
 operation that decreases a row's angle by $s$. Applying this to both rows simultaneously,
 $`N_{\text{true}}=N_0\,R(s)`$, and therefore
@@ -137,9 +137,15 @@ is close to, but not exactly, $`R\big((\text{squint}_A+\text{squint}_D)/2\big)`$
 
 ![squint error vs scale factor](images/squintError.png)
 
-Each panel sweeps a scale factor applied to one region's measured
-$`(\text{squint}_A,\text{squint}_D)`$ pair (1.0 reproduces the measured values exactly, preserving
-the real ascending/descending asymmetry). At the measured squint:
+**Figure 1.** One panel per region (North/Central/South). Each panel sweeps a scale factor (x-axis, 0 to 1.5)
+applied to that region's measured $`(\text{squint}_A,\text{squint}_D)`$ pair — 1.0 reproduces the
+measured values exactly, preserving the real ascending/descending asymmetry, while other values
+along the x-axis show how the error would change if the true squint were smaller or larger than
+measured. The two curves plotted are the "pure-axis" reference cases from §2: $`\%\text{error}_{v_x}`$
+assumes the true velocity is purely along $\hat x$ (so it isolates $`M_{00}`$, the error in
+recovering an $x$-directed flow), and $`\%\text{error}_{v_y}`$ assumes the true velocity is purely
+along $\hat y$ (isolating $`M_{11}`$) — two specific, tractable special cases standing in for the
+general, orientation-dependent error of Figure 2. At the measured squint (scale = 1.0):
 
 | Region | %error $`v_x`$ | %error $`v_y`$ |
 |---|---|---|
@@ -153,12 +159,18 @@ All sub-percent; $`v_y`$ is consistently more sensitive than $`v_x`$ at these cr
 
 ![squint error vs flow direction](images/squintErrorByDirection.png)
 
-Sweeping every true-flow orientation $\theta$ (0°–360°) at the measured squint: speed error
-oscillates sinusoidally with $\theta$ (period $180°$), ranging from about $-0.17\%/+0.12\%$
-(North) to $-0.31\%/+0.09\%$ (South). Direction error is nearly constant in $\theta$ — by the
-Proposition above, this is expected, since $\mathbf M$ is close to a pure rotation — at
-approximately $1.5°$–$1.7°$ for all three regions, consistent with the mean of each region's
-measured ascending/descending squint.
+**Figure 2.** One row per region (North/Central/South), two columns. Unlike Figure 1's two fixed reference
+cases, this figure fixes the squint at its measured value and instead sweeps every possible true
+flow direction $\theta$ (x-axis, 0°–360°, the angle of $`\vec v_{\text{true}}`$ counterclockwise
+from $\hat x$) to show the full, orientation-dependent error rather than just the two special
+cases. Left column: speed error, $`(\lVert\mathbf{M}\hat v(\theta)\rVert-1)\times100`$ — how much
+the computed speed is off, regardless of direction — which oscillates sinusoidally with $\theta$
+(period $180°$), ranging from about $-0.17\%/+0.12\%$ (North) to $-0.31\%/+0.09\%$ (South). Right
+column: direction error, the angle between the computed velocity $\mathbf M\hat v(\theta)$ and the
+true direction $\hat v(\theta)$ — how much the computed flow direction is rotated away from the
+truth. This is nearly constant in $\theta$ — by the Proposition above, this is expected, since
+$\mathbf M$ is close to a pure rotation — at approximately $1.5°$–$1.7°$ for all three regions,
+consistent with the mean of each region's measured ascending/descending squint.
 
 ---
 
