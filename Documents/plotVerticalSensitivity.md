@@ -23,7 +23,7 @@ $$
 p_i = \hat n_i \cdot \vec v, \qquad i \in \{A, D\}
 $$
 
-where $\vec v = (v_x, v_y)$ is the horizontal velocity and $p_i$ is the LOS displacement rate
+where $`\vec v = (v_x, v_y)`$ is the horizontal velocity and $p_i$ is the LOS displacement rate
 already scaled to horizontal-velocity units. Writing $\hat n_A$ at angle $\beta$ and $\hat n_D$
 at angle $\alpha+\beta$ (both measured from a common reference direction), the forward model is
 
@@ -52,7 +52,7 @@ the horizontal solution, but that correction is set aside here so the analysis i
 crossing-geometry effect.
 
 For the sensitivity analysis below it is more convenient to reference the pixel azimuth $\phi$ to
-the *mean* heading $H_{\text{mean}}=(H_A+H_D)/2$ rather than to pass $A$ alone:
+the *mean* heading $`H_{\text{mean}}=(H_A+H_D)/2`$ rather than to pass $A$ alone:
 
 $$
 \gamma = \phi - H_{\text{mean}}
@@ -75,19 +75,19 @@ not be substituted into this formula without checking.
 
 ## 2. Two regimes of error propagation
 
-How an error in $p_A,p_D$ propagates into $(v_x,v_y)$ depends qualitatively on whether the error
+How an error in $`p_A,p_D`$ propagates into $`(v_x,v_y)`$ depends qualitatively on whether the error
 is the *same* physical quantity contaminating both measurements, or *independent* noise in each.
 
 ### 2.1 Common-mode error
 
 A common-mode error is a single physical quantity $\delta$ contributing to both measurements,
-generally with different projection factors $w_A,w_D$ for the two geometries:
-$\Delta p_A = w_A\delta$, $\Delta p_D=w_D\delta$. The leading physical example is uncompensated
+generally with different projection factors $`w_A,w_D`$ for the two geometries:
+$`\Delta p_A = w_A\delta`$, $`\Delta p_D=w_D\delta`$. The leading physical example is uncompensated
 vertical motion $v_z$: a vertical rate projects onto each LOS through that pass's own incidence
-angle $\psi_i$, contributing $w_i=\cot\psi_i$ (not simply $1$, which would hold only at
+angle $\psi_i$, contributing $`w_i=\cot\psi_i`$ (not simply $1$, which would hold only at
 $\psi=45°$).
 
-For **equal** contributions ($w_A=w_D=1$, i.e. $\delta$ contaminates both measurements equally),
+For **equal** contributions ($`w_A=w_D=1`$, i.e. $\delta$ contaminates both measurements equally),
 $\mathbf{A}\cdot(\delta,\delta)^T$ reduces via sum-to-product identities to closed form:
 
 $$
@@ -107,7 +107,7 @@ determines which velocity component absorbs more of it.
 
 ### 2.2 Independent error
 
-Independent (uncorrelated) noise $\sigma_{p_A},\sigma_{p_D}$ in the two measurements separately —
+Independent (uncorrelated) noise $`\sigma_{p_A},\sigma_{p_D}`$ in the two measurements separately —
 e.g. random measurement noise with no shared physical source — propagates as the diagonal of the
 output covariance:
 
@@ -116,18 +116,18 @@ $$
 \sigma_{v_y}^2 = A_{10}^2\,\sigma_{p_A}^2 + A_{11}^2\,\sigma_{p_D}^2
 $$
 
-For $\sigma_{p_A}=\sigma_{p_D}$, $\sigma_{v_x}$ and $\sigma_{v_y}$ are the **row norms** of
+For $`\sigma_{p_A}=\sigma_{p_D}`$, $`\sigma_{v_x}`$ and $`\sigma_{v_y}`$ are the **row norms** of
 $\mathbf{A}$ — a fundamentally different combination of $\mathbf{A}$'s entries than the row
 *sums* of §2.1, which is why the two error classes have qualitatively different
 $\gamma$/$\alpha$ dependence.
 
-The covariance formula above keeps $\sigma_{p_A}$ and $\sigma_{p_D}$ separate, so it is exact for
-any incidence angles $\psi_A,\psi_D$. The figure below, however, converts a single raw
+The covariance formula above keeps $`\sigma_{p_A}`$ and $`\sigma_{p_D}`$ separate, so it is exact for
+any incidence angles $`\psi_A,\psi_D`$. The figure below, however, converts a single raw
 per-measurement noise level $\sigma_{dr}$ into $\sigma_p$ using one mean incidence angle,
-$\psi_{\text{mean}}=(\psi_A+\psi_D)/2$, applied identically to both looks — exact only when
-$\psi_A=\psi_D$. For the three example geometries this is a good approximation (both passes use
-the same sensor, with $\psi_A,\psi_D$ within a few tenths of a degree of each other); a fully
-general treatment would instead scale $\sigma_{p_A}$ and $\sigma_{p_D}$ independently by their
+$`\psi_{\text{mean}}=(\psi_A+\psi_D)/2`$, applied identically to both looks — exact only when
+$`\psi_A=\psi_D`$. For the three example geometries this is a good approximation (both passes use
+the same sensor, with $`\psi_A,\psi_D`$ within a few tenths of a degree of each other); a fully
+general treatment would instead scale $`\sigma_{p_A}`$ and $`\sigma_{p_D}`$ independently by their
 own incidence angles before combining them in the covariance formula.
 
 At $\alpha=90°$ exactly, $\sin\alpha=1,\cos\alpha=0$, and $\mathbf{A}$ collapses to
@@ -137,9 +137,9 @@ $$
 $$
 
 — an orthonormal **rotation matrix**. A rotation preserves vector length, so
-$\sigma_{v_x}=\sigma_{v_y}$ at *every* pixel position: perfectly isotropic error propagation,
+$`\sigma_{v_x}=\sigma_{v_y}`$ at *every* pixel position: perfectly isotropic error propagation,
 independent of $\gamma$. Departing from $\alpha=90°$ introduces $\gamma$-dependent anisotropy —
-at $\alpha=170°$ (near-antiparallel), the $\sigma_{v_x}/\sigma_{v_y}$ ratio ranges from
+at $\alpha=170°$ (near-antiparallel), the $`\sigma_{v_x}/\sigma_{v_y}`$ ratio ranges from
 $\approx0.12$ to $\approx8$ depending on $\gamma$, versus exactly $1$ at every $\gamma$ for
 $\alpha=90°$.
 
@@ -163,8 +163,8 @@ Greenland, $\alpha=101°$–$123°$ — meaningfully closer to the favorable $90
 unfavorable $180°$ case) illustrate both regimes side by side, swept over pixel position
 $\gamma$ (0°–360°), with a secondary axis showing the corresponding longitude and a marker at
 each region's actual crossing-point position. Left column: independent-error sensitivity
-$\sigma_{v_x},\sigma_{v_y}$ (m/yr, per metre of equivalent raw LOS noise over a 12-day repeat).
-Right column: common-mode response $\Delta v_x,\Delta v_y$ per 1 m/yr of uncompensated vertical
+$`\sigma_{v_x},\sigma_{v_y}`$ (m/yr, per metre of equivalent raw LOS noise over a 12-day repeat).
+Right column: common-mode response $`\Delta v_x,\Delta v_y`$ per 1 m/yr of uncompensated vertical
 motion.
 
 At all three regions' real crossing-point positions ($\gamma\approx270°$–$288°$), the common-mode
@@ -179,13 +179,13 @@ across-flow one.
 Two distinct measurement techniques commonly supply the LOS displacement rate $p_i$ in the
 inversion above: interferometric phase, and incoherent cross-correlation (speckle) tracking of
 range/azimuth offsets. **The geometric sensitivity derived in §2 applies identically to both** —
-the inversion only sees $p_A,p_D$ and is indifferent to how they were measured. What differs is
+the inversion only sees $`p_A,p_D`$ and is indifferent to how they were measured. What differs is
 the scaling from the raw measurement to $p_i$, and — far more consequentially — the typical
 magnitude of the raw measurement noise itself.
 
 **Interferometric phase** measures range change directly and very precisely:
-$p_i \propto \phi_i/\sin\psi_i$, and the equivalent raw range noise is
-$\sigma_{\delta r} = \frac{\lambda}{4\pi}\sigma_\phi$. At L-band ($\lambda\approx0.24$ m), even a
+$`p_i \propto \phi_i/\sin\psi_i`$, and the equivalent raw range noise is
+$`\sigma_{\delta r} = \frac{\lambda}{4\pi}\sigma_\phi`$. At L-band ($\lambda\approx0.24$ m), even a
 generous $\sigma_\phi\sim0.5$ rad of unwrapped-phase noise corresponds to only
 $\sigma_{\delta r}\sim1$ cm of equivalent range noise.
 

@@ -67,8 +67,8 @@ rapidly — has not been characterized.
 
 Let $\mathbf{A}_0$ be the inversion matrix (§"Geometric setup" in
 [plotVerticalSensitivity.md](plotVerticalSensitivity.md)) built from the assumed broadside
-headings $H_A,H_D$, and $\mathbf{A}_{\text{true}}$ the matrix built from the true,
-squint-corrected headings $H_A+\text{squint}_A,\ H_D+\text{squint}_D$. For a true velocity
+headings $`H_A,H_D`$, and $\mathbf{A}_{\text{true}}$ the matrix built from the true,
+squint-corrected headings $`H_A+\text{squint}_A,\ H_D+\text{squint}_D`$. For a true velocity
 $\vec v_{\text{true}}$, the broadside-assumed inversion computes
 
 $$
@@ -100,14 +100,14 @@ $\theta$ from the pure-axis cases above and from each other (§4).
 
 ## 3. Exact result: equal squint on both looks is a pure rotation
 
-**Proposition.** If both looks share the same squint angle, $\text{squint}_A=\text{squint}_D=s$,
+**Proposition.** If both looks share the same squint angle, $`\text{squint}_A=\text{squint}_D=s`$,
 then $\mathbf{M} = R(s)$ exactly, where $R(s)$ is the $2\times2$ rotation matrix by angle $s$.
 
 **Proof sketch.** The forward model's coefficient matrix
 $N(\alpha,\beta)=\begin{pmatrix}\cos\beta&\sin\beta\\\cos(\alpha+\beta)&\sin(\alpha+\beta)\end{pmatrix}$
 has rows equal to the two looks' ground-projected unit vectors, at angles $\beta$ and
 $\alpha+\beta$ (measured counterclockwise from a fixed reference direction); the inversion matrix
-is $\mathbf{A}=N^{-1}$. With $\beta=\phi-H_A$ and $\alpha=H_A-H_D$ (§"Geometric setup" in
+is $\mathbf{A}=N^{-1}$. With $\beta=\phi-H_A$ and $`\alpha=H_A-H_D`$ (§"Geometric setup" in
 [plotVerticalSensitivity.md](plotVerticalSensitivity.md)), increasing a look's heading $H_i$ by
 $s$ *decreases* its row angle by $s$ — for look $A$, $\beta\to\beta-s$; for look $D$,
 $\alpha+\beta\to(\alpha+\beta)-s$ once $\alpha$'s unchanged value is substituted back in, given
@@ -115,8 +115,8 @@ equal squint on both looks. A row vector at angle $\theta$, right-multiplied by 
 counterclockwise rotation matrix $R(s)=\begin{pmatrix}\cos s&-\sin s\\\sin s&\cos s\end{pmatrix}$,
 becomes $(\cos(\theta-s),\sin(\theta-s))$ — i.e. right-multiplication by $R(s)$ is exactly the
 operation that decreases a row's angle by $s$. Applying this to both rows simultaneously,
-$N_{\text{true}}=N_0\,R(s)$, and therefore
-$\mathbf{M}=\mathbf{A}_0\mathbf{A}_{\text{true}}^{-1}=N_0^{-1}N_{\text{true}}=R(s)$. $\blacksquare$
+$`N_{\text{true}}=N_0\,R(s)`$, and therefore
+$`\mathbf{M}=\mathbf{A}_0\mathbf{A}_{\text{true}}^{-1}=N_0^{-1}N_{\text{true}}=R(s)`$. $\blacksquare$
 
 (The sign here is tied to the specific convention $\beta=\phi-H_A$: a heading correction is
 defined as *added* to the assumed broadside heading, and $\beta$ depends on heading with a minus
@@ -127,9 +127,9 @@ way, but its algebraic sign is convention-dependent, not free-standing.)
 This explains why, in the figures below, the dominant effect of squint on the velocity solution
 is a near-constant *rotation* of the computed flow direction, close in magnitude to the mean of
 the two looks' squint angles — not an arbitrary, orientation-dependent distortion. The departure
-from a pure rotation is governed entirely by the *difference* $\text{squint}_A-\text{squint}_D$;
+from a pure rotation is governed entirely by the *difference* $`\text{squint}_A-\text{squint}_D`$;
 when that difference is small relative to the mean (as in the measured values above), $\mathbf M$
-is close to, but not exactly, $R\big((\text{squint}_A+\text{squint}_D)/2\big)$.
+is close to, but not exactly, $`R\big((\text{squint}_A+\text{squint}_D)/2\big)`$.
 
 ---
 
@@ -138,7 +138,7 @@ is close to, but not exactly, $R\big((\text{squint}_A+\text{squint}_D)/2\big)$.
 ![squint error vs scale factor](images/squintError.png)
 
 Each panel sweeps a scale factor applied to one region's measured
-$(\text{squint}_A,\text{squint}_D)$ pair (1.0 reproduces the measured values exactly, preserving
+$`(\text{squint}_A,\text{squint}_D)`$ pair (1.0 reproduces the measured values exactly, preserving
 the real ascending/descending asymmetry). At the measured squint:
 
 | Region | %error $v_x$ | %error $v_y$ |
@@ -164,12 +164,12 @@ measured ascending/descending squint.
 
 ## 4. The exact correction
 
-A rotation of the *output* $(v_x,v_y)$ by $-(\text{squint}_A+\text{squint}_D)/2$ removes most of
-the error when $\text{squint}_A\approx\text{squint}_D$ — for the measured values, this cuts the
+A rotation of the *output* $`(v_x,v_y)`$ by $`-(\text{squint}_A+\text{squint}_D)/2`$ removes most of
+the error when $`\text{squint}_A\approx\text{squint}_D`$ — for the measured values, this cuts the
 maximum matrix-element error from 2.75% to 0.20%, a $\sim14\times$ reduction — but it is not the
 correct general fix: it degrades as the two looks' squint values diverge, since beyond the
 common-rotation part captured by the Proposition, $\mathbf M$ also has a shear component
-proportional to $\text{squint}_A-\text{squint}_D$ that a single rotation cannot remove.
+proportional to $`\text{squint}_A-\text{squint}_D`$ that a single rotation cannot remove.
 
 The exact correction instead applies each look's own measured squint to that look's own heading
 **before** the inversion matrix is formed:
