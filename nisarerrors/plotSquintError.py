@@ -48,19 +48,22 @@ velocity v_true, mosaic3d computes
 v_computed = A0 @ A_true^-1 @ v_true = M @ v_true.
 
 Two figures are generated:
-  1. (--output) %error in vx/vy for the two pure-axis reference cases
-     (true velocity = pure x-hat or pure y-hat), swept over a scale factor
-     applied to each region's own real measured (squint_A, squint_D) pair
-     (scale=1.0 = real measured values).
-  2. (--outputByDirection) at the real measured squint (scale=1.0), the
+  1. (--output) %error in vx/vy at theta=0/90/45 deg (see below), swept over
+     mean squint angle (deg, x-axis) -- squint_A and squint_D are scaled
+     together so each region's own real measured ratio between them is
+     preserved at every point on the curve, up to 1.5x the real values.
+  2. (--outputByDirection) at the real measured squint, the
      error decomposed as a function of true flow ORIENTATION theta (0-360
-     deg): speed % error (oscillates with theta, period 180 deg) and
-     direction error in degrees (nearly CONSTANT regardless of theta,
-     ~1.5-1.7 deg for all 3 regions). The near-constancy of the direction
-     error is because M = A0 @ A_true^-1 is dominated by its antisymmetric
-     part (M[0,1] ~= -M[1,0], much larger than M[0,0]-1 or M[1,1]-1) --
-     i.e. M is close to a pure small-angle rotation matrix, and a rotation
-     rotates every input vector by the same angle regardless of its
+     deg). Left column: speed % error, plus vx/vy % error (each component's
+     (computed - true) error, normalized by the true speed -- same
+     normalization as speed % error, well-defined even where a component
+     passes through zero) -- all three oscillate with theta (period 180
+     deg). Right column: direction error in degrees (nearly CONSTANT
+     regardless of theta, ~1.5-1.7 deg for all 3 regions). The near-constancy
+     of the direction error is because M = A0 @ A_true^-1 is dominated by its
+     antisymmetric part (M[0,1] ~= -M[1,0], much larger than M[0,0]-1 or
+     M[1,1]-1) -- i.e. M is close to a pure small-angle rotation matrix, and a
+     rotation rotates every input vector by the same angle regardless of its
      direction. See Documents/plotSquintError.md for the full writeup.
 
 Usage:
@@ -144,20 +147,36 @@ def trueMatrix(H_A0, H_D0, phi_real, squintA, squintD, scale):
     return computeA(alpha_t, beta_t)
 
 
+def errorAtTheta(M, thetaDeg):
+    """Speed/vx/vy % error and direction error (deg) of M @ vhat(thetaDeg), for a
+    single true-flow orientation. vx/vy % error is (computed - true) component,
+    normalized by the true SPEED (always 1.0, since vhat is a unit vector) rather
+    than by the true component itself -- the same normalization speed % error
+    already uses, and one that stays well-defined as either true component passes
+    through zero. At thetaDeg=0 this reduces to (M[0,0]-1)*100 (Figure 1's pure-x
+    case); at thetaDeg=90, (M[1,1]-1)*100 (Figure 1's pure-y case)."""
+    th = np.radians(thetaDeg)
+    vhat = np.array([np.cos(th), np.sin(th)])
+    vcomp = M @ vhat
+    speedErrPct = (np.linalg.norm(vcomp) - 1.0) * 100.0
+    vxErrPct = (vcomp[0] - vhat[0]) * 100.0
+    vyErrPct = (vcomp[1] - vhat[1]) * 100.0
+    diff = np.degrees(np.arctan2(vcomp[1], vcomp[0]) - th)
+    angErrDeg = ((diff + 180) % 360) - 180   # wrap to (-180, 180]
+    return speedErrPct, vxErrPct, vyErrPct, angErrDeg
+
+
 def errorByDirection(M, nTheta=N_THETA_POINTS):
-    """Speed % error and direction error (deg) of M @ vhat(theta), swept over
-    every true-flow orientation theta (0-360 deg)."""
+    """Speed/vx/vy % error and direction error (deg) of M @ vhat(theta), swept
+    over every true-flow orientation theta (0-360 deg) -- see errorAtTheta."""
     thetaDeg = np.linspace(0, 360, nTheta)
-    thetas = np.radians(thetaDeg)
-    speedErrPct = np.empty_like(thetas)
-    angErrDeg = np.empty_like(thetas)
-    for i, th in enumerate(thetas):
-        vhat = np.array([np.cos(th), np.sin(th)])
-        vcomp = M @ vhat
-        speedErrPct[i] = (np.linalg.norm(vcomp) - 1.0) * 100.0
-        diff = np.degrees(np.arctan2(vcomp[1], vcomp[0]) - th)
-        angErrDeg[i] = ((diff + 180) % 360) - 180   # wrap to (-180, 180]
-    return thetaDeg, speedErrPct, angErrDeg
+    speedErrPct = np.empty_like(thetaDeg)
+    vxErrPct = np.empty_like(thetaDeg)
+    vyErrPct = np.empty_like(thetaDeg)
+    angErrDeg = np.empty_like(thetaDeg)
+    for i, th in enumerate(thetaDeg):
+        speedErrPct[i], vxErrPct[i], vyErrPct[i], angErrDeg[i] = errorAtTheta(M, th)
+    return thetaDeg, speedErrPct, vxErrPct, vyErrPct, angErrDeg
 
 
 def main():
@@ -183,59 +202,73 @@ def main():
         A0, H_A0, H_D0, phi_real, squintA_real, squintD_real = regionGeometry(
             label, relGeojsonA, relGeojsonD, args.projectDir)
 
+        # Sweep both squint_A and squint_D together, scaled by the same factor,
+        # so their real measured ratio (the actual asc/desc asymmetry) is
+        # preserved at every point -- but plot directly against the resulting
+        # mean squint angle in degrees rather than the dimensionless factor
+        # itself, since that's what's physically varying and needs no
+        # secondary axis or title lookup to interpret.
+        meanSquintReal = 0.5 * (squintA_real + squintD_real)
+        meanSquintDeg = scales * meanSquintReal
+
         pctErrVx = np.empty_like(scales)
         pctErrVy = np.empty_like(scales)
+        pctErrVx45 = np.empty_like(scales)
+        pctErrVy45 = np.empty_like(scales)
         for i, scale in enumerate(scales):
             A_true = trueMatrix(H_A0, H_D0, phi_real, squintA_real, squintD_real, scale)
             M = A0 @ np.linalg.inv(A_true)
-            pctErrVx[i] = (M[0, 0] - 1.0) * 100.0
-            pctErrVy[i] = (M[1, 1] - 1.0) * 100.0
+            _, pctErrVx[i], _, _ = errorAtTheta(M, 0.0)
+            _, _, pctErrVy[i], _ = errorAtTheta(M, 90.0)
+            _, pctErrVx45[i], pctErrVy45[i], _ = errorAtTheta(M, 45.0)
 
         print(f'{label}: squint_asc={squintA_real:.4f} deg  squint_desc={squintD_real:.4f} deg  '
               f'%error_vx range=[{pctErrVx.min():.3f},{pctErrVx.max():.3f}]  '
-              f'%error_vy range=[{pctErrVy.min():.3f},{pctErrVy.max():.3f}]')
+              f'%error_vy range=[{pctErrVy.min():.3f},{pctErrVy.max():.3f}]  '
+              f'%error_vx(45deg) range=[{pctErrVx45.min():.3f},{pctErrVx45.max():.3f}]  '
+              f'%error_vy(45deg) range=[{pctErrVy45.min():.3f},{pctErrVy45.max():.3f}]')
 
         ax = axes1[row]
-        ax.plot(scales, pctErrVx, label=r'$\%$error $v_x$', color='C0')
-        ax.plot(scales, pctErrVy, label=r'$\%$error $v_y$', color='C1')
+        ax.plot(meanSquintDeg, pctErrVx, label=r'$\%$error $v_x$ ($\theta{=}0°$)', color='C0')
+        ax.plot(meanSquintDeg, pctErrVy, label=r'$\%$error $v_y$ ($\theta{=}90°$)', color='C1')
+        ax.plot(meanSquintDeg, pctErrVx45, label=r'$\%$error $v_x$ ($\theta{=}45°$)', color='C0', ls='--')
+        ax.plot(meanSquintDeg, pctErrVy45, label=r'$\%$error $v_y$ ($\theta{=}45°$)', color='C1', ls='--')
         ax.axhline(0.0, color='gray', lw=0.5, ls=':')
-        ax.axvline(1.0, color='k', lw=1.2, ls='--',
+        ax.axvline(meanSquintReal, color='k', lw=1.2, ls='--',
                   label='real measured squint' if row == 0 else None)
         ax.set_ylabel(f'{label}\n% error')
         ax.grid(alpha=0.3)
         if row == 0:
             ax.legend(fontsize=8, loc='upper left')
-        ax.set_title(f'real squint: asc={squintA_real:.2f}°  desc={squintD_real:.2f}°', fontsize=9)
-
-        def scaleToSquintDeg(s, _sq=squintA_real):
-            return s * _sq
-
-        def squintDegToScale(deg, _sq=squintA_real):
-            return deg / _sq
-
-        sec = ax.secondary_xaxis('top', functions=(scaleToSquintDeg, squintDegToScale))
-        sec.set_xlabel('Ascending squint angle (deg)' if row == 0 else '', fontsize=8)
-        sec.tick_params(labelsize=7)
+        ax.set_title(f'real squint: asc={squintA_real:.2f}°  desc={squintD_real:.2f}°  '
+                    f'(mean={meanSquintReal:.2f}°, dashed line)', fontsize=9)
 
         # Second figure: error decomposed by true-flow orientation, at the real measured squint
         M_real = A0 @ np.linalg.inv(
             trueMatrix(H_A0, H_D0, phi_real, squintA_real, squintD_real, 1.0))
-        thetaDeg, speedErrPct, angErrDeg = errorByDirection(M_real)
+        thetaDeg, speedErrPct, vxErrPct, vyErrPct, angErrDeg = errorByDirection(M_real)
 
         print(f'  speed %err=[{speedErrPct.min():.3f},{speedErrPct.max():.3f}]  '
+              f'vx %err=[{vxErrPct.min():.3f},{vxErrPct.max():.3f}]  '
+              f'vy %err=[{vyErrPct.min():.3f},{vyErrPct.max():.3f}]  '
               f'direction err=[{angErrDeg.min():.3f},{angErrDeg.max():.3f}] deg')
 
         ax1, ax2 = axes2[row]
-        ax1.plot(thetaDeg, speedErrPct, color='C0')
+        ax1.plot(thetaDeg, speedErrPct, label='speed' if row == 0 else None, color='C0')
+        ax1.plot(thetaDeg, vxErrPct, label=r'$v_x$' if row == 0 else None, color='C1')
+        ax1.plot(thetaDeg, vyErrPct, label=r'$v_y$' if row == 0 else None, color='C3')
         ax1.axhline(0, color='gray', lw=0.5, ls=':')
-        ax1.set_ylabel(f'{label}\nspeed % error')
+        ax1.set_ylabel(f'{label}\n% error')
         ax1.grid(alpha=0.3)
+        if row == 0:
+            ax1.legend(fontsize=8, loc='upper right')
         ax2.plot(thetaDeg, angErrDeg, color='C2')
         ax2.axhline(0, color='gray', lw=0.5, ls=':')
         ax2.set_ylabel('direction error (deg)')
         ax2.grid(alpha=0.3)
 
-    axes1[-1].set_xlabel('Scale factor (1.0 = real measured squint)')
+    axes1[-1].set_xlabel('Mean squint angle, (squint_A+squint_D)/2 (deg) -- '
+                         'squint_A/squint_D scaled together, real ratio preserved')
     fig1.tight_layout()
     fig1.savefig(args.output, dpi=150)
     print(f'Written: {args.output}')

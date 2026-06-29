@@ -135,25 +135,37 @@ is close to, but not exactly, $`R\big((\text{squint}_A+\text{squint}_D)/2\big)`$
 
 ## Figure 1 — error vs. squint magnitude, pure-axis cases
 
-![squint error vs scale factor](images/squintError.png)
+![squint error vs mean squint angle](images/squintError.png)
 
-**Figure 1.** One panel per region (North/Central/South). Each panel sweeps a scale factor (x-axis, 0 to 1.5)
-applied to that region's measured $`(\text{squint}_A,\text{squint}_D)`$ pair — 1.0 reproduces the
-measured values exactly, preserving the real ascending/descending asymmetry, while other values
-along the x-axis show how the error would change if the true squint were smaller or larger than
-measured. The two curves plotted are the "pure-axis" reference cases from §2: $`\%\text{error}_{v_x}`$
-assumes the true velocity is purely along $\hat x$ (so it isolates $`M_{00}`$, the error in
-recovering an $x$-directed flow), and $`\%\text{error}_{v_y}`$ assumes the true velocity is purely
-along $\hat y$ (isolating $`M_{11}`$) — two specific, tractable special cases standing in for the
-general, orientation-dependent error of Figure 2. At the measured squint (scale = 1.0):
+**Figure 1.** One panel per region (North/Central/South). Each panel sweeps the mean squint angle
+(x-axis, degrees) from 0 up to 1.5× its real measured value — $`\text{squint}_A`$ and
+$`\text{squint}_D`$ are scaled together by the same factor at every point, so the real
+ascending/descending asymmetry (their ratio) is preserved throughout, not just at the real value
+itself (marked by the vertical dashed line, annotated with that region's actual
+$`\text{squint}_A`$/$`\text{squint}_D`$ in the title). Solid curves are the "pure-axis" reference
+cases from §2: $`\%\text{error}_{v_x}`$ ($\theta{=}0°$) assumes the true velocity is purely along
+$\hat x$ (so it isolates $`M_{00}`$, the error in recovering an $x$-directed flow), and
+$`\%\text{error}_{v_y}`$ ($\theta{=}90°$) assumes the true velocity is purely along $\hat y$
+(isolating $`M_{11}`$). These two are deceptively small, because at $\theta{=}0°$ only $M_{00}$
+contributes to $v_x$ error and $M_{11}$ never enters at all (and vice versa at $\theta{=}90°$) —
+each pure-axis case structurally hides the off-diagonal (cross-axis leakage) term that the *other*
+component would pick up. Dashed curves add a third orientation, $\theta{=}45°$ (true velocity
+equally split between $\hat x$ and $\hat y$), where *both* the diagonal and off-diagonal terms of
+$\mathbf M$ contribute to each component's error — this is a single, fixed-orientation slice
+through the same full sweep Figure 2 shows continuously, and it is consistently several times
+larger than either pure-axis curve. At the real measured squint:
 
-| Region | %error $`v_x`$ | %error $`v_y`$ |
-|---|---|---|
-| North | +0.05% | −0.18% |
-| Central | +0.08% | −0.26% |
-| South | +0.05% | −0.36% |
+| Region | %error $`v_x`$ ($\theta{=}0°$) | %error $`v_y`$ ($\theta{=}90°$) | %error $`v_x`$ ($\theta{=}45°$) | %error $`v_y`$ ($\theta{=}45°$) |
+|---|---|---|---|---|
+| North | +0.05% | −0.18% | −1.85% | +1.87% |
+| Central | +0.08% | −0.26% | −1.88% | +1.76% |
+| South | +0.05% | −0.35% | −1.92% | +1.69% |
 
-All sub-percent; $`v_y`$ is consistently more sensitive than $`v_x`$ at these crossing geometries.
+The pure-axis cases are sub-percent; the 45° case is not — it's roughly $`\sin(\text{mean
+squint})`$, an order of magnitude larger, for the same reason the off-diagonal terms show up large
+in Figure 2 away from $\theta=0°/90°$. $`v_y`$ is consistently more sensitive than $`v_x`$ in the
+pure-axis cases at these crossing geometries; at 45° the two are comparable, since both now draw
+on the same mix of diagonal and off-diagonal terms.
 
 ## Figure 2 — error vs. true flow direction, at the measured squint
 
@@ -163,9 +175,19 @@ All sub-percent; $`v_y`$ is consistently more sensitive than $`v_x`$ at these cr
 cases, this figure fixes the squint at its measured value and instead sweeps every possible true
 flow direction $\theta$ (x-axis, 0°–360°, the angle of $`\vec v_{\text{true}}`$ counterclockwise
 from $\hat x$) to show the full, orientation-dependent error rather than just the two special
-cases. Left column: speed error, $`(\lVert\mathbf{M}\hat v(\theta)\rVert-1)\times100`$ — how much
-the computed speed is off, regardless of direction — which oscillates sinusoidally with $\theta$
-(period $180°$), ranging from about $-0.17\%/+0.12\%$ (North) to $-0.31\%/+0.09\%$ (South). Right
+cases. Left column: three curves, all normalized by the true *speed* (so they stay well-defined
+even where a component's own true value passes through zero) —
+speed error, $`(\lVert\mathbf{M}\hat v(\theta)\rVert-1)\times100`$, how much the computed speed is
+off regardless of direction; and $`v_x`$/$`v_y`$ error, $`(\mathbf{M}\hat v(\theta) -
+\hat v(\theta))_{x,y}\times100`$, the error in each Cartesian component individually. All three
+oscillate sinusoidally with $\theta$ (period $180°$ for speed, $v_x$ and $v_y$ 90° out of phase
+with each other). Speed error stays small — about $-0.17\%/+0.12\%$ (North) to
+$-0.31\%/+0.09\%$ (South) — because $\mathbf M$ is close to a pure rotation, which barely changes
+a vector's *norm*. The individual components are not protected the same way: wherever the true
+flow direction makes one component near zero, a rotation by the squint angle still mixes in a
+piece of the other component at full strength, so $v_x$/$v_y$ error swings about
+$\pm2.7\%$–$\pm2.8\%$ for all three regions — roughly $\sin(\text{mean squint})$, an order of
+magnitude larger than the speed error despite coming from the same matrix $\mathbf M$. Right
 column: direction error, the angle between the computed velocity $\mathbf M\hat v(\theta)$ and the
 true direction $\hat v(\theta)$ — how much the computed flow direction is rotated away from the
 truth. This is nearly constant in $\theta$ — by the Proposition above, this is expected, since
