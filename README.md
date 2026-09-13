@@ -17,6 +17,21 @@ zero-Doppler processing. It computes the resulting $\%$ error in $(v_x, v_y)$ at
 same three real crossing-point locations, over a range of squint/PRF ratios, using a rigorous
 (non-approximated) nonzero-Doppler geocoding solve.
 
+**makeS1Reference** builds and caches a Sentinel-1 reference velocity field (the temporal mean
+of the NSIDC-0725 annual Greenland mosaics, plus the inter-annual sigma and per-pixel valid-epoch
+count) so that repeated calibration runs do not re-read the remote stack.
+
+**compareToS1** compares a NISAR velocity mosaic against that reference over stable terrain and
+reports whether `mosaic3d`'s formal errors describe the observed differences. Beyond the obvious
+ratio it reports `kDecile` — the error ratio computed within deciles of the formal error — which
+distinguishes a formal error that is merely scaled wrong (flat) from one that is missing a term
+added in quadrature (declining), and a semivariogram that distinguishes short-correlation
+matching noise from long-correlation ionospheric or ramp error. Those two diagnostics imply
+different fixes, and a single ratio cannot tell them apart.
+
+**velErrorStats** is the statistics library behind `compareToS1`, kept numpy/xarray-only so it
+can be imported from a notebook without EarthData credentials.
+
 ## Installation
 
 ```bash
@@ -25,6 +40,10 @@ pip install git+https://github.com/fastice/nisarErrors.git@main
 
 ## Documentation
 
+- [makeS1Reference](Documents/makeS1Reference.md) — what is cached and why, the grid, and the
+  rioxarray/GDAL and login gotchas
+- [compareToS1](Documents/compareToS1.md) — the statistics, what `kDecile` and the semivariogram
+  each decide, and the point-sample vs average resolution caveat
 - [plotVerticalSensitivity](Documents/plotVerticalSensitivity.md) — usage, and the
   crossing-geometry error-analysis theory (common-mode vs. independent-error propagation,
   the $\tan\gamma$ and rotation-matrix-isotropy results) behind the plots

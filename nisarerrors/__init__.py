@@ -1,1 +1,2 @@
-__all__ = ['plotVerticalSensitivity']
+__all__ = ['plotVerticalSensitivity', 'plotSquintError',
+           'makeS1Reference', 'velErrorStats', 'compareToS1']

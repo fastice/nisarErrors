@@ -165,7 +165,8 @@ def sensitivities(alpha_deg, gamma_deg, psi_A_deg, psi_D_deg):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__,
+    p = argparse.ArgumentParser(
+        epilog='Part of the nisarErrors package.',description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--projectDir', default=DEFAULT_PROJECT_DIR,
                   help=f'Root directory containing the track-N/ example geodats '

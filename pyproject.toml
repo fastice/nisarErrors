@@ -18,7 +18,12 @@ dependencies = [
     "numpy",
     "matplotlib",
     "gdal",
-    "utilities"
+    "utilities",
+    "pyyaml",
+    # makeS1Reference only: fetching/reducing the remote S1 stack.  velErrorStats
+    # deliberately needs none of these so it stays importable without credentials.
+    "nisardev",
+    "grimpfunc"
 ]
 
 [tool.setuptools]
@@ -31,3 +36,5 @@ Repository = "https://github.com/fastice/nisarErrors"
 [project.scripts]
 plotVerticalSensitivity = "nisarerrors.plotVerticalSensitivity:main"
 plotSquintError = "nisarerrors.plotSquintError:main"
+makeS1Reference = "nisarerrors.makeS1Reference:main"
+compareToS1 = "nisarerrors.compareToS1:main"
