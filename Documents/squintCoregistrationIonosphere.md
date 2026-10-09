@@ -12,15 +12,16 @@ to make NISAR RUNW products.
 **Summary of results**
 
 1. A zero-Doppler focused SLC records, at each target's image peak, the phase of the
-   **closest-approach (zero-Doppler) range**. Squint does not enter the peak phase; it enters only
-   through the azimuth **Doppler carrier** of the impulse response.
+   **closest-approach (zero-Doppler) range**. In the azimuth-only, small-squint model used here (§2), squint does
+   not enter the peak phase; it enters only through the azimuth **Doppler carrier** of the impulse
+   response.
 2. The carrier converts any azimuth **misregistration** between the coregistered secondary and the
    target's true position into phase. The interferometric phase is therefore
    $$\Delta\phi = \Delta\phi_{\text{zero-Doppler}} - 2\pi f_{dc}\,(c-d)$$
    where $c$ is the coregistration shift applied and $d$ the target's true along-track shift (in time).
    Coregistration that follows the target ($c=d$) gives broadside (zero-Doppler) sensitivity; fixed,
    geometry-only coregistration ($c=0$) gives the squinted line-of-sight sensitivity.
-3. NISAR RUNW products are rubbersheeted with dense offsets, so smooth along-track ice motion does
+3. The NISAR RUNW products examined here (ISCE3 v0.25.8, rubbersheet coregistration) are rubbersheeted with dense offsets, so smooth along-track ice motion does
    **not** leak into the phase. The `-useSquint` correction in `mosaic3d` assumes it does, and would
    add a ≈1.6° rotation error to phase-derived velocities. Moving-ice data reject that premise (§6.4),
    and crossing-orbit phase directions agree with squint-free range-offset directions only without
@@ -29,7 +30,7 @@ to make NISAR RUNW products.
    shift is frequency dependent this makes split-spectrum return the screen at **beam-centre** time
    while the main-band phase holds it extrapolated to **zero-Doppler** time. The corrected phase keeps
    a residual $`-2\pi f_{dc}\,s`$, where $s$ is the ionospheric azimuth shift: ≈0.9 rad per metre of shift
-   for NISAR. Both the carrier term and the double counting are confirmed in RUNW data (§6.2, §6.3).
+   for NISAR. The RUNW data are consistent with both the carrier term and this residual (§6.2, §6.3).
 5. The $`-2\pi f_{dc}\,c`$ term is directly visible in NISAR RUNW phase, at the predicted slope of
    $`-2\pi f_{dc}/V_g\approx-0.9`$ rad/m (§6).
 
@@ -44,14 +45,14 @@ to make NISAR RUNW products.
 | $t$ | azimuth (zero-Doppler) time | |
 | $V$, $`V_g`$ | platform speed, ground-track speed at the target | 7558 m/s, ≈6800 m/s |
 | $`f_{dc}`$ | Doppler centroid at $`f_0`$ | 960–976 Hz |
-| $\psi$ | squint, $`\sin\psi=\lambda f_{dc}/2V`$ | 0.87–0.88° (3-D); ≈1.4–1.9° projected on the ground |
+| $\psi$ | 3-D squint relative to the platform velocity, $`\sin\psi=\lambda f_{dc}/2V`$ | 0.87–0.88° ($`\sin\psi\approx0.0153`$); ≈1.4–1.9° when projected on the ground |
 | $`k_a`$ | azimuth FM rate, $`\approx -2V V_g/\lambda R`$ | ≈ −464 Hz/s |
 | $`\tau_c=t_c-t_0=f_{dc}/k_a`$ | beam-centre time minus zero-Doppler time | ≈ −2.1 s (beam centre *before* zero Doppler) |
 | $c$, $d$, $s$ | coregistration shift; true non-dispersive (motion) shift; ionospheric shift — all azimuth time, secondary relative to reference | |
 | $`\Phi_{\text{bc}}`$, $`\Phi_{\text{zd}}`$ | differential ionospheric phase screen (radians at $`f_0`$), evaluated at beam-centre time $`t_c`$ / extrapolated to zero-Doppler time $`t_0`$ | differ by $`2\pi f_{dc}s_0`$ (§5.1) |
 | $`\Phi_{\text{SS}}`$ | the RUNW `ionospherePhaseScreen` (split-spectrum estimate, filtered) | |
 | $`s_0`$, $`s_f`$ | ionospheric azimuth shift (s) at $`f_0`$ / at band frequency $f$ (subscripts on $s$, $f$, $\lambda$ denote frequency; on $\Phi$ and $t$, time) | |
-| $`\kappa=\lambda f_{dc}/2V_g`$ | range error per metre of uncompensated along-track misregistration | 0.017 |
+| $`\kappa=\lambda f_{dc}/2V_g=(V/V_g)\sin\psi`$ | range change per metre of uncompensated along-track ground misregistration (dimensionless). Not equal to $\sin\psi$, because a ground shift of $`\Delta a`$ is a time shift of $`\Delta a/V_g`$, during which the platform moves $`(V/V_g)\Delta a`$ | 0.0170 |
 | $`2\pi f_{dc}/V_g`$ | the same in phase | 0.90 rad/m |
 
 Conventions: SLC phase $e^{-j4\pi R/\lambda}$; interferogram reference × conj(secondary); shifts are
@@ -82,6 +83,13 @@ $$
 
 So the phase of a zero-Doppler image is a broadside measurement *at the peak*. Any squint
 dependence must come from where the peak is sampled, which is decided by coregistration.
+
+*Scope of this model.* Eq. (1) is the azimuth cut of the impulse response. The full squinted 2-D
+response also has range–azimuth coupling and a range phase ramp (Bara et al., 2000,
+[doi:10.1109/36.868875](https://doi.org/10.1109/36.868875)). These matter when range alignment changes. The derivation assumes that
+reference and secondary are sampled at corresponding range positions, or that those terms are
+negligible. That is reasonable at NISAR's ≈0.9° squint, but the azimuth-only argument does not by
+itself establish the full 2-D phase behaviour.
 
 **Implication:** squint by itself does not change what zero-Doppler phase measures. Any squint dependence comes from where coregistration samples the secondary relative to its peak.
 
@@ -121,9 +129,9 @@ the phase is lost, but does not change Eq. 2.)
 
 | Coregistration | $c$ | Phase sensitivity |
 |---|---|---|
-| Geometry only (DEM + orbits) | 0 | $`\Delta r_0 + \kappa\,\Delta a`$: the range change seen from a **fixed** platform position, i.e. the squinted line of sight. With $\kappa\approx\sin\psi$ this is the familiar $`\Delta r_0\cos\psi+\Delta a\sin\psi`$ ($\cos\psi\approx1-4\times10^{-4}$ here) |
+| Geometry only (DEM + orbits) | 0 | $`\Delta r_0 + \kappa\,\Delta a`$: the range change seen from a **fixed** platform position, i.e. the squinted line of sight. This is the familiar $`\Delta r_0\cos\psi'+\Delta a\sin\psi'`$ with $`\sin\psi'=\kappa=(V/V_g)\sin\psi`$ (the line-of-sight along-track component at the target, 0.0170, not the platform-frame $`\sin\psi=0.0153`$). The $\cos$ factor is negligible: $`1-\kappa^2/2\approx1-1.4\times10^{-4}`$ |
 | Follows the target (rubbersheet with dense offsets) | $d$ | $`\Delta r_0`$ only: broadside, zero-Doppler |
-| Partial (smoothed rubbersheet) | $d-\varepsilon$ | $`\Delta r_0 + \kappa\,\varepsilon`$: leakage of the *unfollowed* motion only |
+| Partial (smoothed rubbersheet) | $d-\varepsilon$ | $`\Delta r_0 + \kappa V_g\varepsilon`$: leakage of the *unfollowed* motion only ($`V_g\varepsilon`$ in ground metres) |
 
 Both limits are physically correct; they answer different questions. A fixed-pixel interferogram
 measures range change from a fixed point in space and therefore sees the squinted line of sight. A
@@ -136,8 +144,9 @@ to offsets.
 **NISAR numbers.** $\kappa = 0.017$. One metre of along-track motion missed by the coregistration
 gives 1.7 cm of apparent range, 0.9 rad of phase, or ≈0.5 m/yr of line-of-sight velocity for a
 12-day pair. NISAR's azimuth resolution is ≈7 m, so without a motion-following rubbersheet, ice
-faster than ≈200 m/yr would decorrelate in 12 days. Wherever fast ice is coherent in a RUNW, the
-coregistration has necessarily followed it.
+faster than ≈200 m/yr would be misregistered by about a resolution cell in 12 days and lose much of
+its coherence. This is not a hard threshold. Coherent fast ice in a RUNW indicates the coregistration
+largely followed the motion, but does not prove exact peak following.
 
 **Implication:** when the coregistration follows the motion, as in NISAR RUNWs, phase measures closest-approach range change, so use broadside (zero-Doppler) geometry. The squinted-line-of-sight formula applies only to fixed-pixel (geometry-only) coregistration. Offsets never need a squint correction.
 
@@ -169,7 +178,10 @@ smooth leakage with no discontinuity to reveal it.
 
 ### 4.2 Strongly squinted acquisitions (e.g. ±45°)
 
-Equation (2) is unchanged. Only the numbers grow:
+The local carrier–misregistration principle still applies, but the small-squint expressions above
+cannot simply be extended by substituting a larger Doppler centroid. At ±45° the range–azimuth
+coupling, the nonlinear phase history, the different line-of-sight geometry and orbit curvature need
+a fuller model. The numbers below are first-order, order-of-magnitude scalings only:
 
 | | NISAR ($\psi\approx0.9°$) | $\psi=45°$, L-band |
 |---|---|---|
@@ -227,8 +239,12 @@ $$
 Equation (4) is the central result. It splits the phase into a **non-dispersive** part, ∝ $f$, and a
 **dispersive** part, ∝ $1/f$:
 
-- The **dispersive part is $`\Phi_{\text{bc}}`$, independent of coregistration**. Split-spectrum, which separates
-  ∝ $f$ from ∝ $1/f$, always returns the screen at beam-centre time.
+- Under the assumptions of this derivation, the **dispersive part is $`\Phi_{\text{bc}}`$, whatever the common
+  shift $c$**. Those assumptions are: a locally linear ionospheric ramp, one shift applied to all
+  bands, fixed-squint frequency scaling, and consistent sub-band sampling and phase conventions.
+  Split-spectrum, which separates ∝ $f$ from ∝ $1/f$, then returns the screen at beam-centre time.
+  This is not universal: for arbitrary screens, different apertures or frequency-dependent warps it
+  can differ. The per-band row of §5.3 is one exception.
 - The **coregistration leakage is non-dispersive**. Ice leakage, $`-2\pi f_{dc}(c-d)`$, is ∝ $f$ like
   motion, so split-spectrum leaves it in place.
 - With $c=0$ the main band holds $`\Phi_{\text{bc}}`$: a fixed-pixel interferogram samples the ionosphere where
@@ -246,7 +262,10 @@ Writing $c$ in terms of what the coregistration follows:
 | $d$ (follow ice, not ionosphere) | $`\Phi_{\text{bc}}`$ | $`\Phi_{\text{bc}}`$ | 0 ✓ |
 | $`d+s_f`$ per band (each band on its own peak) | $`\Phi_{\text{zd}}`$ | $`\Phi_{\text{zd}}`$ | 0 ✓ |
 
-The mechanism of the double counting is as follows. The rubbersheet removes the ionospheric
+"Double counting" here is shorthand for **a residual carrier phase that is excluded from the
+dispersive estimate**. The azimuth effect of the ionosphere is compensated by the coregistration but
+is then not reflected in the screen; no TEC is literally counted twice. The mechanism is as
+follows. The rubbersheet removes the ionospheric
 misregistration from the main band, so the main band holds $`\Phi_{\text{zd}}`$. Each sub-band, however, is
 displaced by about ±4% of $`s_0`$ from its own peak (Eq. 3). Through the carrier this gives a small
 phase difference between the sub-bands, which split-spectrum amplifies by roughly the inverse of that
@@ -266,7 +285,10 @@ indistinguishable from real non-dispersive signal.
   amplified by split-spectrum (≈12×) reach ≈1 rad. An iteration works: estimate the screen,
   predict $s$, resample per band, re-estimate.
 - **Correct afterwards (simplest):** add $`2\pi f_{dc}(c-d)`$ to the split-spectrum-corrected phase,
-  with $c$ the applied rubbersheet shift and $d$ from a velocity model. This removes double counting
+  with $c$ the applied residual shift beyond geometric registration and $d$ from a velocity model, both
+  in seconds. Equivalently, in ground metres, add $`(2\pi f_{dc}/V_g)(\Delta a_c-\Delta a_{\text{model}})`$. The
+  remaining error is $`2\pi f_{dc}(d_{\text{true}}-d_{\text{model}})`$ in phase, i.e.
+  $`\kappa(\Delta a_{\text{true}}-\Delta a_{\text{model}})`$ in range. This removes the residual carrier
   and residual ice leakage together. In the slow interior, where $d$ is small and smooth, it reduces
   to adding $`(2\pi f_{dc}/V_g)`$ × the rubbersheet along-track offset.
 
@@ -287,7 +309,11 @@ v0.25.8:<path>` in `~/isce3`; HEAD is 0.26-dev and differs in `rubbersheet.py`, 
 - **Rubbersheet:** median-filter culling (9×9, 0.75 px), `fill_smoothed`, then a 5×5 boxcar on the
   dense grid, interpolated bilinearly and added to the geo2rdr offsets. The RUNW
   `pixelOffsets/alongTrackOffset` is this culled, filled, filtered residual field (excluding geometry),
-  in ground metres, as secondary minus reference. In other words, it is the applied $`\Delta a_c`$.
+  in ground metres, as secondary minus reference (`rubbersheet.py:352-386` at v0.25.8). The applied SLC-grid warp
+  is this field interpolated bilinearly and added to the geo2rdr offsets. So the layer should equal
+  the applied $`\Delta a_c`$ on the dense grid. This rests on reading the source with default settings.
+  It has not been verified bit-for-bit against a product, and the products' embedded run
+  configuration is empty. Verify it before any operational correction (§8).
 - **Screen estimate:** `main_diff_low_high_subband` combines the main-band unwrapped phase with the
   unwrapped high × conj(low) difference. It is filtered with an inverse-variance-weighted Gaussian
   (kernel 100, σ = 33 RUNW pixels ≈ 2.4 km in azimuth, 1 iteration). `unwrap_correction` is on by
@@ -355,8 +381,11 @@ On rock $d=0$, so by Eq. (4) the split-spectrum-corrected phase is $`-2\pi f_{dc
 ionospheric structure the screen does not resolve, troposphere and noise. The rubbersheet offset $c$
 over rock is the ionospheric azimuth shift plus a constant. To isolate the carrier term, both fields
 are high-passed with the same rock-pixel mask (normalised Gaussian, σ = 50 RUNW pixels ≈ 3.6 km), which
-keeps the azimuth streaks. A phase screen and its own along-track gradient are uncorrelated at these
-scales, so pure ionosphere predicts no correlation between the high-passed phase and $c$. The carrier
+keeps the azimuth streaks. For a statistically stationary screen, a phase screen and its own
+along-track gradient have zero covariance in expectation. Pure ionosphere therefore predicts no
+*systematic* correlation between the high-passed phase and $c$. Finite, masked, weighted samples
+can show chance correlation, but a chance correlation would not have a consistent sign and magnitude
+across 16 frames, both pass directions and three regions. The carrier
 predicts a slope of $`-2\pi f_{dc}/V_g = -0.89`$ to $-0.92$ rad/m, computed per frame from its own
 $`f_{dc}`$ and $`V_g`$.
 
@@ -380,8 +409,8 @@ sorted by streak strength. Crosses show the slope of the split-spectrum screen a
 Nine of the 16 frames give −0.74 to −0.89 rad/m. Seven give −0.05 to −0.41, and these include most
 frames with the strongest streaks: sd(c) of 1.1–4.3 m, often in coastal relief where rock unwrapping
 is least reliable. Filtering $c$ as ISCE3 does (median culling, then boxcar) did not restore their
-slopes, so noise in the offsets is not the explanation. At longer wavelengths (§6.3) the same frames
-show the full slope, so the departure is a short-wavelength effect. No frame has the opposite sign. Over slow interior ice the same test is dominated by km-scale flow features common to
+slopes. That argues against offset noise (errors-in-variables bias) but does not exclude it. At longer
+wavelengths (§6.3) the same frames show the full slope, so the departure is a short-wavelength effect. No frame has the opposite sign. Over slow interior ice the same test is dominated by km-scale flow features common to
 the phase and the offsets, so it is not used.
 
 **Implication:** RUNW phase contains $`-(2\pi f_{dc}/V_g)\times`$ the applied rubbersheet shift. The carrier mechanism of Eq. (2) is real, and the RUNW `pixelOffsets` layer alone is enough to predict it.
@@ -390,7 +419,7 @@ the phase and the offsets, so it is not used.
 
 ISCE3's screen filter (σ = 33 pixels) passes wavelengths longer than about 15 km, so at the high-pass
 scale of §6.2 the screen is mostly smoothed away. The near-zero screen slopes in Fig. 3a are therefore
-not evidence either way. The decisive test uses a band the screen does resolve: the difference of
+not evidence either way. The more direct test uses a band the screen does resolve: the difference of
 Gaussian smoothings with σ = 50 and 150 pixels, i.e. wavelengths of about 22–67 km. In that band:
 - **Double counting** (screen $`=\Phi_{\text{bc}}`$, Eq. 4): the screen is uncorrelated with $c$, and the
   corrected phase keeps the full −0.9 rad/m.
@@ -411,18 +440,20 @@ velocity model removed.
 | Slow ice | 14 | **−0.91 rad/m** | **−0.05** (−0.22 … +0.02) |
 
 The split-spectrum screen does not contain the carrier term, and the corrected phase keeps all of
-it, at the predicted −0.90 rad/m. This is the double counting of §5.3, confirmed in the band where
-the screen is resolved. It agrees with the ISCE3 code (§5.5): one coregistration is applied to every
-sub-band.
+it, at the predicted −0.90 rad/m. This is consistent with the residual carrier phase ("double counting") of §5.3, in the band where
+the screen is resolved, and with the ISCE3 code (§5.5), which applies one coregistration to every
+sub-band. It is agreement with a prediction, not an independent causal test. Competing explanations
+for a screen-independent correlation of −0.9 rad/m with $c$ have not been formally excluded,
+although none is apparent.
 
 The band-pass results also explain the weak frames of §6.2. Frames with high-pass slopes of only
 −0.05 to −0.4 (track-131/3863_37, 45/4296_33, 11/3397_56, 11/1840_56) give −0.71 to −0.91 in the
 band-pass. The departure is therefore confined to wavelengths shorter than about 20 km in frames with
-strong streaks. That is the expected limit of the first-order model: the ≈10 km synthetic aperture at
+strong streaks. That is consistent with the limit of the first-order model, in which the ≈10 km synthetic aperture at
 the ionosphere averages the screen gradient, so the shift and the phase no longer follow the
-linear-ramp relation for narrow streaks.
+linear-ramp relation for narrow streaks. It does not uniquely identify that cause.
 
-**Implication: the RUNW ionosphere correction is incomplete.** `unwrappedPhase − ionospherePhaseScreen` keeps ≈ −0.9 rad per metre of ionospheric azimuth shift: 1.7 cm of range, or ≈0.5 m/yr of line-of-sight velocity per metre for a 12-day pair. For the ±1–4 m shifts seen here, that is a 0.5–2 m/yr error following the azimuth streaks. It is non-dispersive, so it is indistinguishable from motion. **Fix:** add $`(2\pi f_{dc}/V_g)(c-d_{\text{model}})`$ using the RUNW `pixelOffsets/alongTrackOffset`. Within ISCE3, either coregister each sub-band with its own $`(f_0/f)^2`$-scaled ionospheric shift, or apply the same correction after split-spectrum.
+**Implication: in the RUNWs examined (ISCE3 v0.25.8), the ionosphere correction is incomplete.** `unwrappedPhase − ionospherePhaseScreen` keeps ≈ −0.9 rad per metre of ionospheric azimuth shift: 1.7 cm of range, or ≈0.5 m/yr of line-of-sight velocity per metre for a 12-day pair. For the ±1–4 m shifts seen here, that is a 0.5–2 m/yr error following the azimuth streaks. It is non-dispersive, so it is indistinguishable from motion. **Fix:** add $`(2\pi f_{dc}/V_g)(c-d_{\text{model}})`$ using the RUNW `pixelOffsets/alongTrackOffset`. Within ISCE3, either coregister each sub-band with its own $`(f_0/f)^2`$-scaled ionospheric shift, or apply the same correction after split-spectrum.
 
 ### 6.4 Does moving ice leak into the phase? (the `-useSquint` premise)
 
@@ -448,9 +479,10 @@ The coefficient on $m-c$ is positive in most frames but scattered (−0.3 to +2.
 That is consistent with leakage of unfollowed motion, but $m-c$ is small and noisy, so this part is
 not a quantitative confirmation.
 
-**Implication:** for rubbersheeted products such as NISAR RUNWs, assuming zero-Doppler (broadside) geometry for the phase is correct. The phase does not see along-track ice motion through the squinted line of sight, so the premise of `-useSquint` is false for these products.
+**Implication:** for rubbersheeted products such as these NISAR RUNWs (ISCE3 v0.25.8 configuration), assuming zero-Doppler (broadside) geometry for the phase is correct. The phase does not see along-track ice motion through the squinted line of sight, so the premise of `-useSquint` is false for these products.
 
-This holds to within $\kappa$ times the motion the rubbersheet did not follow, $`\kappa(d-c)`$. That
+This holds to within $\kappa$ times the motion the rubbersheet did not follow, $`\kappa(\Delta a-\Delta a_c)`$ in
+range, with both terms in ground metres. That
 residual is confined to places where the smoothed rubbersheet cannot follow the flow, such as shear
 margins and sub-km structure. In this test it is small and noisy: the coefficient on $m-c$ ranges
 from −0.3 to +2.4 rad/m, with several frames near the predicted +0.9. It is therefore consistent with
@@ -480,8 +512,11 @@ phase solution relative to the range/range solution. (c) The same by speed.
 | phase/phase with `-useSquint` | **−1.69° ± 0.49°** |
 | *for reference:* phase/phase with `-useSquint` relative to phase/phase without it | −1.60° (the same at every pixel, IQR 0.1°): the rotation the correction applies |
 
-The uncorrected phase solution agrees with the squint-free range solution; `-useSquint` rotates it
-1.6° away (3.4σ). Below ≈40 m/yr both phase solutions drift negative by about 1–2°, as expected from
+The ± values are standard deviations of 300 block-bootstrap resamples of the block-median direction
+difference (25 km blocks). The two rows share the range solution, so they are not independent. The
+uncorrected phase solution is consistent with the squint-free range solution. The `-useSquint`
+solution lies 1.69° from it, about 3.4 bootstrap standard errors, assuming a roughly Gaussian
+bootstrap distribution. Below ≈40 m/yr both phase solutions drift negative by about 1–2°, as expected from
 additive biases at low speed. Between 60 and 150 m/yr the uncorrected solution is within 0.3° of the
 range solution. An earlier run with three cycles per track gave the same ordering with larger errors.
 
@@ -497,15 +532,17 @@ Two other crossings were tried and are not used:
 
 ## 7. Implications for GrIMP
 
-- **`mosaic3d -useSquint` should stay off for RUNW phase.** Its premise, phase sensitivity along the
+- **`mosaic3d -useSquint` should stay off for RUNW phase** from the processing configuration checked here
+  (ISCE3 v0.25.8, rubbersheet coregistration). Re-check if the NISAR processing changes. Its premise, phase sensitivity along the
   squinted line of sight, applies only to geometry-only coregistration (§3.3). The data reject it
   directly (§6.4), and turning it on moves crossing-orbit directions 1.6° away from the squint-free
   offset solution (§6.5).
 - **Correct the carrier term with the modelled motion, not the full rubbersheet shift.** Add
   $`2\pi f_{dc}(c-d_{\text{model}})`$. Adding $`2\pi f_{dc}c`$ alone also adds $`2\pi f_{dc}d`$, which puts the
   phase back in the squinted, fixed-pixel geometry, i.e. what `-useSquint` assumes. With the model,
-  the residual is $`\kappa\,(d_{\text{model}}-d_{\text{true}})`$, which is 1.7% of the velocity-model
-  error.
+  the residual is $`2\pi f_{dc}(d_{\text{true}}-d_{\text{model}})`$ in phase, i.e.
+  $`\kappa(\Delta a_{\text{true}}-\Delta a_{\text{model}})`$ in range: 1.7% of the along-track
+  velocity-model error, in ground metres.
 - **The squint values used by `-useSquint` include the ±0.08° along-track-vector artefact** (§6.1). If
   the correction is ever needed, for example with geometry-only data, measure squint against the
   zero-Doppler line of sight, or compute it from $`f_{dc}`$.
@@ -516,6 +553,10 @@ Two other crossings were tried and are not used:
 ## 8. Open questions
 
 - Whether range offsets see the beam-centre or the zero-Doppler group delay (§5.6).
+- Bit-for-bit verification that `pixelOffsets/alongTrackOffset` equals the applied residual warp. This
+  covers the write path, filtering stage, interpolation to the SLC grid, units, sign, and mapping to the
+  interferogram grid. It is required before using the layer for an operational correction (§5.5).
+- A 2-D (range–azimuth) treatment of the squinted impulse response, to bound the terms neglected in §2.
 - How the carrier relation degrades for narrow, strong streaks below ≈20 km wavelength (§6.3). A
   second-order model that averages the screen gradient over the aperture should be tested against
   the high-pass slopes.
