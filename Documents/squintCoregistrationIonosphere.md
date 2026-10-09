@@ -482,10 +482,14 @@ not a quantitative confirmation.
 
 **Implication:** for rubbersheeted products such as these NISAR RUNWs (ISCE3 v0.25.8 configuration), assuming zero-Doppler (broadside) geometry for the phase is correct. The phase does not see along-track ice motion through the squinted line of sight, so the premise of `-useSquint` is false for these products.
 
-This holds to within $\kappa$ times the motion the rubbersheet did not follow, $`\kappa(\Delta a-\Delta a_c)`$ in
-range, with both terms in ground metres. That
-residual is confined to places where the smoothed rubbersheet cannot follow the flow, such as shear
-margins and sub-km structure. In this test it is small and noisy: the coefficient on $m-c$ ranges
+This holds up to the residual $`\kappa(\Delta a-\Delta a_c)`$ in range, with both terms in ground metres.
+Because $`\Delta a_c`$ is the whole applied shift, $`\Delta a_c=\Delta a+\Delta a_{\text{iono}}`$ even with
+perfect motion following, the residual includes both unfollowed ice motion and ionospheric shifts
+followed by the rubbersheet. The ionospheric part, $`-\kappa\Delta a_{\text{iono}}`$, is the §6.3 residual
+and occurs throughout the streaks, including in smooth flow. Only the unfollowed-motion contribution
+is associated with inadequate tracking of flow, such as at shear margins and sub-km structure. That
+contribution is what the $m-c$ regressor targets, since $m$ contains the ionospheric shift too. In this
+test it is small and noisy: the coefficient on $m-c$ ranges
 from −0.3 to +2.4 rad/m, with several frames near the predicted +0.9. It is therefore consistent with
 the data, not quantitatively confirmed.
 
