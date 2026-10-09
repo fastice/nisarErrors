@@ -52,7 +52,7 @@ to make NISAR RUNW products.
 | $`\Phi_{\text{bc}}`$, $`\Phi_{\text{zd}}`$ | differential ionospheric phase screen (radians at $`f_0`$), evaluated at beam-centre time $`t_c`$ / extrapolated to zero-Doppler time $`t_0`$ | differ by $`2\pi f_{dc}s_0`$ (§5.1) |
 | $`\Phi_{\text{SS}}`$ | the RUNW `ionospherePhaseScreen` (split-spectrum estimate, filtered) | |
 | $`s_0`$, $`s_f`$ | ionospheric azimuth shift (s) at $`f_0`$ / at band frequency $f$ (subscripts on $s$, $f$, $\lambda$ denote frequency; on $\Phi$ and $t$, time) | |
-| $`\kappa=\lambda f_{dc}/2V_g=(V/V_g)\sin\psi`$ | range change per metre of uncompensated along-track ground misregistration (dimensionless). Not equal to $\sin\psi$, because a ground shift of $`\Delta a`$ is a time shift of $`\Delta a/V_g`$, during which the platform moves $`(V/V_g)\Delta a`$ | 0.0170 |
+| $`\kappa=\lambda f_{dc}/2V_g=(V/V_g)\sin\psi`$ | equivalent range per metre of uncompensated along-track ground displacement (dimensionless coupling). It is not $\sin\psi$: a ground shift $`\Delta a`$ is a time shift $`\Delta a/V_g`$, during which the platform moves $`(V/V_g)\Delta a`$. It is also not a line-of-sight angle; see §3.3 | 0.0170 |
 | $`2\pi f_{dc}/V_g`$ | the same in phase | 0.90 rad/m |
 
 Conventions: SLC phase $e^{-j4\pi R/\lambda}$; interferogram reference × conj(secondary); shifts are
@@ -129,7 +129,7 @@ the phase is lost, but does not change Eq. 2.)
 
 | Coregistration | $c$ | Phase sensitivity |
 |---|---|---|
-| Geometry only (DEM + orbits) | 0 | $`\Delta r_0 + \kappa\,\Delta a`$: the range change seen from a **fixed** platform position, i.e. the squinted line of sight. This is the familiar $`\Delta r_0\cos\psi'+\Delta a\sin\psi'`$ with $`\sin\psi'=\kappa=(V/V_g)\sin\psi`$ (the line-of-sight along-track component at the target, 0.0170, not the platform-frame $`\sin\psi=0.0153`$). The $\cos$ factor is negligible: $`1-\kappa^2/2\approx1-1.4\times10^{-4}`$ |
+| Geometry only (DEM + orbits) | 0 | $`\Delta r_{\text{eff}}\simeq\Delta r_0 + \kappa\,\Delta a`$: the first-order displacement sensitivity of a fixed-pixel interferogram, i.e. squinted-line-of-sight-like sensitivity. $\kappa$ is a processing coupling, not a line-of-sight angle. Measured on tracks 58 and 97, the along-track component of the beam-centre line of sight at the target is 0.0164–0.0175, within ≈±3% of $\kappa=0.0170$ with opposite sign for ascending and descending. So the two should not be identified, and no cosine factor is implied for $`\Delta r_0`$ |
 | Follows the target (rubbersheet with dense offsets) | $d$ | $`\Delta r_0`$ only: broadside, zero-Doppler |
 | Partial (smoothed rubbersheet) | $d-\varepsilon$ | $`\Delta r_0 + \kappa V_g\varepsilon`$: leakage of the *unfollowed* motion only ($`V_g\varepsilon`$ in ground metres) |
 
@@ -186,7 +186,7 @@ a fuller model. The numbers below are first-order, order-of-magnitude scalings o
 | | NISAR ($\psi\approx0.9°$) | $\psi=45°$, L-band |
 |---|---|---|
 | $`f_{dc}`$ | 970 Hz | ≈45 kHz (many PRFs) |
-| Range per metre along-track, $\sin\psi$ | 0.017 | 0.71 |
+| Equivalent range per metre of along-track ground displacement | $\kappa=0.017$ | ≈0.7 (first-order scaling only) |
 | Along-track motion per fringe | ≈7 m | 0.17 m |
 | Phase per cm of misregistration | 0.009 rad | 0.37 rad |
 
@@ -204,7 +204,7 @@ The practical difficulties are:
   straight-track picture. Native-squint processing is therefore preferred. Zero-Doppler output is not
   wrong in principle, but it is harder to make accurate.
 
-**Implication:** a fore/aft squint mission gets along-track sensitivity only if its coregistration does not follow the motion, or if the applied shift is added back. The physics is the same as NISAR's; only $\kappa$ grows, from 0.017 to ≈0.7.
+**Implication:** a fore/aft squint mission gets along-track sensitivity only if its coregistration does not follow the motion, or if the applied shift is added back. The carrier–misregistration principle carries over from NISAR, and the coupling grows from 0.017 to roughly 0.7. A quantitative treatment also needs the range–azimuth coupling, nonlinear phase, line-of-sight geometry and orbit curvature noted above.
 
 ---
 
@@ -384,8 +384,9 @@ are high-passed with the same rock-pixel mask (normalised Gaussian, σ = 50 RUNW
 keeps the azimuth streaks. For a statistically stationary screen, a phase screen and its own
 along-track gradient have zero covariance in expectation. Pure ionosphere therefore predicts no
 *systematic* correlation between the high-passed phase and $c$. Finite, masked, weighted samples
-can show chance correlation, but a chance correlation would not have a consistent sign and magnitude
-across 16 frames, both pass directions and three regions. The carrier
+can show chance correlation. Agreement in sign and approximate magnitude across multiple frames, both
+pass directions and three regions strengthens the carrier interpretation, although shared processing
+effects and sample dependence have not been excluded. The carrier
 predicts a slope of $`-2\pi f_{dc}/V_g = -0.89`$ to $-0.92$ rad/m, computed per frame from its own
 $`f_{dc}`$ and $`V_g`$.
 
@@ -453,7 +454,7 @@ strong streaks. That is consistent with the limit of the first-order model, in w
 the ionosphere averages the screen gradient, so the shift and the phase no longer follow the
 linear-ramp relation for narrow streaks. It does not uniquely identify that cause.
 
-**Implication: in the RUNWs examined (ISCE3 v0.25.8), the ionosphere correction is incomplete.** `unwrappedPhase − ionospherePhaseScreen` keeps ≈ −0.9 rad per metre of ionospheric azimuth shift: 1.7 cm of range, or ≈0.5 m/yr of line-of-sight velocity per metre for a 12-day pair. For the ±1–4 m shifts seen here, that is a 0.5–2 m/yr error following the azimuth streaks. It is non-dispersive, so it is indistinguishable from motion. **Fix:** add $`(2\pi f_{dc}/V_g)(c-d_{\text{model}})`$ using the RUNW `pixelOffsets/alongTrackOffset`. Within ISCE3, either coregister each sub-band with its own $`(f_0/f)^2`$-scaled ionospheric shift, or apply the same correction after split-spectrum.
+**Implication: in the RUNWs examined (ISCE3 v0.25.8), the ionosphere correction is incomplete.** `unwrappedPhase − ionospherePhaseScreen` keeps ≈ −0.9 rad per metre of ionospheric azimuth shift: 1.7 cm of range, or ≈0.5 m/yr of line-of-sight velocity per metre for a 12-day pair. For the ±1–4 m shifts seen here, that is a 0.5–2 m/yr error following the azimuth streaks. It is non-dispersive, so it is indistinguishable from motion. **Fix:** add $`(2\pi f_{dc}/V_g)(\Delta a_c-\Delta a_{\text{model}})`$ with both displacements in ground metres, using the RUNW `pixelOffsets/alongTrackOffset` for $`\Delta a_c`$, once that layer is verified (§5.5). Equivalently, add $`2\pi f_{dc}(c-d_{\text{model}})`$ with both shifts in seconds. Within ISCE3, either coregister each sub-band with its own $`(f_0/f)^2`$-scaled ionospheric shift, or apply the same correction after split-spectrum.
 
 ### 6.4 Does moving ice leak into the phase? (the `-useSquint` premise)
 
@@ -544,8 +545,9 @@ Two other crossings were tried and are not used:
   $`\kappa(\Delta a_{\text{true}}-\Delta a_{\text{model}})`$ in range: 1.7% of the along-track
   velocity-model error, in ground metres.
 - **The squint values used by `-useSquint` include the ±0.08° along-track-vector artefact** (§6.1). If
-  the correction is ever needed, for example with geometry-only data, measure squint against the
-  zero-Doppler line of sight, or compute it from $`f_{dc}`$.
+  the correction is ever needed, for example with geometry-only data, derive the effective rotation from
+  the coupling $\kappa$ (i.e. from $`f_{dc}`$ and $`V_g`$). Do not use the `geolocationGrid` squint: the
+  geometric beam-centre squint differs from $\kappa$ by a few percent (§3.3).
 - **RUNW phase carries $`-2\pi f_{dc}(c-d)`$**, which is streak-shaped wherever ionospheric azimuth
   shifts are strong. It can be removed with the rubbersheet offsets stored in every RUNW
   (`pixelOffsets/alongTrackOffset`) and a velocity model (§5.4).
