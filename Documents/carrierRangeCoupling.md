@@ -46,16 +46,16 @@ The ionospheric along-track shift is not ground motion. It comes from a Doppler 
 the focused target along its own range-migration curve. With squint that curve has slope $`dR/dt=\lambda f_{dc}/2`$, so
 the target also moves in range by
 
-$$
+```math
 \Delta r = \kappa\, s .
-$$
+```
 
 Any measurement of where the target sits sees this, so the range offsets carry it whether or not they were
 rubbersheeted. In phase units
 
-$$
+```math
 \tfrac{4\pi}{\lambda}\,\kappa\, s = \tfrac{2\pi f_{dc}}{V_{\text{groundtrack}}}\, s = k_{dc}\, s = C ,
-$$
+```
 
 exactly the carrier correction. The phase carries $`-C`$ (from the rubbersheet) and the offsets carry $`+C`$ (from the
 squinted range migration). Real ice motion moves the ground and has neither term.
@@ -84,10 +84,8 @@ offsets themselves.
    ([squintCoregistrationIonosphere.md](squintCoregistrationIonosphere.md) §5.1).
 2. **The shifted response slides along the target's own range-migration curve.** The focused position is read off
    the range history $`R(t)`$, so a response shifted by $`\Delta t`$ sits at a range changed by the slope of that
-   curve at the beam centre, $`dR/dt = \lambda f_{dc}/2`$:
-   $$
-   \Delta r = \tfrac{\lambda f_{dc}}{2}\,\Delta t = \kappa\, s .
-   $$
+   curve at the beam centre, $`dR/dt = \lambda f_{dc}/2`$, so
+   $`\Delta r = \tfrac{\lambda f_{dc}}{2}\,\Delta t = \kappa\, s`$.
    The range-Doppler view gives the same result: range-migration correction uses the Doppler-dependent range
    $`R(f) \approx R_0\,(1 + \lambda^2 f^2 / 8V_{\text{eff}}^2)`$, and its slope at $`f_{dc}`$ times $`\Delta f`$ is again
    $`\lambda f_{dc}\Delta t/2`$. At zero squint the beam centre is the vertex of the curve and the coupling vanishes to
@@ -99,7 +97,8 @@ offsets themselves.
    (in the theory document's notation $`\Delta\phi = \Delta\phi_{\text{zero-Doppler}} - 2\pi f_{dc}(c-d)`$ with
    coregistration $`c`$ equal to the displacement $`d`$, §3). For an ionospheric shift nothing moved, so there is no
    line-of-sight term, and the resampling leaves $`-k_{dc}\,s = -C`$.
-4. **Hence $`C = k_{dc}\,(\Delta a_c - S[\Delta a_{\text{model}}])`$, not $`k_{dc}\,\Delta a_c`$.** The rubbersheet shift
+4. **Hence the form of the correction:** $`C = k_{dc}\,(\Delta a_c - S[\Delta a_{\text{model}}])`$, not
+   $`k_{dc}\,\Delta a_c`$. The rubbersheet shift
    $`\Delta a_c`$ contains both parts. The motion part has already cancelled correctly, so only the remainder is added
    back; adding $`k_{dc}\,\Delta a_c`$ whole would undo the zero-Doppler restoration and put the squinted geometry
    back into the phase. $`S[\cdot]`$ is the dense-offset window average, because that is the motion field the
