@@ -23,9 +23,11 @@ The range offsets carry a matching error of the opposite sign: the same ionosphe
 in range, again because of the squint. Inside GrIMP's estimate the two errors cancel, so the estimate is clean but the
 corrected phase keeps the whole error, and the range offsets keep theirs.
 
-The correction must therefore be applied to both inputs. Done that way, it removes the streak error from the phase
-completely, leaves GrIMP's ionosphere estimate (and the azimuth correction derived from it) unchanged, and also corrects
-the range offsets. On a strong-ionosphere Antarctic pair the phase-baseline residual fell by more than half and the
+The fix is therefore to add the carrier correction to the phase *after* the ionosphere is estimated, and to remove the
+small range shift from the range offsets. Adding it to the phase *before* the estimate, as a first version did, removes
+only half the error, because the estimate then absorbs the other half. Done after, it removes the streak error from the
+phase completely, leaves GrIMP's ionosphere estimate (and the azimuth correction derived from it) unchanged, and also
+corrects the range offsets. On a strong-ionosphere Antarctic pair the phase-baseline residual fell by more than half and the
 range-baseline residual by a quarter.
 
 ---
@@ -64,16 +66,21 @@ squinted range migration). Real ice motion moves the ground and has neither term
 error, the corrected phase $`\phi-\text{screen}`$ keeps all of it, and the range offsets carry a $`\kappa s`$ error of
 their own (4–10 cm for 2–6 m shifts).
 
-| Where the correction goes | Phase after correction | Screen; range and azimuth ionosphere corrections |
-|---|---|---|
-| nowhere (production until 2026-10) | full error | clean |
-| phase only, before the screen | **half** the error | pick up $`+C/2`$ |
-| phase $`+C`$ **and** offset phase $`-C`$, before the screen | error removed | unchanged (clean) |
+The corrected phase is $`\phi - \text{screen}`$ with $`\text{screen} = (\phi + \phi_{\text{off}})/2`$ (before
+filling and smoothing). Following only the carrier term through each way of applying the correction:
 
-Adding $`C`$ to the phase and $`-C`$ to the offset phase cancels in the screen, so for the phase this is identical to
-adding $`C`$ after the screen, which is what the after-the-fact correction in
-[carrierCorrectionFrames.md](carrierCorrectionFrames.md) did. The coupling only matters for correcting the range
-offsets themselves.
+| Where $`C`$ is applied | Phase into the screen | Offsets into the screen | Screen | Corrected phase |
+|---|---|---|---|---|
+| nowhere (production until 2026-10) | $`-C`$ | $`+C`$ | 0 | $`-C`$, the full error |
+| to the phase, after the screen | $`-C`$ | $`+C`$ | 0 | $`-C + C = 0`$ |
+| to the phase, before the screen; offsets left alone | 0 | $`+C`$ | $`+C/2`$ | $`-C/2`$, **half** the error |
+| to the phase and taken out of the offsets, before the screen | 0 | 0 | 0 | 0 |
+
+The last row is how the production code applies it; for the phase it is identical to the second row, which is also what
+the after-the-fact correction in [carrierCorrectionFrames.md](carrierCorrectionFrames.md) did. In both, the screen and
+the range and azimuth ionosphere corrections derived from it are unchanged. Separately, the range offsets carry the
+$`\kappa s`$ shift themselves, so the range ionosphere correction gets that term added (§5); the "before, phase only"
+row instead puts $`+C/2`$ into the screen and every correction derived from it.
 
 ### Physical picture: why a Doppler shift couples into range and real motion does not
 
@@ -152,25 +159,26 @@ Merged-frame baseline fits (σ of the fit residuals):
 | Greenland 5535_0000 | Phase baseline | Range, with ionosphere correction | Azimuth, with azimuth ionosphere correction |
 |---|---|---|---|
 | no correction | 8.49 rad | 0.1157 m | 2.621 m |
-| phase only, before the screen | 8.11 | 0.1116 | 2.686 |
-| both inputs (manual test) | 7.83 | 0.1169 | 2.620 |
-| **both inputs, production code** | **7.83** | **0.1142** | **2.620** |
+| $`C`$ added to the phase before the screen (half fix) | 8.11 | 0.1116 | 2.686 |
+| $`C`$ added after the screen; range correction unchanged (manual test) | 7.83 | 0.1169 | 2.620 |
+| **$`C`$ added after the screen, plus $`\kappa s`$ in the range correction (production code)** | **7.83** | **0.1142** | **2.620** |
 
 | Antarctica 4334_0000 | Phase baseline | Range, with ionosphere correction | Azimuth, with azimuth ionosphere correction |
 |---|---|---|---|
 | no correction | 4.55 rad | 0.1621 m | 2.369 m |
-| phase only, before the screen | 2.77 | 0.1247 | 2.574 |
-| both inputs (manual test) | 1.98 | 0.1621 | 2.368 |
-| **both inputs, production code** | **1.98 (−57%)** | **0.1132 (−30%)** | **2.360** |
+| $`C`$ added to the phase before the screen (half fix) | 2.77 | 0.1247 | 2.574 |
+| $`C`$ added after the screen; range correction unchanged (manual test) | 1.98 | 0.1621 | 2.368 |
+| **$`C`$ added after the screen, plus $`\kappa s`$ in the range correction (production code)** | **1.98 (−57%)** | **0.1132 (−30%)** | **2.360** |
 
 Per frame (Figure 2): the remaining streak error falls from 0.78 to 0.04 (Greenland) and from 0.61 to −0.06
-(Antarctica); the median residual σ from 3.08 to 2.67 rad and from 3.63 to 1.02 rad. "Phase only, before the screen"
+(Antarctica); the median residual σ from 3.08 to 2.67 rad and from 3.63 to 1.02 rad. The "before the screen" variant
 is the first production version, switched on and then paused on 2026-10-17: it removes about half the error and puts
-the other half into the screen. The manual test adds the range-coupling term only on the merged grid, which is why the
-production code's range result is better.
+the other half into the screen. The manual test corrected only the phase, so its range ionosphere correction, and hence
+its range fit, is the same as with no correction; the production code also adds $`\kappa s`$ to the range correction,
+which is where its range improvement comes from.
 
-**Implication:** correcting both inputs removes the streak error completely in both regions, and the production code
-reproduces the manual test. The merged-frame phase-baseline residual falls by more than half (4.55 to 1.98 rad) in Antarctica, where the
+**Implication:** adding $`C`$ after the screen removes the streak error completely in both regions, and the production
+code reproduces the manual test for the phase. The merged-frame phase-baseline residual falls by more than half (4.55 to 1.98 rad) in Antarctica, where the
 ionosphere is strong; in the Greenland frame other errors dominate the merged residual, so the gain there shows mainly
 per frame. Removing $`\kappa s`$ from the range offsets lowers the range-baseline residual. The azimuth fit is
 unchanged, because the screen it is derived from is unchanged.
@@ -182,7 +190,7 @@ unchanged, because the screen it is derived from is unchanged.
   for processors before CRID 5032 a frame-wide test also removes the −70 m / −200 m patches of some 0.25.8 products.
   About 1–6 s per frame.
 - `estimateIonosphere --carrierCorrection --carrierOffsets`: phase $`+C`$ and offset phase $`-C`$ before the screen is
-  estimated; writes `<stem>.carrierCorrection.tif` (phase grid) and `<stem>.carrierRangeCoupling.offset.tif` (the
+  estimated, which leaves the screen unchanged and is therefore the same as adding $`C`$ to the phase after it; writes `<stem>.carrierCorrection.tif` (phase grid) and `<stem>.carrierRangeCoupling.offset.tif` (the
   $`\kappa s`$ term in SLC pixels, offset grid), and folds the latter into the range-offset ionosphere correction that
   every consumer already adds.
 - `SetupNISAR`: passes both flags (or `carrierCorrection: true` and `carrierOffsets: true` in project.yaml); mosaics
