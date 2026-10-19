@@ -134,6 +134,17 @@ at the rubbersheet's resolution (see §6).
 
 ## 3. The coupling, measured on 600 frames
 
+**What this section tests.** §2 predicts that wherever the ionosphere shifts the image along track by $`s`$, the range
+offsets shift by $`\kappa s`$, i.e. they carry the full $`+C`$. Case 3 relies on this: it removes exactly $`C`$ from the
+offsets, so if they carried less, part of the carrier term would stay in the screen. The test is whether the measured
+range shift equals $`\kappa s`$, in both regions and for both ISCE3 versions in use.
+
+**How.** Ice motion also moves targets in range and along track, so the comparison is made only on slow-moving pixels
+and only at streak scales (high-pass), where the along-track offset is dominated by the ionospheric shift. On those
+pixels the slant-range offset is regressed on the along-track offset, and the slope is expressed as a coupling
+relative to the prediction: 1 means the offsets carry the full $`\kappa s`$, 0 means none. The ROFF offsets are the
+ones GrIMP uses; the RUNW rubbersheet offsets are shown as a cross-check.
+
 ![survey](images/carrierCoupling_survey.png)
 
 **Figure 1.** Coupling = (slant-range shift) / (κ × along-track shift), measured as the slope of the slant-range
