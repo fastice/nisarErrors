@@ -75,6 +75,40 @@ adding $`C`$ after the screen, which is what the after-the-fact correction in
 [carrierCorrectionFrames.md](carrierCorrectionFrames.md) did. The coupling only matters for correcting the range
 offsets themselves.
 
+### Physical picture: why a Doppler shift couples into range and real motion does not
+
+1. **The ionospheric shift is a Doppler error, not a displacement.** An along-track gradient in the ionospheric
+   delay adds a phase that is linear in slow time, i.e. a Doppler offset $`\Delta f`$. Azimuth compression turns it
+   into a time shift $`\Delta t = \Delta f / k_a`$ ($`k_a`$ the azimuth FM rate), so the focused target appears
+   displaced along track by $`s = V_{\text{groundtrack}}\,\Delta t`$
+   ([squintCoregistrationIonosphere.md](squintCoregistrationIonosphere.md) §5.1).
+2. **The shifted response slides along the target's own range-migration curve.** The focused position is read off
+   the range history $`R(t)`$, so a response shifted by $`\Delta t`$ sits at a range changed by the slope of that
+   curve at the beam centre, $`dR/dt = \lambda f_{dc}/2`$:
+   $$
+   \Delta r = \tfrac{\lambda f_{dc}}{2}\,\Delta t = \kappa\, s .
+   $$
+   The range-Doppler view gives the same result: range-migration correction uses the Doppler-dependent range
+   $`R(f) \approx R_0\,(1 + \lambda^2 f^2 / 8V_{\text{eff}}^2)`$, and its slope at $`f_{dc}`$ times $`\Delta f`$ is again
+   $`\lambda f_{dc}\Delta t/2`$. At zero squint the beam centre is the vertex of the curve and the coupling vanishes to
+   first order; NISAR's ~1.5° residual squint ($`f_{dc} \approx 980`$ Hz) puts it on the sloped flank.
+3. **Real ice motion moves the target and its whole migration curve.** Its zero-Doppler range is still the true
+   closest approach, so the offsets carry no $`\kappa`$ term. In the phase, the squinted line of sight sees part of
+   the along-track motion $`\Delta a_m`$, adding $`k_{dc}\,\Delta a_m`$; the rubbersheet registers the secondary by the
+   same shift, and resampling the carrier adds $`-k_{dc}\,\Delta a_m`$. The two cancel and the phase is zero-Doppler
+   (in the theory document's notation $`\Delta\phi = \Delta\phi_{\text{zero-Doppler}} - 2\pi f_{dc}(c-d)`$ with
+   coregistration $`c`$ equal to the displacement $`d`$, §3). For an ionospheric shift nothing moved, so there is no
+   line-of-sight term, and the resampling leaves $`-k_{dc}\,s = -C`$.
+4. **Hence $`C = k_{dc}\,(\Delta a_c - S[\Delta a_{\text{model}}])`$, not $`k_{dc}\,\Delta a_c`$.** The rubbersheet shift
+   $`\Delta a_c`$ contains both parts. The motion part has already cancelled correctly, so only the remainder is added
+   back; adding $`k_{dc}\,\Delta a_c`$ whole would undo the zero-Doppler restoration and put the squinted geometry
+   back into the phase. $`S[\cdot]`$ is the dense-offset window average, because that is the motion field the
+   rubbersheet actually applied.
+
+**Implication:** the carrier error and the range coupling are both signatures of a Doppler shift without a
+matching displacement, which is why they isolate the ionosphere from ice motion. The motion cancellation holds only
+at the rubbersheet's resolution (see §6).
+
 ## 3. The coupling, measured on 600 frames
 
 ![survey](images/carrierCoupling_survey.png)
@@ -165,6 +199,10 @@ unchanged, because the screen it is derived from is unchanged.
 - First-order correction: nonlinear defocus from strong ionospheric gradients is not captured (as in the companion
   documents).
 - The velocity model enters the correction only through $`S[\Delta a_{\text{model}}]`$, at κ-level sensitivity.
+- Motion cancels only at the rubbersheet's resolution. The squinted line of sight sees the pointwise along-track
+  motion $`\Delta a_m`$ while the rubbersheet applies its window average $`S[\Delta a_m]`$, so
+  $`k_{dc}\,(\Delta a_m - S[\Delta a_m])`$ remains uncorrected wherever along-track motion varies within the
+  dense-offset window (shear margins, termini). Not modelled; small except in strong shear.
 - The RUNW rubbersheet offsets of some 0.25.8 Antarctic frames show weak coupling; the ROFF offsets GrIMP uses do not.
   The correction does not depend on RUNW's coupling.
 - The azimuth ionosphere correction's empirical gain (0.4) appears to under-correct by about half on the Antarctic
