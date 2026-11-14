@@ -90,8 +90,7 @@ To measure error, we build a synthetic interferogram with a known answer for eac
 - **Number of looks.** L is fitted per frame (between 16 and 208) so that the synthetic interferogram has the same
   residue density as the real one in each coherence range.
 
-Each frame is unwrapped twice. The **baseline** is the production approach: unmasked, untiled. The **proposal** is
-masked, tiled with `-S`. For some frames, earlier diagnostic runs also provide the two mixed combinations, which
+Each frame is unwrapped twice: **unmasked untiled**, the production approach, and **masked tiled `-S`**. For some frames, earlier diagnostic runs also provide the two mixed combinations, which
 separate the effect of the mask from the effect of tiling. Each solution is scored as the share of pixels, in
 its connected components, whose cycle count differs from the component's median offset against the truth. Both
 solutions are scored over the same pixels: those the mask keeps.
@@ -119,7 +118,7 @@ overlap) and the ocean more than 10 km from land or ice (blue). Numbers give the
 JPL's production processing does not remove this noise either. The products list a water mask among their
 inputs, but the recorded unwrapping preprocessing names only a sub-swath mask. The unwrapped phase over the
 ocean is noise (median gradient 2.1 radians per pixel against 0.34 over ice), and coherent ocean pixels appear in
-connected components. Unmasked, untiled unwrapping is therefore the appropriate production baseline.
+connected components. Unmasked untiled unwrapping is therefore the right reference for production.
 
 ### 3.2 Noise must be masked and filled
 
@@ -189,16 +188,16 @@ already noise.
 
 ### 3.4 Synthetic test: speed and accuracy
 
-Table 2 gives the results for the first 10 frames. The proposal (masked, tiled with `-S`) is **7-19 times faster**
-than the baseline (unmasked, untiled), median 10.1 times. Together the ten frames took 11,200 s with the baseline
-and 923 s with the proposal. The largest gains are on large, noisy coastal frames, where untiled unwrapping is
+Table 2 gives the results for the first 10 frames. Masked tiled `-S` unwrapping is **7-19 times faster** than
+unmasked untiled unwrapping, median 10.1 times. Together the ten frames took 11,200 s unmasked untiled and 923 s
+masked tiled `-S`. The largest gains are on large, noisy coastal frames, where untiled unwrapping is
 slowest.
 
-*Table 2. Synthetic test, first 10 frames: baseline (unmasked, untiled) against proposal (masked, tiled with `-S`).
-"Wrong" is the share of scored pixels whose cycle count is wrong. Red marks a proposal error substantially worse than
-the baseline's (more than double, or more than 0.5 percentage points higher); no value is substantially better.*
+*Table 2. Synthetic test, first 10 frames: unmasked untiled against masked tiled `-S`. "Wrong" is the share of
+scored pixels whose cycle count is wrong. Red marks a masked tiled `-S` error substantially worse than the unmasked
+untiled one (more than double, or more than 0.5 percentage points higher); no value is substantially better.*
 
-| Frame | Class | Size (Mpx) | L | Residues | Masked | Baseline | Proposal | Speedup | Wrong, baseline | Wrong, proposal |
+| Frame | Class | Size (Mpx) | L | Residues | Masked | Unmasked untiled | Masked tiled `-S` | Speedup | Wrong, unmasked untiled | Wrong, masked tiled `-S` |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `t003D_f121` | coastal | 7.0 | 16 | 1,915k | 77.8% | 770 s | 53 s | 14.6 | (no components) | (no components) |
 | `t014A_f143` | coastal | 6.6 | 128 | 767k | 31.6% | 677 s | 81 s | 8.4 | 0.530% | 0.554% |
@@ -211,12 +210,12 @@ the baseline's (more than double, or more than 0.5 percentage points higher); no
 | `t144A_f143` | coastal | 10.5 | 64 | 1,420k | 26.1% | 2,332 s | 191 s | 12.2 | 0.970% | 0.929% |
 | `t170A_f145` | coastal | 3.5 | 32 | 820k | 59.7% | 222 s | 30 s | 7.3 | 1.152% | $\color{red}{\text{2.488\%}}$ |
 
-On 8 of the 9 frames that could be scored, the proposal's error is within 0.03 percentage points of the
-baseline's (median 0.216% against 0.215%). One frame, `t003D_f121`, is almost entirely noise, and neither run
-produced a connected component. The exception is `t170A_f145`, where the proposal's error is twice the baseline's.
+On 8 of the 9 frames that could be scored, the masked tiled `-S` error is within 0.03 percentage points of the
+unmasked untiled error (median 0.215% against 0.216%). One frame, `t003D_f121`, is almost entirely noise, and neither run
+produced a connected component. The exception is `t170A_f145`, where the masked tiled `-S` error is twice the unmasked untiled error.
 
-Diagnostic runs on that frame separate the two changes. Unmasked tiled unwrapping gives exactly the baseline
-error (1.152%), and masked untiled unwrapping gives exactly the proposal's (2.488%). The extra error therefore comes
+Diagnostic runs on that frame separate the two changes. Unmasked tiled `-S` unwrapping gives exactly the
+unmasked untiled error (1.152%), and masked untiled unwrapping gives exactly the masked tiled `-S` error (2.488%). The extra error therefore comes
 from the mask, as on `t138A_f141` in the real data, and not from tiling. On every frame where both were run, tiled
 and untiled unwrapping of the same input gave the same error.
 
