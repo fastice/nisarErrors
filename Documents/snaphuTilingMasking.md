@@ -157,8 +157,8 @@ one exception. On `t138A_f141` at 0.25, 0.007% of pixels differed: with 415,000 
 started their non-convex optimization from different points and reached slightly different minima.
 
 *Table 1. Real-data runs with the residue mask at thresholds 0.10 and 0.25. Colour marks a 0.25 value that differs
-substantially from the 0.10 value (time more than 1.5 times, or disagreement changed by more than half): red worse,
-green better.*
+substantially from the 0.10 value (time more than 1.5 times; disagreement changed by more than half, or by more
+than 5 percentage points): red worse, green better.*
 
 | Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25) | Disagreement with JPL, % (0.10 / 0.25) |
 |---|---|---|---|---|---|
