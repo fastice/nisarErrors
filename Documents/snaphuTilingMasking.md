@@ -156,15 +156,17 @@ blocks and agrees slightly better with JPL. In every case the tiled and untiled 
 one exception. On `t138A_f141` at 0.25, 0.007% of pixels differed: with 415,000 residues left, the two methods
 started their non-convex optimization from different points and reached slightly different minima.
 
-*Table 1. Real-data runs with the residue mask at thresholds 0.10 and 0.25.*
+*Table 1. Real-data runs with the residue mask at thresholds 0.10 and 0.25. Colour marks a 0.25 value that differs
+substantially from the 0.10 value (time more than 1.5 times, or disagreement changed by more than half): red worse,
+green better.*
 
 | Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25) | Disagreement with JPL, % (0.10 / 0.25) |
 |---|---|---|---|---|---|
 | `t048A_f137` | interior | 5.4% / 4.4% | 601 / 693 s | 82 / 104 s | 0.031 / 0.031 |
 | `t085D_f129` | interior | 0.2% / 0.1% | 709 / 694 s | 238 / 217 s | 1.283 / 1.282 |
-| `t107D_f123` | coastal | 27.5% / 23.7% | 746 / 855 s | 116 / 127 s | 0.329 / 0.079 |
-| `t055D_f125` | coastal | 54.8% / 46.5% | 1,187 / 1,583 s | 99 / 199 s | 0.166 / 0.143 |
-| `t138A_f141` | coastal | 57.5% / 39.3% | 1,571 / 2,933 s | 374 / 1,427 s | 24.1 / 29.9 |
+| `t107D_f123` | coastal | 27.5% / 23.7% | 746 / 855 s | 116 / 127 s | 0.329 / $\color{green}{\text{0.079}}$ |
+| `t055D_f125` | coastal | 54.8% / 46.5% | 1,187 / 1,583 s | 99 / $\color{red}{\text{199}}$ s | 0.166 / 0.143 |
+| `t138A_f141` | coastal | 57.5% / 39.3% | 1,571 / $\color{red}{\text{2,933}}$ s | 374 / $\color{red}{\text{1,427}}$ s | 24.1 / $\color{red}{\text{29.9}}$ |
 
 Frames that are mostly noise are the difficult case (Figure 2). On `t138A_f141`, about 40-60% of the frame is
 masked. The good data that remains is a set of fragments (glacier tongues, ice-shelf pieces, rough ground) linked
@@ -193,7 +195,8 @@ and 923 s with the proposal. The largest gains are on large, noisy coastal frame
 slowest.
 
 *Table 2. Synthetic test, first 10 frames: baseline (unmasked, untiled) against proposal (masked, tiled with `-S`).
-"Wrong" is the share of scored pixels whose cycle count is wrong.*
+"Wrong" is the share of scored pixels whose cycle count is wrong. Red marks a proposal error substantially worse than
+the baseline's (more than double, or more than 0.5 percentage points higher); no value is substantially better.*
 
 | Frame | Class | Size (Mpx) | L | Residues | Masked | Baseline | Proposal | Speedup | Wrong, baseline | Wrong, proposal |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -206,7 +209,7 @@ slowest.
 | `t085D_f129` | interior | 12.5 | 208 | 54k | 0.1% | 769 s | 104 s | 7.4 | 0.000% | 0.000% |
 | `t107D_f123` | coastal | 8.2 | 64 | 686k | 23.3% | 870 s | 102 s | 8.6 | 0.960% | 0.921% |
 | `t144A_f143` | coastal | 10.5 | 64 | 1,420k | 26.1% | 2,332 s | 191 s | 12.2 | 0.970% | 0.929% |
-| `t170A_f145` | coastal | 3.5 | 32 | 820k | 59.7% | 222 s | 30 s | 7.3 | 1.152% | 2.488% |
+| `t170A_f145` | coastal | 3.5 | 32 | 820k | 59.7% | 222 s | 30 s | 7.3 | 1.152% | $\color{red}{\text{2.488\%}}$ |
 
 On 8 of the 9 frames that could be scored, the proposal's error is within 0.03 percentage points of the
 baseline's (median 0.216% against 0.215%). One frame, `t003D_f121`, is almost entirely noise, and neither run
