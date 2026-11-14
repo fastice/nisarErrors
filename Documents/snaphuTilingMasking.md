@@ -20,8 +20,9 @@ per loop, restricted to regions at least three blocks thick.
 
 In a synthetic test with a known answer, masked tiled unwrapping was 7-19 times faster than the unmasked untiled
 unwrapping used in production (median 10 times) on the first 10 frames. It was as accurate on 8 of the 9 frames
-that could be scored. On the remaining frame the mask, not the tiling, increased the error, by disconnecting
-pieces of good data whose relative cycle offsets then went wrong.
+that could be scored. On the remaining frame the mask, not the tiling, increased the error, though only slightly
+in absolute terms (2.5% against 1.2% of pixels with the wrong cycle count), by disconnecting pieces of good data
+whose relative cycle offsets then went wrong.
 
 ## 1. Introduction
 
@@ -262,8 +263,9 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 3. A residue-density mask (15 x 15 blocks, threshold 0.25, regions at least three blocks thick) makes masked tiled
    unwrapping 7-19 times faster than the production approach on the first 10 synthetic frames, with the same
    accuracy on 8 of 9 scorable frames.
-4. Where the mask does cost accuracy, it does so by disconnecting fragments of good data. The mask rule, not the
-   use of tiles, is what needs refining for such frames.
+4. Where the mask does cost accuracy, the cost so far is small (2.5% against 1.2% of pixels with the wrong cycle
+   count, on one frame), and it comes from disconnecting fragments of good data. The mask rule, not the use of
+   tiles, is what needs refining for such frames.
 
 ## Plan
 
