@@ -174,7 +174,13 @@ the same machine. Wall-clock and CPU times come from `/usr/bin/time`.
 
 ## 3. Results
 
-### 3.1 Tiling is slow when residue-dense noise remains in the interferogram
+We first use the actual phase data to show why tiling alone does not speed up unwrapping on noisy Antarctic frames
+(Section 3.1), and to develop a preprocessing step that fixes it: masking the residue-dense noise and filling it
+smoothly (Sections 3.2 and 3.3). We then use the synthetic interferograms to measure what that approach gains in
+time and costs in accuracy (Sections 3.4 and 3.5). Finally, we describe two problems in snaphu's tiled mode that
+the tests exposed, an overflow abort and a slow assembly of the tiles on some frames (Sections 3.6 and 3.7).
+
+### 3.1 Why tiling with no masking does not work
 
 These runs use the real RUNW phase, rewrapped, with no mask. How much time tiling saves depends on how many
 residues are left after the tiled pass, and on where they are.
