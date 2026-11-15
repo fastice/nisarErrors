@@ -167,7 +167,7 @@ value, where it has no coverage, which is mostly over ice shelves, ice tongues a
 filled and left out of the unwrapping and the scoring, like pixels with zero coherence or in sub-swath gaps. A
 frame is skipped if the model covers less than half of its coherent pixels (RUNW coherence above 0.5), and is
 replaced by another frame of the same class chosen by the same rule (Section 2.1). The first version of the test
-treated zero truth as data (Plan).
+treated zero truth as data (see the status note at the top).
 
 Each machine runs at most five untiled and three tiled unwrappings at a time, and both runs of a frame are made on
 the same machine. Wall-clock and CPU times come from `/usr/bin/time`.
