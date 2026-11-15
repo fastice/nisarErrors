@@ -218,13 +218,19 @@ On that frame it worked for the tiled mode, but it is not the approach we kept:
 - The residue mask of Section 3.3, which needs only the interferogram itself, did better on the same frame (116 to
   127 s tiled, against 164 s).
 
-The ocean-mask runs also showed that removing the noise from snaphu's problem takes more than a mask. snaphu's
-byte mask makes masked pixels free to cut through, but their wrapped phase still defines the residues to be solved:
+Whatever mask is used, masking alone does not remove the noise from snaphu's problem; the masked phase must also
+be replaced. The reason is how snaphu treats masked pixels. snaphu works on residues, the 2 x 2 loops of wrapped
+phase that do not close, and it computes them from the wrapped phase of every pixel, masked or not. Its byte mask
+does not remove those residues. It only sets the cost of crossing a masked pixel to zero. So:
 
-- **Mask only.** Masking the ocean in the byte mask alone left the untiled time unchanged (827 s against 775 s).
-  The tiled time fell from 1,133 s to 164 s, because the masked regions no longer contributed cost to the
-  re-optimization.
-- **Mask and fill.** Replacing the masked phase with a fill removes the masked residues altogether.
+- **Mask only.** Every residue inside the masked area is still in the network and must still be connected to a
+  residue of opposite sign or to an edge. The connections are free, so the cost of the solution hardly changes, but
+  the solver still has to find them, and an untiled run takes about as long as before. A tiled run does gain,
+  because the masked noise no longer sets costs along the seams, so the tiles assemble into a nearly right
+  solution and the re-optimization has less to do.
+- **Mask and fill.** Replacing the masked phase with a smooth surface leaves no loops that fail to close, so the
+  masked area contributes no residues at all. The problem shrinks for both modes, and the masked pixels still cost
+  nothing to cross.
 
 The kind of fill matters. A nearest-neighbour fill leaves a phase step where fills from two sides of a thin masked
 band meet. The end of such a step acts as a residue, and on `t085D_f129` it produced a straight one-cycle cut
