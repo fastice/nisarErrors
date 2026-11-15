@@ -139,13 +139,38 @@ To measure error, we build a synthetic interferogram with a known answer for eac
     the phasors partly cancel. We divide by the expected loss, sinc(g_r/2) x sinc(g_a/2), computed from the
     truth's own phase gradients g_r and g_a in radians per pixel. Cells steeper than about 2.4 radians per pixel
     are left decorrelated, as they would be in reality.
-- **Number of looks.** L is fitted per frame (between 16 and 208) so that the synthetic interferogram has the same
-  residue density as the real one in each coherence range.
+- **Number of looks.** The RUNW is formed from 13 x 16 = 208 samples, but we do not use 208 as L. Neighbouring
+  samples are correlated, so the number of independent looks is smaller, and the real phase noise also departs from
+  the ideal model in ways the coherence does not capture: sea ice and shelf fronts change between acquisitions, and
+  the two coherence corrections above are approximate. With L = 208 the synthetic interferogram would be cleaner
+  than the real one on some frames and noisier on others. What makes a frame hard to unwrap is its residues, so we
+  choose L for each frame, from 16, 32, 64, 128 and 208, to make the synthetic interferogram's residue density in
+  each coherence range (bins from 0 to 1) match the real interferogram's as closely as possible. L is therefore a
+  calibration constant that sets how hard the synthetic frame is to unwrap, not a physical look count. The fitted
+  values span the whole range: coastal frames often need a low L (their real phase is noisier than their coherence
+  implies), and interior frames usually fit best at 208.
 
-Each frame is unwrapped twice: **unmasked untiled**, the production approach, and **masked tiled `-S`**. For some frames, earlier diagnostic runs also provide the two mixed combinations, which
-separate the effect of the mask from the effect of tiling. Each solution is scored as the share of pixels, in
-its connected components, whose cycle count differs from the component's median offset against the truth. Both
+### 2.5 Experiment protocol
+
+Each synthetic frame is unwrapped twice: **unmasked untiled**, the production approach, and **masked tiled `-S`**.
+Both runs use the same noisy interferogram (the noise is seeded per frame), and the masked run additionally applies
+the residue mask and smooth fill (Section 3.3). Each solution is scored as the share of pixels, in its connected
+components, whose cycle count differs from the component's median offset against the truth (Section 2.3). Both
 solutions are scored over the same pixels: those the mask keeps.
+
+Where the masked tiled run is substantially less accurate, we also unwrap the masked input untiled with the
+unmodified snaphu. Comparing that run with the other two separates the effect of the mask from the effect of
+tiling.
+
+Pixels where the truth is exactly zero are treated as missing: the velocity model stores zero, not a no-data
+value, where it has no coverage, which is mostly over ice shelves, ice tongues and the ocean. Those pixels are
+filled and left out of the unwrapping and the scoring, like pixels with zero coherence or in sub-swath gaps. A
+frame is skipped if the model covers less than half of its coherent pixels (RUNW coherence above 0.5), and is
+replaced by another frame of the same class chosen by the same rule (Section 2.1). The first version of the test
+treated zero truth as data (Plan).
+
+Each machine runs at most five untiled and three tiled unwrappings at a time, and both runs of a frame are made on
+the same machine. Wall-clock and CPU times come from `/usr/bin/time`.
 
 ## 3. Results
 
