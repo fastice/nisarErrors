@@ -149,7 +149,7 @@ To measure error, we build a synthetic interferogram with a known answer for eac
     g = sqrt((N g_est^2 - 1)/(N - 1)), set to zero below the floor. Without this correction, every decorrelated
     pixel would get a little spurious coherence, and the synthetic noise would be too weak exactly where it matters
     most.
-  - **Fringe-slope bias.** It reads low where the phase changes quickly across the estimation window, because
+  - **Fringe-slope bias.** Correlation reads low where the phase changes quickly across the estimation window, because
     the phasors partly cancel. We divide by the expected loss, sinc(g_r/2) x sinc(g_a/2), computed from the
     truth's own phase gradients g_r and g_a in radians per pixel. Cells steeper than about 2.4 radians per pixel
     are left decorrelated, as they would be in reality.
