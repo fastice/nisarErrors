@@ -321,15 +321,13 @@ already noise.
 
 Table 2 gives the results for the first ten frames of the set. Two of the ten first drawn, `t078D_f122` and
 `t170A_f145`, were replaced by `t047A_f141` and `t079D_f123`, because the velocity map covers too little of them
-(Section 2.1); the replacements' untiled runs are still running. On the eight frames with both runs finished,
-masked tiled `-S` unwrapping is **7-15 times faster** than unmasked untiled unwrapping, median 8.0 times; together
-they took 7,355 s unmasked untiled and 721 s masked tiled `-S`. The largest gains are on large, noisy coastal frames,
+(Section 2.1). Masked tiled `-S` unwrapping is **7-25 times faster** than unmasked untiled unwrapping, median 9.3
+times; together the ten frames took 12,296 s unmasked untiled and 952 s masked tiled `-S`, 12.9 times less. The largest gains are on large, noisy coastal frames,
 where untiled unwrapping is slowest.
 
 *Table 2. Synthetic test, first ten frames: unmasked untiled against masked tiled `-S`. "Wrong" is the share of
 scored pixels whose cycle count is wrong. Colour would mark a masked tiled `-S` error substantially worse (red) or
-better (green) than the unmasked untiled one (more than double or half, or more than 0.5 percentage points apart);
-none is.*
+better (green) than the unmasked untiled one (more than double or half, or more than 0.5 percentage points apart).*
 
 | Frame | Class | Size (Mpx) | L | Residues | Masked | Unmasked untiled | Masked tiled `-S` | Speedup | Wrong, unmasked untiled | Wrong, masked tiled `-S` |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -338,14 +336,15 @@ none is.*
 | `t048A_f137` | interior | 12.4 | 208 | 287k | 2.7% | 514 s | 72 s | 7.1 | 0.000% | 0.000% |
 | `t055D_f125` | coastal | 9.3 | 64 | 633k | 14.1% | 958 s | 74 s | 13.0 | 0.059% | 0.062% |
 | `t064A_f140` | coastal | 14.6 | 32 | 2,083k | 30.2% | 2,388 s | 157 s | 15.2 | 0.062% | 0.062% |
-| `t047A_f141` | coastal | 14.8 | 64 | 1,219k | 14.3% | (running) | 171 s |  | (running) | 0.203% |
+| `t047A_f141` | coastal | 14.8 | 64 | 1,219k | 14.3% | 4,346 s | 171 s | 25.4 | 1.311% | $\color{green}{\text{0.203\%}}$ |
 | `t085D_f129` | interior | 12.5 | 208 | 54k | 0.1% | 769 s | 104 s | 7.4 | 0.000% | 0.000% |
 | `t107D_f123` | coastal | 8.2 | 64 | 83k | 1.9% | 698 s | 82 s | 8.5 | 0.200% | 0.199% |
 | `t144A_f143` | coastal | 10.5 | 64 | 525k | 1.9% | 992 s | 137 s | 7.2 | 0.152% | 0.162% |
-| `t079D_f123` | coastal | 9.0 | 128 | 70k | 0.1% | (running) | 59 s |  | (running) | 0.206% |
+| `t079D_f123` | coastal | 9.0 | 128 | 70k | 0.1% | 597 s | 59 s | 10.1 | 0.206% | 0.206% |
 
-On all seven frames that could be scored, the masked tiled `-S` error is within 0.02 percentage points of the
-unmasked untiled error. One frame, `t003D_f121`, is almost entirely noise, and neither run produced a connected
+On eight of the nine frames that could be scored, the masked tiled `-S` error is within 0.02 percentage points of
+the unmasked untiled error. On the ninth, `t047A_f141`, the mask substantially improves the result (0.20% of
+pixels wrong against 1.31%). One frame, `t003D_f121`, is almost entirely noise, and neither run produced a connected
 component. Wherever the masked input was also unwrapped untiled, tiled and untiled unwrapping of the same input
 gave the same error (Section 3.5).
 
