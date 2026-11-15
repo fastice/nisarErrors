@@ -61,7 +61,7 @@ tests whether that step costs accuracy.
 We performed experiments both with actual phase data and with a larger set of synthetic interferograms based on a
 reference velocity map. The two answer different questions. The actual data show how snaphu behaves on real
 noise, including open ocean, sea ice and decorrelated shear margins, and how long it takes. But they have no
-known answer, so two solutions can only be compared with each other or with JPL's (Section 2.3). The synthetic
+known answer, so two solutions can only be compared with each other or with the RUNW's own solution (Section 2.3). The synthetic
 interferograms combine the phase predicted by the velocity map with noise matched to each frame's real coherence
 (Section 2.4). They have a known answer, so they measure error as well as time, on many more frames.
 
@@ -70,7 +70,7 @@ interferograms combine the phase predicted by the velocity map with noise matche
 We use 100 Antarctica40 RUNW products: 40 MHz (`_4000_`), HH, unwrapped on the 13 x 16 look RUNW grid. They were
 selected across tracks, pass directions, latitudes and acquisition dates, and classed as **coastal** (60 frames,
 footprint touching ocean, ice shelf or the grounding zone) or **interior** (40 frames, fully grounded). Each
-product's own unwrapped phase, rewrapped, together with its coherence, forms the interferogram we unwrap. JPL's
+product's own unwrapped phase, rewrapped, together with its coherence, forms the interferogram we unwrap. The RUNW's
 unwrapped phase and connected components serve as a reference solution.
 
 ### 2.2 Unwrapping
@@ -267,7 +267,7 @@ from the data alone and needs neither a coastline nor geolocation.
 
 Table 1 compares two thresholds on five frames. On the two interior frames the mask hardly matters. On the
 coastal frames a threshold of 0.10 removes more residues and runs faster, while 0.25 removes only near-random
-blocks and agrees slightly better with JPL. In every case the tiled and untiled solutions were identical, with
+blocks and agrees slightly more closely with the RUNW solution. In every case the tiled and untiled solutions were identical, with
 one exception. On `t138A_f141` at 0.25, 0.007% of pixels differed: with 415,000 residues left, the two methods
 started their non-convex optimization from different points and reached slightly different minima.
 
@@ -275,7 +275,7 @@ started their non-convex optimization from different points and reached slightly
 substantially from the 0.10 value (time more than 1.5 times; disagreement changed by more than half, or by more
 than 5 percentage points): red worse, green better.*
 
-| Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25) | Disagreement with JPL, % (0.10 / 0.25) |
+| Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25) | Disagreement with RUNW, % (0.10 / 0.25) |
 |---|---|---|---|---|---|
 | `t048A_f137` | interior | 5.4% / 4.4% | 601 / 693 s | 82 / 104 s | 0.031 / 0.031 |
 | `t085D_f129` | interior | 0.2% / 0.1% | 709 / 694 s | 238 / 217 s | 1.283 / 1.282 |
@@ -285,16 +285,16 @@ than 5 percentage points): red worse, green better.*
 
 Frames that are mostly noise are the difficult case (Figure 3). On `t138A_f141`, about 40-60% of the frame is
 masked. The good data that remains is a set of fragments (glacier tongues, ice-shelf pieces, rough ground) linked
-only by narrow strips. JPL's solution connected these fragments through rough terrain that our mask removes, and
-our solution and JPL's disagree on the relative cycle offsets of several of them (24-30% of compared pixels).
+only by narrow strips. The RUNW solution connects these fragments through rough terrain that the mask removes, and
+the two solutions differ in the relative cycle offsets of several of them (24-30% of compared pixels).
 
 Neither solution can be confirmed from the data. A local comparison of each disagreeing fragment against the
-velocity-model phase favoured our solution on some fragments and JPL's on others, and was inconclusive where the
+velocity-model phase favoured the masked solution on some fragments and the RUNW solution on others, and was inconclusive where the
 model itself is several cycles off, near fronts and glacier tongues. Raising the threshold kept more of the
 connecting terrain but made both modes much slower, without reducing the disagreement.
 
 ![Figure 3](images/snaphuTiling_t138A_maskThresholds.png)
-*Figure 3. The residue mask on `t138A_f141` at four thresholds (purple). Red marks masked pixels that JPL's solution
+*Figure 3. The residue mask on `t138A_f141` at four thresholds (purple). Red marks masked pixels that the RUNW solution
 placed in a connected component.*
 
 A carrier correction made no difference to unwrapping cost. Adding the GrIMP rubber-sheet carrier correction, with
@@ -438,7 +438,7 @@ almost entirely to the tiled mode.
 The mask cuts both ways. On frames where good data survives only as fragments, masking the noise between them
 removes the paths that tied their phases together. Their relative cycle offsets are then fixed only through masked
 or narrow regions, and can come out wrong. This is the mechanism behind the six frames the mask made worse, and
-the disagreement with JPL on `t138A_f141`. On other frames the same mask removes noise that untiled snaphu would
+the difference from the RUNW solution on `t138A_f141`. On other frames the same mask removes noise that untiled snaphu would
 otherwise connect through the data, and the result improves. A gentler rule on land (for example, masking only
 residue regions connected to open ocean) may keep the gains and avoid the losses. In production, the per-component
 ambiguity correction against the velocity model, which can treat separated pieces of a component independently,
@@ -448,7 +448,7 @@ The fragmentation that hurts accuracy also costs time. When masked and decorrela
 the tiles disagree in their overlaps, snaphu's assembly fails to converge, and the `-S` pass does the work instead
 (Section 3.7). Wider overlaps reduce this on the worst frames, but cost about as much on the others.
 
-Agreement with JPL's solution is a weak test. Both it and ours are minimum-cost solutions to the same wrapped
+Agreement with the RUNW solution is a weak test. Both it and the masked solution are minimum-cost solutions to the same wrapped
 phase, and their disagreements are confined to fragments whose offsets the data do not determine. The synthetic
 test is the more informative measure, with two limitations. Its truth is a velocity model, which is aliased at
 some ice fronts. And its noise is calibrated to each frame's residue statistics, not to its actual phase.
