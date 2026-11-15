@@ -42,7 +42,7 @@ masked tiled time. Wider tile overlaps reduce this on the worst frames but cost 
 
 Snaphu solves phase unwrapping as a minimum-cost network flow problem. Its cost grows with the number of
 **residues**: 2 x 2 pixel loops whose wrapped phase differences do not sum to zero, each of which must be
-connected to a residue of the opposite sign or to the edge of the data. With coherent data residues are rare. In
+connected to a residue of the opposite sign or to the edge of the data. With coherent data, residues are rare. In
 decorrelated data, such as open water, about one loop in three is a residue.
 
 To unwrap large interferograms faster, snaphu can divide the image into overlapping tiles, unwrap them in
