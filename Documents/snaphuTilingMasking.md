@@ -79,14 +79,29 @@ All runs use snaphu 2.0.7 with the statistical cost mode `SMOOTH`, an MCF initia
 RUNW's 13 x 16 looks. The two modes compared are:
 
 - **untiled**: the unmodified snaphu release, as used for production unwrapping;
-- **tiled with `-S`**: a slightly modified build of snaphu 2.0.7, 4 x 4 tiles with 200-pixel overlaps, 16
-  processes, followed by the single-tile re-optimization. The build makes three changes: it removes a fixed delay
-  before each tile process starts, it speeds up the search for a common ancestor in the network solver's tree
-  (`FindApex`), and it no longer aborts when large flows lie only on arcs next to masked pixels (Section 3.6).
-  Wherever the unmodified release runs to completion, the output is byte-identical.
+- **tiled with `-S`**: a slightly modified build of snaphu 2.0.7 (below), 4 x 4 tiles with 200-pixel overlaps, 16
+  processes, followed by the single-tile re-optimization.
 
-Runs were made on a 48-core machine shared with other work. Wall-clock times are therefore indicative to perhaps
-20%.
+The modified build changes 125 of snaphu's roughly 20,200 lines of C (114 lines added, 11 removed, in four
+files). None of the changes alter the unwrapped result: wherever the unmodified release runs to completion, the
+output is byte-identical. We checked the first two changes against the unmodified release on CoSSC data and on 68
+Greenland frames, and the third against the build without it on Antarctic frames here.
+The changes are:
+
+- **No delay between tile processes** (1 line). snaphu pauses before starting each tile process, in proportion to
+  the tile size. The pause is unnecessary, because each tile writes its own files and the parent waits for them.
+- **Faster ancestor search** (94 lines added, 6 removed). The tree solver repeatedly searches for the common
+  ancestor of two nodes (`FindApex`) by walking up the tree one node at a time. The modified build caches a pointer
+  to an ancestor every 32 levels and invalidates the cache when the tree changes, so the search skips most of the
+  walk.
+- **No abort on large flows next to masked pixels** (19 lines added, 4 removed). snaphu aborts if any arc carries
+  more flow than its 16-bit cost arithmetic allows: about 160 cycles at the default `NSHORTCYCLE` of 200. A tiled solution can leave that much flow on
+  arcs next to masked pixels, which carry no cost and which the solver already ignores when it tracks the largest
+  flow. The modified build applies the check to the other arcs only (Section 3.6).
+
+Runs were made on machines shared with other work: a 48-core machine and, for the corrected synthetic test, also a
+96-core machine. Both runs of a frame were always made on the same machine. Wall-clock times are therefore
+indicative to perhaps 20%, and speedups are more reliable than absolute times.
 
 ### 2.3 Comparing solutions
 
