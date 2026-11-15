@@ -126,8 +126,15 @@ To measure error, we build a synthetic interferogram with a known answer for eac
   exact distribution of a two-channel complex Wishart matrix (two random draws per pixel). The noise therefore
   follows the frame's real coherence pattern.
 - **Coherence.** The RUNW's own coherence, corrected in two ways:
-  - **Low-coherence bias.** Estimated coherence reads high when the true coherence is low (open ocean reads about
-    0.08 when the truth is near 0), so it is debiased for 139 looks.
+  - **Low-coherence bias.** Coherence is estimated as the magnitude of an average of N products of the two images'
+    complex samples, normalized by their powers. When the true coherence is zero, those products have random
+    phases, and the magnitude of their average is not zero but about 1/sqrt(N), because random phasors do not cancel
+    exactly. For the N = 139 effective looks of the RUNW coherence (13 x 16 samples, fewer independent ones), this
+    floor is about 0.085, and open ocean, where the true coherence is near zero, reads about 0.08. The bias shrinks
+    as the true coherence rises. We remove it with the approximation E[g_est^2] = g^2 + (1 - g^2)/N, i.e.
+    g = sqrt((N g_est^2 - 1)/(N - 1)), set to zero below the floor. Without this correction, every decorrelated
+    pixel would get a little spurious coherence, and the synthetic noise would be too weak exactly where it matters
+    most.
   - **Fringe-slope bias.** It reads low where the phase changes quickly across the estimation window, because
     the phasors partly cancel. We divide by the expected loss, sinc(g_r/2) x sinc(g_a/2), computed from the
     truth's own phase gradients g_r and g_a in radians per pixel. Cells steeper than about 2.4 radians per pixel
