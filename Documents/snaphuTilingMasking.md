@@ -58,6 +58,13 @@ tests whether that step costs accuracy.
 
 ## 2. Data and methods
 
+We performed experiments both with actual phase data and with a larger set of synthetic interferograms based on a
+reference velocity map. The two answer different questions. The actual data show how snaphu behaves on real
+noise, including open ocean, sea ice and decorrelated shear margins, and how long it takes. But they have no
+known answer, so two solutions can only be compared with each other or with JPL's (Section 2.3). The synthetic
+interferograms combine the phase predicted by the velocity map with noise matched to each frame's real coherence
+(Section 2.4). They have a known answer, so they measure error as well as time, on many more frames.
+
 ### 2.1 Data
 
 We use 100 Antarctica40 RUNW products: 40 MHz (`_4000_`), HH, unwrapped on the 13 x 16 look RUNW grid. They were
