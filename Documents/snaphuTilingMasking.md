@@ -287,15 +287,16 @@ started their non-convex optimization from different points and reached slightly
 
 *Table 1. Real-data runs with the residue mask at thresholds 0.10 and 0.25. Colour marks a 0.25 value that differs
 substantially from the 0.10 value (time more than 1.5 times; disagreement changed by more than half, or by more
-than 5 percentage points): red worse, green better.*
+than 5 percentage points): red worse, green better. The tiled times are followed by the speedup over the untiled
+run at the same threshold.*
 
-| Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25) | Disagreement with RUNW, % (0.10 / 0.25) |
+| Frame | Class | Masked (0.10 / 0.25) | Untiled (0.10 / 0.25) | Tiled + `-S` (0.10 / 0.25), with speedup over untiled | Disagreement with RUNW, % (0.10 / 0.25) |
 |---|---|---|---|---|---|
-| `t048A_f137` | interior | 5.4% / 4.4% | 601 / 693 s | 82 / 104 s | 0.031 / 0.031 |
-| `t085D_f129` | interior | 0.2% / 0.1% | 709 / 694 s | 238 / 217 s | 1.283 / 1.282 |
-| `t107D_f123` | coastal | 27.5% / 23.7% | 746 / 855 s | 116 / 127 s | 0.329 / $\color{green}{\text{0.079}}$ |
-| `t055D_f125` | coastal | 54.8% / 46.5% | 1,187 / 1,583 s | 99 / $\color{red}{\text{199}}$ s | 0.166 / 0.143 |
-| `t138A_f141` | coastal | 57.5% / 39.3% | 1,571 / $\color{red}{\text{2,933}}$ s | 374 / $\color{red}{\text{1,427}}$ s | 24.1 / $\color{red}{\text{29.9}}$ |
+| `t048A_f137` | interior | 5.4% / 4.4% | 601 / 693 s | 82 (7.3x) / 104 (6.7x) s | 0.031 / 0.031 |
+| `t085D_f129` | interior | 0.2% / 0.1% | 709 / 694 s | 238 (3.0x) / 217 (3.2x) s | 1.283 / 1.282 |
+| `t107D_f123` | coastal | 27.5% / 23.7% | 746 / 855 s | 116 (6.4x) / 127 (6.7x) s | 0.329 / $\color{green}{\text{0.079}}$ |
+| `t055D_f125` | coastal | 54.8% / 46.5% | 1,187 / 1,583 s | 99 (12.0x) / $\color{red}{\text{199}}$ (8.0x) s | 0.166 / 0.143 |
+| `t138A_f141` | coastal | 57.5% / 39.3% | 1,571 / $\color{red}{\text{2,933}}$ s | 374 (4.2x) / $\color{red}{\text{1,427}}$ (2.1x) s | 24.1 / $\color{red}{\text{29.9}}$ |
 
 Frames that are mostly noise are the difficult case (Figure 4). On `t138A_f141`, about 40-60% of the frame is
 masked. The good data that remains is a set of fragments (glacier tongues, ice-shelf pieces, rough ground) linked
