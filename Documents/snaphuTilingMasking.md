@@ -255,7 +255,11 @@ as JPL does, but leave them out of all comparisons.
 
 ### 3.3 A residue-based mask
 
-Rather than relying on a coastline, we derive the mask from the residues themselves. The residue density in
+The ocean mask did not solve the problem. It removes only the noise a map can predict, open water away from the
+coast, and leaves the rest: sea ice, the coastal margin, fjords and decorrelated areas on land, which on many
+coastal frames hold much of the noise. It also depends on an external mask that has to be kept current and mapped
+into radar geometry for every frame. So rather than relying on a coastline, we derive the mask from the residues
+themselves, which marks the noise wherever it is. The residue density in
 15 x 15 pixel blocks is close to two-valued: blocks are either nearly free of residues or close to the one in three
 expected for random phase. We mask blocks above a threshold, but only in regions at least three blocks thick, so
 that narrow low-coherence streaks across the ice are left to snaphu's coherence weighting. The mask is computed
