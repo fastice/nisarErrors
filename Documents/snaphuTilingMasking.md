@@ -237,7 +237,7 @@ corrected run's error rates differ by less than 0.04 percentage points.*
 
 Tiling with `-S` never changed the unwrapped answer in a way that mattered. Its speed, however, depends on the
 residues left after the tiled pass. snaphu's tiled pass is parallel, but the re-optimization that makes the result
-seam-free is not. On clean data the assembled tiles are almost right and that step converges in seconds. When the
+seam-free is not. On clean data the assembled tiles are almost right and that step converges quickly. When the
 tiles meet in dense noise, each tile pairs the noise residues differently, the assembled solution is far from the
 whole-scene optimum, and the re-optimization can take longer than unwrapping the whole scene untiled. Removing the
 noise first leaves the assembled solution nearly right again, so almost all of the work stays in the parallel stage. Untiled unwrapping time
