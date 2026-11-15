@@ -9,8 +9,9 @@ results, and the results sections will be redone from it (see [Plan](#plan)).
 
 These experiments are designed to see if the wall-clock time for snaphu can be reduced by using tiled rather than
 untiled unwrapping. Specifically, we investigate tiling with the `-S` option, using a slightly modified version of
-snaphu 2.0.7 (Section 2.2). Tiling splits the interferogram into tiles (here 4 x 4) that are unwrapped in parallel, assembles them, and then re-optimizes the assembled solution as a
-single tile so that the result has no errors along the tile seams. Production unwrapping of NISAR RUNW products uses
+snaphu 2.0.7 (Section 2.2). Tiling splits the interferogram into tiles (here 4 x 4) that are unwrapped in parallel
+and then assembled; with `-S`, snaphu then re-optimizes the assembled solution as a single tile so that the result
+has no errors along the tile seams. Production unwrapping of NISAR RUNW products uses
 untiled snaphu, which runs on a single core because its network solver is sequential.
 
 On 80 MHz Greenland interferograms, tiled unwrapping with `-S` was about 2.5 times faster than untiled unwrapping,
