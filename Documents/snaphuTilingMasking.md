@@ -409,7 +409,10 @@ cycle count, so the assembled solution jumped by up to 245 cycles across masked 
 160 (32,000 divided by `NSHORTCYCLE` 200). Arcs next to masked pixels carry no cost, and snaphu's solver loop
 already ignores them when it tracks the largest flow, so the modified build now applies the initial check to the
 other arcs only. On frames that passed the check its output is byte-identical to the previous build. With this
-change, no frame of the corrected synthetic test aborts. One frame (`t060A_f139`) also failed in the first version
+change, no frame of the corrected synthetic test aborts. Without it, 9 of the first 181 masked tiled runs (5%)
+would have: their largest flows next to masked pixels were 164 to 338 cycles, while elsewhere they stayed within
+the limit (2 to 117 cycles). Masked tiled unwrapping therefore needs the modified snaphu. Untiled unwrapping, masked
+or not, builds no tile solution and is not affected. One frame (`t060A_f139`) also failed in the first version
 of the test, because a jump of 389 cycles lay between unmasked pixels; that jump came from the zero-truth areas
 (Section 2.5), and with those excluded the frame runs.
 
