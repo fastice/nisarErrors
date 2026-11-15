@@ -8,8 +8,8 @@ results, and the results sections will be redone from it (see [Plan](#plan)).
 ## Summary
 
 These experiments are designed to see if the wall-clock time for snaphu can be reduced by using tiled rather than
-untiled unwrapping. Specifically, we investigate tiling with the `-S` option, which splits the interferogram into
-tiles (here 4 x 4) that are unwrapped in parallel, assembles them, and then re-optimizes the assembled solution as a
+untiled unwrapping. Specifically, we investigate tiling with the `-S` option, using a slightly modified version of
+snaphu 2.0.7 (Section 2.2). Tiling splits the interferogram into tiles (here 4 x 4) that are unwrapped in parallel, assembles them, and then re-optimizes the assembled solution as a
 single tile so that the result has no errors along the tile seams. Production unwrapping of NISAR RUNW products uses
 untiled snaphu, which runs on a single core because its network solver is sequential.
 
@@ -71,9 +71,11 @@ All runs use snaphu 2.0.7 with the statistical cost mode `SMOOTH`, an MCF initia
 RUNW's 13 x 16 looks. The two modes compared are:
 
 - **untiled**: the unmodified snaphu release, as used for production unwrapping;
-- **tiled with `-S`**: the modified build, 4 x 4 tiles with 200-pixel overlaps, 16 processes, followed by the
-  single-tile re-optimization. Its output is byte-identical to the unmodified release for the same mode,
-  except that it no longer aborts when masked areas carry large flows (Section 3.6).
+- **tiled with `-S`**: a slightly modified build of snaphu 2.0.7, 4 x 4 tiles with 200-pixel overlaps, 16
+  processes, followed by the single-tile re-optimization. The build makes three changes: it removes a fixed delay
+  before each tile process starts, it speeds up the search for a common ancestor in the network solver's tree
+  (`FindApex`), and it no longer aborts when large flows lie only on arcs next to masked pixels (Section 3.6).
+  Wherever the unmodified release runs to completion, the output is byte-identical.
 
 Runs were made on a 48-core machine shared with other work. Wall-clock times are therefore indicative to perhaps
 20%.
