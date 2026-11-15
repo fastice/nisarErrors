@@ -1,9 +1,8 @@
 # Tiled phase unwrapping of noisy NISAR interferograms: the cost of residues and a masking remedy
 
-**Status: draft, 2026-11-15.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test. The
-first version of the synthetic test (Sections 3.4 to 3.7, Appendix A) used a truth that is zero, not missing, where
-the velocity model has no coverage. A corrected version is running on 200 frames; the Summary gives its provisional
-results, and the results sections will be redone from it (see [Plan](#plan)).
+**Status: draft, 2026-11-15.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test on
+200 frames. An earlier version of the synthetic test used a truth that is zero, not missing, where the velocity map
+has no coverage; all synthetic results here are from the corrected test (Section 2.5).
 
 ## Summary
 
@@ -26,16 +25,17 @@ Replacing that phase with a smooth fill removes them; a crude fill, such as copy
 creates new ones (Section 3.2). We use a mask built from the residues themselves: 15 x 15 pixel blocks whose residue density exceeds 0.25
 per loop, restricted to regions at least three blocks thick.
 
-In a synthetic test with a known answer, masked tiled unwrapping is a median 8.1 times faster than the unmasked
-untiled unwrapping used in production (provisional, 119 of 200 frames, 50 of them coastal). Scaled to the 1,803
-frame locations of the Antarctica40 project (30% coastal), one pass of unwrapping would take about 80 h instead of
-about 570 h, about 7 times less. Accuracy is unchanged on almost every frame: on 103 of the 116 frames that could
-be scored the two error rates differ by less than 0.07 percentage points, and the mean share of pixels with the
-wrong cycle count is 1.2% in both. The mask makes a few frames substantially more accurate (5) and a few less
-accurate (3); the losses come from disconnecting pieces of good data whose relative cycle offsets then go wrong.
+In a synthetic test with a known answer on 200 frames, masked tiled unwrapping is a median 8.9 times faster
+than the unmasked untiled unwrapping used in production, and 7.1 times faster in total (10.4 h against
+74.3 h). Scaled to the 1,803 frame locations of the Antarctica40 project (30% coastal), one pass of unwrapping
+would take about 107 h instead of about 658 h, about 6 times less. Accuracy is effectively unchanged: on
+165 of the 193 frames that could be scored the two error rates differ by less than 0.07 percentage points, and the
+mean share of pixels with the wrong cycle count is 1.55% masked tiled against 1.64% unmasked untiled. The
+mask makes 10 frames substantially more accurate and 7 less accurate; the losses come from disconnecting pieces
+of good data whose relative cycle offsets then go wrong.
 
-On about one frame in fifteen, snaphu's assembly of the tiles fails to converge. The `-S` re-optimization repairs
-the result, so the answer is unaffected, but these frames lose most of the speedup and take about half of the
+On 16 of the 200 frames, snaphu's assembly of the tiles fails to converge. The `-S` re-optimization repairs the
+result, so the answer is unaffected, but these frames gain a median of only 3.6 times and take about half of the
 masked tiled time. Wider tile overlaps reduce this on the worst frames but cost about as much on the others.
 
 ## 1. Introduction
@@ -362,43 +362,46 @@ in the masked tiled `-S` and unmasked untiled solutions; dark grey is masked or 
 
 ### 3.5 Synthetic test: all frames
 
-*Provisional: 148 of the 200 frames (72 coastal, 76 interior) of the corrected test have both runs finished. This
-section will be updated when the test finishes.*
+Table 3 and Figure 6 summarize the 200 frames (120 coastal, 80 interior); Appendix A lists every frame. Masked
+tiled `-S` unwrapping took a median of 77 s per frame against 636 s for unmasked untiled unwrapping
+(Figure 6a). The median speedup is 8.9 times (Figure 6b), and the total time fell 7.1 times, from 74.3 h to
+10.4 h. Coastal frames gain more (median 11.0 times) than interior frames (median 7.6 times), because their
+untiled runs spend longest on the noise.
 
-Table 3 and Figure 6 summarize the frames finished so far; Appendix A lists every frame. Masked tiled `-S`
-unwrapping took a median of 68 s per frame against 570 s for unmasked untiled unwrapping (Figure 6a). The median
-speedup is 8.3 times (Figure 6b), and the total time fell 6.5 times, from 49.4 h to 7.6 h.
+**Scaled to the project.** The test over-represents coastal frames (60%, against 30% of the project's 1,803 frame
+locations). Weighting the mean time per frame of each class by the project's counts, one unwrapping pass over all
+locations would take about 658 h unmasked untiled and about 107 h masked tiled `-S`, 6.2 times less (90% range
+from resampling the frames: 4.5 to 9.3 times). The hours are single-frame wall-clock times on shared machines;
+the ratio is the more robust number.
 
-**Accuracy.** Most frames are unchanged (Figure 6c, d). On 128 of the 145 frames that could be scored the two errors
-are within 0.07 percentage points of each other, and on 139 within 0.5 points. The median share of wrong pixels is
-0.036% unmasked untiled and 0.027% masked tiled `-S`. A few frames change substantially, six for the better and three
-for the worse (Table 3):
+**Accuracy.** Most frames are unchanged (Figure 6c, d). On 165 of the 193 frames that could be scored the two errors
+are within 0.07 percentage points of each other, and on 181 within 0.5 points. The median share of wrong pixels is
+0.059% unmasked untiled and 0.057% masked tiled `-S`, and the mean 1.64% and 1.55%. The mean is
+dominated by a few frames that neither run unwraps well (up to about 60% wrong in both), the median by the typical
+frame. 10 frames change substantially for the better and 7 for the worse (Table 3):
 
-- Better: `t104A_f142` (36.1% to 22.5%), `t151A_f138` (12.8% to 5.9%), `t111A_f144` (5.6% to 4.1%), and three
-  frames whose errors were already below 0.15% (`t073D_f123`, `t087A_f142`, `t059D_f123`).
-- Worse: `t059D_f122` (2.4% to 13.7%), `t108A_f139` (0.23% to 2.4%) and `t097D_f125` (0.39% to 1.4%).
+- Better: `t104A_f142` (36% to 22%), `t151A_f138` (13% to 5.9%), `t076A_f138` (5.7% to 0.17%), `t061A_f142` (5.4% to 0.63%), `t060A_f139` (9.2% to 7.4%), `t111A_f144` (5.6% to 4.1%), `t047A_f141` (1.3% to 0.2%), `t073D_f123` (0.14% to 0.015%), `t087A_f142` (0.036% to 0.016%), `t059D_f123` (0.015% to 0.00031%).
+- Worse: `t059D_f122` (2.4% to 14%), `t108A_f139` (0.23% to 2.4%), `t010D_f124` (0.56% to 2.4%), `t097D_f125` (0.39% to 1.4%), `t170D_f126` (0.0027% to 0.59%), `t033A_f141` (0.064% to 0.35%), `t111A_f144` (0.067% to 0.22%).
 
-In the first version of the test, every frame that lost accuracy was also unwrapped with the masked input untiled,
-and in every case that run had the same error as the masked tiled run: the losses came from the mask, not from
-tiling. The three losses in the corrected test have not yet been checked this way.
+ATTRIBUTION_PLACEHOLDER
 
-*Table 3. Synthetic test, the frames finished so far, by class. Totals are summed wall-clock times. "Wrong" is the
-median share of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use the
-rule of Table 2 in each direction.*
+*Table 3. Synthetic test, all 200 frames, by class. Totals are summed wall-clock times. "Wrong" is the median share
+of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use the rule of
+Table 2 in each direction.*
 
 | Set | Frames | Unmasked untiled, total | Masked tiled `-S`, total | Speedup, median (range) | Wrong, unmasked untiled | Wrong, masked tiled `-S` | Substantially worse | Substantially better |
 |---|---|---|---|---|---|---|---|---|
-| all | 148 | 49.4 h | 7.6 h | 8.3 (1.3-141.8) | 0.036% | 0.027% | 3 of 145 | 6 of 145 |
-| coastal | 72 | 23.4 h | 3.5 h | 9.4 (1.3-33.0) | 0.281% | 0.300% | 3 of 69 | 3 of 69 |
-| interior | 76 | 26.0 h | 4.1 h | 7.6 (2.4-141.8) | 0.000% | 0.000% | 0 of 76 | 3 of 76 |
+| all | 200 | 74.3 h | 10.4 h | 8.9 (0.8-141.8) | 0.059% | 0.057% | 7 of 193 | 10 of 193 |
+| coastal | 120 | 45.6 h | 5.1 h | 11.0 (1.3-62.2) | 0.232% | 0.228% | 7 of 113 | 6 of 113 |
+| interior | 80 | 28.7 h | 5.3 h | 7.6 (0.8-141.8) | 0.001% | 0.000% | 0 of 80 | 4 of 80 |
 
 ![Figure 6](images/snaphuTiling_syntheticSummary.png)
-*Figure 6. Synthetic test, the 148 frames finished so far. (a) Wall time of each run, with medians (dashed) and
-totals; runs longer than 4,000 s are in the last bin (unmasked untiled | masked tiled `-S`). (b) Speedup, stacked by
-class, with the median (dashed); speedups above 30 are in the last bin, with their values. (c) Share of scored pixels
-with the wrong cycle count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames
-substantially worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled (negative where
-the masked run is more accurate); changes beyond ±3 points are in the end bins, with their values.*
+*Figure 6. Synthetic test, all 200 frames. (a) Wall time of each run, with medians (dashed) and totals; runs longer
+than 4,000 s are in the last bin (unmasked untiled | masked tiled `-S`). (b) Speedup, stacked by class, with the
+median (dashed); speedups above 30 are in the last bin, with their values. (c) Share of scored pixels with the wrong
+cycle count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially
+worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled (negative where the masked
+run is more accurate); changes beyond ±3 points are in the end bins, with their values.*
 
 ### 3.6 An overflow abort
 
@@ -409,8 +412,8 @@ cycle count, so the assembled solution jumped by up to 245 cycles across masked 
 already ignores them when it tracks the largest flow, so the modified build now applies the initial check to the
 other arcs only. On frames that passed the check its output is byte-identical to the previous build. With this
 change, no frame of the corrected synthetic test aborts. Without the snaphu modifications, that is with stock
-snaphu 2.0.7, 9 of the first 181 masked tiled runs (5%) would have aborted: their largest flows next to masked
-pixels were 164 to 338 cycles, while elsewhere they stayed within the limit (2 to 117 cycles). Masked tiled
+snaphu 2.0.7, 10 of the 200 masked tiled runs (5%) would have aborted: their largest flows next to masked
+pixels were 164 to 338 cycles, while elsewhere they stayed within the limit. Masked tiled
 unwrapping therefore requires the modified snaphu; with stock snaphu it fails on about one frame in twenty.
 Untiled unwrapping, masked or not, builds no tile solution and works with stock snaphu. One frame (`t060A_f139`) also failed in the first version
 of the test, because a jump of 389 cycles lay between unmasked pixels; that jump came from the zero-truth areas
@@ -419,14 +422,13 @@ of the test, because a jump of 389 cycles lay between unmasked pixels; that jump
 ### 3.7 Slow frames: the assembly of the tiles
 
 Snaphu assembles the tiles by solving a secondary network for the cycle offset of each piece of each tile. On
-12 of the 147 frames finished so far (provisional, corrected test) this solver stopped early ("No overall cost
-reduction for too many iterations"), and the assembled solution contains wrong offsets of tens of cycles between
-pieces (127 cycles across a 180-pixel boundary on `t081D_f127` in the first version of the test), which the `-S`
-pass has to repair. The answer is repaired, but much of the time saving is lost: these 12 frames take 55% of
-the masked tiled `-S` time. If they ran at the median speedup of the other frames (8.7 times), the total would
-fall from 7.6 h to 4.9 h, a speedup of about 10 rather than 6.5. Even on these frames, masked tiled
-`-S` unwrapping is still faster than unmasked untiled unwrapping: a median 3.4 times (1.3 to 7.9), and
-3.1 times in total.
+16 of the 200 frames this solver stopped early ("No overall cost reduction for too many iterations"), and the
+assembled solution contains wrong offsets of tens of cycles between pieces (127 cycles across a 180-pixel boundary on
+`t081D_f127` in the first version of the test), which the `-S` pass has to repair. The answer is repaired, but much
+of the time saving is lost: these 16 frames take 52% of the masked tiled `-S` time. If they ran at the median
+speedup of the other frames (9.3 times), the total would fall from 10.4 h to 6.9 h, a speedup of about
+11 rather than 7.1. Even so, masked tiled `-S` unwrapping is faster than unmasked untiled unwrapping on all but
+one of these frames: a median 3.6 times (0.8 to 62), and 3.3 times in total.
 
 The cause lies in the tiles, not in the solver. The solver works with costs clipped to 16-bit integers, but an exact
 solution of the same secondary network for `t081D_f127` with 64-bit costs is only 16% cheaper and still contains a
@@ -444,7 +446,7 @@ slow frames mostly ran faster (`t081D_f127` 3,193 s to 1,466 s, `t173D_f127` 866
 four normal frames ran about 20% slower, because the tiles are larger. In total the 17 frames took 12% less time
 (12,516 s against 14,224 s), but they are mostly slow frames; weighting the two groups as in the 100-frame set
 (Section 3.5) gives roughly the same total time either way. The one frame that aborted at 200 pixels
-(`t060A_f139`, Section 3.6) runs at 400 pixels. These runs used the uncorrected synthetic inputs (Plan), which does
+(`t060A_f139`, Section 3.6) runs at 400 pixels. These runs used the synthetic inputs of the earlier version of the test (Section 2.5), which does
 not affect the comparison of the two overlaps on the same input. With 3 x 3 tiles, `t081D_f127` took 1,924 s.
 
 ## 4. Discussion
@@ -460,7 +462,7 @@ almost entirely to the tiled mode.
 
 The mask cuts both ways. On frames where good data survives only as fragments, masking the noise between them
 removes the paths that tied their phases together. Their relative cycle offsets are then fixed only through masked
-or narrow regions, and can come out wrong. This is the mechanism behind the six frames the mask made worse, and
+or narrow regions, and can come out wrong. This is the mechanism behind the 7 frames the mask made worse, and
 the difference from the RUNW solution on `t138A_f141`. On other frames the same mask removes noise that untiled snaphu would
 otherwise connect through the data, and the result improves. A gentler rule on land (for example, masking only
 residue regions connected to open ocean) may keep the gains and avoid the losses. In production, the per-component
@@ -473,9 +475,9 @@ the tiles disagree in their overlaps, snaphu's assembly fails to converge, and t
 
 Antarctica is in some ways a special case. Its coastal frames carry large areas of open ocean and sea ice, which
 make up most of the noise studied here. The interior frames, coherent ice with little noise, are closer to most of
-the land and ice NISAR images elsewhere. On the 76 interior frames finished so far, masked tiled `-S` unwrapping is a
-median 7.6 times faster than unmasked untiled unwrapping (6.4 times in total), and accuracy is unchanged on
-74 of them to within 0.07 percentage points. That suggests tiling with `-S` could speed up NISAR unwrapping
+the land and ice NISAR images elsewhere. On the 80 interior frames, masked tiled `-S` unwrapping is a
+median 7.6 times faster than unmasked untiled unwrapping (5.4 times in total), and accuracy is unchanged on
+77 of them to within 0.07 percentage points. That suggests tiling with `-S` could speed up NISAR unwrapping
 globally, not only in Antarctica, although regions with other kinds of decorrelation, such as dense vegetation, would
 need their own test.
 
@@ -487,21 +489,20 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 ## 5. Conclusions
 
 1. Tiled unwrapping with `-S` gives the same result as untiled unwrapping of the same input. Combined with the
-   residue mask, it gives effectively the same accuracy as the production approach: 1.50% against
-   1.55% of pixels with the wrong cycle count on average (median 0.025% against 0.033%), on the
-   144 frames scored so far. On noisy coastal frames tiling is fast only if the residue-dense noise is removed
-   first.
+   residue mask, it gives effectively the same accuracy as the production approach: 1.55% against
+   1.64% of pixels with the wrong cycle count on average (median 0.057% against 0.059%), on 193
+   scored frames. On noisy coastal frames tiling is fast only if the residue-dense noise is removed first.
 2. Removing the noise requires both masking and a smooth fill of the masked pixels, together with filling the
    zero-valued sub-swath edges of the RUNW. Masked tiled unwrapping also requires the modified snaphu: stock
    snaphu 2.0.7 aborts on about 5% of masked frames (Section 3.6).
 3. A residue-density mask (15 x 15 blocks, threshold 0.25, regions at least three blocks thick) makes masked tiled
-   unwrapping a median 8.3 times faster than the production approach, and 6.5 times faster in total
-   (147 synthetic frames so far, provisional).
-4. The mask changes accuracy substantially on only a few frames, 6 for the better and 3 for the worse, and on
-   average it costs nothing. The losses come from disconnecting fragments of good data; the mask rule, not the
-   use of tiles, is what could be refined.
+   unwrapping a median 8.9 times faster than the production approach, and 7.1 times faster in total, on 200
+   synthetic frames; scaled to the whole project, about 6 times faster.
+4. The mask changes accuracy substantially on only a few frames, 10 for the better and 7 for the worse, and on
+   average it costs nothing. The losses come from disconnecting fragments of good data; the mask rule, not the use
+   of tiles, is what could be refined.
 5. On about one frame in 12, snaphu's assembly of the tiles fails to converge and `-S` repairs it at a cost in
-   time; these frames are still a median 3.4 times faster than untiled. This is not a solver limitation. Wider tile
+   time; these frames are still a median 3.6 times faster than untiled. This is not a solver limitation. Wider tile
    overlaps (400 pixels) shift time from these frames to the others without changing the answer, and save little
    overall.
 6. Antarctica's coastal frames, with open ocean and sea ice, are an unusually hard case. The interior frames are
@@ -510,39 +511,46 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 
 ## Plan
 
-Done for the first 100 frames: the full results (Section 3.5, Appendix A), and the attribution of every frame that
-lost accuracy (all to the mask). Next:
+Done: the corrected synthetic test on 200 frames (Sections 3.4 and 3.5, Appendix A). Next:
 
-1. **Second 100 frames.** Repeat the summary for the second set (P05023 products only), running now, and for both
-   sets together.
-2. **Tile overlaps.** Repeat the 400-pixel overlap comparison (Section 3.7) on a random sample of the corrected
-   frames, together with a timing of stock snaphu against the modified build.
-3. **Gentler masks.** Compare frames the mask helped (`t151A_f138`, `t044D_f123`) with frames it hurt (`t032D_f121`,
-   `t172D_f127`), and test mask variants, for example masking only residue regions connected to open ocean, or a
-   different thickness rule.
-4. **Production.** Settle the mask rule and the tiling parameters, and add the preprocessing (residue mask, smooth
+1. **Attribution.** Unwrap the masked input untiled for the frames the mask made worse, to confirm that the losses
+   come from the mask and not from tiling (running).
+2. **Stock snaphu and tile overlaps.** Time stock snaphu against the modified build on a sample of frames, and
+   repeat the 400-pixel overlap comparison (Section 3.7) on a random sample of the corrected frames.
+3. **Gentler masks.** Compare frames the mask helped (`t076A_f138`, `t061A_f142`, `t151A_f138`) with frames it hurt
+   (`t059D_f122`, `t108A_f139`, `t010D_f124`), and test mask variants, for example filling isolated unmasked blocks
+   inside masked areas, masking only residue regions connected to open ocean, or a different thickness rule.
+4. **Truth from the NISAR map.** Simulate the truth from the NISAR velocity mosaic, which covers the ice shelves and
+   coastal ice that the MEaSUREs phase-based map lacks, so fewer coastal pixels have to be dropped.
+5. **Production.** Settle the mask rule and the tiling parameters, and add the preprocessing (residue mask, smooth
    fill of masked and sub-swath pixels) ahead of tiled unwrapping in production.
-5. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
+6. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
 
 ## Appendix A: synthetic test, all frames
 
-*Table A1. Synthetic test (corrected), the 148 frames finished so far; provisional. Columns as in Table 2. Red marks
-a masked tiled `-S` error substantially worse than the unmasked untiled one, green one substantially better (more
-than double or half, or more than 0.5 percentage points apart).*
+*Table A1. Synthetic test, all 200 frames. Columns as in Table 2. Red marks a masked tiled `-S` error substantially
+worse than the unmasked untiled one, green one substantially better (more than double or half, or more than 0.5
+percentage points apart).*
 
 | Frame | Class | Size (Mpx) | L | Residues | Masked | Unmasked untiled | Masked tiled `-S` | Speedup | Wrong, unmasked untiled | Wrong, masked tiled `-S` |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `t001A_f138` | interior | 14.0 | 208 | 8k | 0.0% | 485 s | 55 s | 8.9 | 0.000% | 0.000% |
 | `t003D_f121` | coastal | 7.0 | 16 | 138k | 2.4% | 670 s | 45 s | 15.0 | (no components) | (no components) |
+| `t004A_f141` | coastal | 14.8 | 32 | 2,770k | 48.7% | 2,113 s | 126 s | 16.7 | (no components) | (no components) |
 | `t004D_f133` | interior | 9.6 | 208 | 4k | 0.0% | 347 s | 28 s | 12.5 | 0.000% | 0.000% |
 | `t006A_f135` | interior | 9.3 | 208 | 46k | 0.0% | 564 s | 51 s | 11.1 | 0.029% | 0.029% |
+| `t006A_f140` | coastal | 14.4 | 128 | 1,835k | 23.7% | 2,551 s | 164 s | 15.6 | 0.002% | 0.005% |
 | `t007D_f123` | coastal | 8.6 | 64 | 44k | 0.2% | 543 s | 64 s | 8.5 | 0.133% | 0.136% |
+| `t007D_f123` | coastal | 8.6 | 64 | 62k | 0.1% | 616 s | 57 s | 10.8 | 0.169% | 0.169% |
 | `t008D_f131` | interior | 12.4 | 208 | 40k | 0.0% | 528 s | 65 s | 8.1 | 0.104% | 0.103% |
+| `t008D_f133` | interior | 6.9 | 208 | 528k | 1.4% | 347 s | 38 s | 9.1 | 0.000% | 0.000% |
 | `t009A_f144` | coastal | 10.2 | 208 | 445k | 3.7% | 1,388 s | 139 s | 10.0 | 1.311% | 0.885% |
+| `t010D_f124` | coastal | 14.9 | 16 | 507k | 2.5% | 1,932 s | 406 s | 4.8 | 0.562% | $\color{red}{\text{2.362\%}}$ |
 | `t011A_f145` | coastal | 14.4 | 64 | 273k | 1.7% | 2,198 s | 105 s | 21.0 | 0.281% | 0.440% |
 | `t011A_f145` | coastal | 14.4 | 208 | 116k | 0.4% | 1,498 s | 84 s | 17.8 | 0.507% | 0.507% |
 | `t011D_f126` | coastal | 14.3 | 64 | 2,172k | 30.3% | 5,508 s | 167 s | 33.0 | 0.247% | 0.162% |
 | `t011D_f128` | interior | 13.9 | 208 | 46k | 0.0% | 376 s | 49 s | 7.7 | 0.004% | 0.004% |
+| `t012D_f126` | coastal | 14.5 | 128 | 2,016k | 27.0% | 1,057 s | 160 s | 6.6 | 0.151% | 0.152% |
 | `t013A_f143` | interior | 3.8 | 208 | 8k | 0.0% | 59 s | 11 s | 5.1 | 0.000% | 0.000% |
 | `t013A_f144` | coastal | 14.7 | 208 | 462k | 2.3% | 1,449 s | 127 s | 11.4 | 0.847% | 0.843% |
 | `t013D_f128` | interior | 10.8 | 32 | 83k | 0.3% | 465 s | 114 s | 4.1 | 0.005% | 0.005% |
@@ -556,18 +564,26 @@ than double or half, or more than 0.5 percentage points apart).*
 | `t024A_f143` | interior | 6.9 | 208 | 296k | 1.4% | 235 s | 41 s | 5.7 | 0.000% | 0.000% |
 | `t025D_f126` | interior | 6.2 | 208 | 534k | 8.2% | 308 s | 37 s | 8.3 | 0.000% | 0.000% |
 | `t027A_f141` | interior | 14.8 | 128 | 152k | 0.0% | 487 s | 196 s | 2.5 | 0.001% | 0.001% |
+| `t029D_f127` | coastal | 14.8 | 208 | 192k | 0.1% | 948 s | 128 s | 7.4 | 0.074% | 0.074% |
 | `t030D_f122` | coastal | 4.2 | 128 | 176k | 2.4% | 362 s | 29 s | 12.6 | 1.189% | 1.636% |
 | `t031D_f123` | interior | 8.5 | 208 | 920k | 10.3% | 382 s | 60 s | 6.4 | 0.001% | 0.001% |
 | `t032D_f121` | coastal | 13.6 | 64 | 548k | 8.3% | 1,447 s | 93 s | 15.5 | 0.329% | 0.527% |
+| `t033A_f141` | coastal | 14.7 | 208 | 844k | 4.5% | 4,059 s | 218 s | 18.6 | 0.064% | $\color{red}{\text{0.352\%}}$ |
+| `t034D_f121` | coastal | 8.9 | 208 | 113k | 0.1% | 648 s | 46 s | 14.1 | 0.135% | 0.135% |
 | `t036A_f138` | interior | 14.4 | 128 | 25k | 0.0% | 830 s | 76 s | 10.9 | 0.000% | 0.000% |
 | `t036A_f139` | coastal | 16.4 | 128 | 56k | 0.0% | 1,419 s | 109 s | 13.0 | 0.180% | 0.180% |
+| `t036D_f123` | coastal | 11.7 | 128 | 191k | 0.1% | 839 s | 70 s | 12.0 | 0.616% | 0.614% |
 | `t037A_f142` | coastal | 10.0 | 32 | 398k | 1.0% | 597 s | 67 s | 8.9 | 0.127% | 0.139% |
 | `t038A_f144` | coastal | 16.1 | 208 | 216k | 1.6% | 1,166 s | 142 s | 8.2 | 0.326% | 0.212% |
+| `t039A_f145` | coastal | 2.7 | 208 | 137k | 10.7% | 142 s | 22 s | 6.5 | (no components) | 0.331% |
+| `t040D_f124` | coastal | 7.7 | 32 | 118k | 1.0% | 545 s | 42 s | 12.9 | 0.248% | 0.248% |
 | `t041A_f140` | interior | 14.4 | 208 | 141k | 0.0% | 483 s | 75 s | 6.5 | 0.000% | 0.000% |
 | `t043D_f128` | interior | 9.6 | 208 | 409k | 0.0% | 364 s | 36 s | 10.2 | 0.001% | 0.001% |
 | `t044A_f139` | interior | 14.7 | 64 | 0k | 0.0% | 311 s | 39 s | 7.9 | 0.000% | 0.000% |
 | `t044D_f123` | coastal | 11.2 | 128 | 337k | 2.4% | 953 s | 77 s | 12.4 | 0.068% | 0.057% |
 | `t044D_f123` | coastal | 11.6 | 32 | 180k | 0.8% | 881 s | 118 s | 7.4 | 2.157% | 2.154% |
+| `t045D_f122` | coastal | 14.7 | 208 | 241k | 1.1% | 663 s | 113 s | 5.8 | 0.004% | 0.004% |
+| `t047A_f141` | coastal | 14.8 | 64 | 1,219k | 14.3% | 4,346 s | 171 s | 25.4 | 1.311% | $\color{green}{\text{0.203\%}}$ |
 | `t047D_f123` | interior | 3.9 | 208 | 346k | 0.0% | 153 s | 17 s | 9.0 | 0.001% | 0.001% |
 | `t048A_f137` | interior | 12.4 | 208 | 287k | 2.7% | 514 s | 72 s | 7.1 | 0.000% | 0.000% |
 | `t049D_f123` | coastal | 14.8 | 128 | 934k | 8.8% | 1,585 s | 132 s | 12.0 | 0.276% | 0.275% |
@@ -580,13 +596,20 @@ than double or half, or more than 0.5 percentage points apart).*
 | `t055D_f125` | coastal | 9.3 | 64 | 633k | 14.1% | 958 s | 74 s | 13.0 | 0.059% | 0.062% |
 | `t055D_f133` | interior | 10.0 | 208 | 1k | 0.0% | 449 s | 27 s | 16.7 | 0.000% | 0.000% |
 | `t056A_f145` | coastal | 7.7 | 64 | 34k | 0.0% | 626 s | 49 s | 12.8 | 0.039% | 0.039% |
+| `t056D_f126` | coastal | 9.3 | 64 | 1,537k | 38.1% | 2,350 s | 94 s | 24.9 | 0.063% | 0.061% |
 | `t057D_f127` | coastal | 7.3 | 128 | 15k | 0.0% | 414 s | 112 s | 3.7 | 3.175% | 3.175% |
 | `t057D_f127` | coastal | 6.9 | 208 | 39k | 0.0% | 446 s | 82 s | 5.5 | 3.484% | 3.484% |
+| `t058D_f126` | coastal | 14.4 | 208 | 51k | 0.0% | 1,670 s | 74 s | 22.7 | 16.650% | 16.649% |
 | `t059D_f122` | coastal | 12.7 | 208 | 196k | 1.3% | 1,375 s | 125 s | 11.0 | 2.384% | $\color{red}{\text{13.671\%}}$ |
+| `t059D_f122` | coastal | 12.3 | 208 | 220k | 1.7% | 1,240 s | 81 s | 15.3 | 1.009% | 1.009% |
 | `t059D_f123` | interior | 13.9 | 208 | 65k | 0.1% | 601 s | 89 s | 6.7 | 0.015% | $\color{green}{\text{0.000\%}}$ |
 | `t060A_f135` | interior | 8.1 | 208 | 7k | 0.0% | 222 s | 21 s | 10.7 | 0.000% | 0.000% |
+| `t060A_f139` | coastal | 10.9 | 128 | 625k | 13.8% | 7,579 s | 122 s | 62.2 | 9.209% | $\color{green}{\text{7.389\%}}$ |
+| `t061A_f142` | coastal | 14.3 | 32 | 764k | 6.5% | 4,115 s | 148 s | 27.9 | 5.441% | $\color{green}{\text{0.634\%}}$ |
 | `t062A_f137` | interior | 12.0 | 208 | 775k | 0.5% | 575 s | 60 s | 9.6 | 0.001% | 0.001% |
+| `t062A_f141` | coastal | 14.7 | 32 | 1,860k | 29.7% | 1,964 s | 155 s | 12.7 | 0.055% | 0.055% |
 | `t064A_f140` | coastal | 14.6 | 32 | 2,083k | 30.2% | 2,388 s | 157 s | 15.2 | 0.062% | 0.062% |
+| `t064D_f123` | coastal | 8.3 | 64 | 216k | 5.7% | 646 s | 190 s | 3.4 | 0.800% | 0.785% |
 | `t064D_f130` | interior | 13.0 | 208 | 0k | 0.0% | 587 s | 53 s | 11.1 | 0.000% | 0.000% |
 | `t065A_f139` | coastal | 8.5 | 208 | 85k | 0.7% | 765 s | 82 s | 9.3 | 5.440% | 5.506% |
 | `t066D_f127` | coastal | 10.8 | 32 | 38k | 0.1% | 530 s | 84 s | 6.3 | 0.562% | 0.562% |
@@ -599,33 +622,44 @@ than double or half, or more than 0.5 percentage points apart).*
 | `t073D_f123` | coastal | 15.8 | 208 | 647k | 2.3% | 1,452 s | 111 s | 13.1 | 0.141% | $\color{green}{\text{0.015\%}}$ |
 | `t073D_f124` | interior | 2.7 | 208 | 0k | 0.0% | 47 s | 8 s | 6.2 | 0.000% | 0.000% |
 | `t075D_f123` | interior | 3.8 | 208 | 28k | 0.0% | 132 s | 17 s | 7.8 | 0.000% | 0.000% |
+| `t076A_f138` | interior | 14.2 | 32 | 112k | 0.7% | 5,661 s | 193 s | 29.4 | 5.725% | $\color{green}{\text{0.167\%}}$ |
 | `t076A_f142` | coastal | 2.4 | 16 | 5k | 0.0% | 94 s | 12 s | 8.1 | (no components) | (no components) |
 | `t078A_f140` | interior | 7.7 | 64 | 734k | 21.6% | 755 s | 55 s | 13.7 | 0.040% | 0.022% |
+| `t078A_f141` | coastal | 6.6 | 208 | 722k | 27.2% | 613 s | 45 s | 13.5 | 0.013% | 0.013% |
+| `t079D_f123` | coastal | 9.0 | 128 | 70k | 0.1% | 597 s | 59 s | 10.1 | 0.206% | 0.206% |
 | `t080A_f136` | interior | 12.8 | 64 | 5k | 0.0% | 392 s | 42 s | 9.3 | 0.009% | 0.009% |
 | `t080A_f139` | coastal | 10.1 | 208 | 144k | 0.0% | 510 s | 63 s | 8.1 | 0.428% | 0.428% |
+| `t080D_f133` | interior | 10.0 | 208 | 396k | 2.8% | 418 s | 63 s | 6.7 | 0.001% | 0.001% |
 | `t081D_f127` | coastal | 15.0 | 208 | 215k | 2.4% | 1,655 s | 145 s | 11.4 | 0.260% | 0.228% |
+| `t081D_f127` | coastal | 15.0 | 208 | 35k | 0.1% | 1,404 s | 159 s | 8.8 | 0.284% | 0.303% |
 | `t082D_f130` | interior | 4.2 | 208 | 0k | 0.0% | 115 s | 14 s | 8.3 | 0.000% | 0.000% |
 | `t083D_f125` | coastal | 14.7 | 32 | 1,840k | 27.3% | 1,081 s | 187 s | 5.8 | 0.041% | 0.041% |
+| `t085D_f126` | coastal | 10.9 | 64 | 745k | 10.8% | 1,188 s | 83 s | 14.3 | 0.061% | 0.067% |
 | `t085D_f129` | interior | 12.5 | 208 | 54k | 0.1% | 769 s | 104 s | 7.4 | 0.000% | 0.000% |
 | `t086A_f136` | interior | 14.0 | 208 | 6k | 0.0% | 396 s | 49 s | 8.1 | 0.000% | 0.000% |
 | `t087A_f142` | interior | 14.4 | 64 | 483k | 5.1% | 20,277 s | 143 s | 141.8 | 0.036% | $\color{green}{\text{0.016\%}}$ |
+| `t087A_f143` | coastal | 10.9 | 128 | 195k | 0.3% | 752 s | 60 s | 12.5 | 0.232% | 0.234% |
 | `t087D_f125` | coastal | 14.7 | 32 | 423k | 0.3% | 1,292 s | 180 s | 7.2 | 1.649% | 1.608% |
 | `t091D_f125` | interior | 14.7 | 64 | 143k | 0.5% | 1,764 s | 152 s | 11.6 | 0.181% | 0.120% |
 | `t094D_f129` | interior | 12.0 | 64 | 78k | 0.0% | 5,290 s | 2,156 s | 2.5 | 0.006% | 0.006% |
 | `t095A_f143` | coastal | 7.8 | 128 | 460k | 8.4% | 740 s | 56 s | 13.3 | 0.047% | 0.046% |
 | `t097D_f125` | coastal | 15.8 | 128 | 2,404k | 40.0% | 3,381 s | 238 s | 14.2 | 0.389% | $\color{red}{\text{1.386\%}}$ |
+| `t097D_f125` | coastal | 15.8 | 128 | 1,439k | 12.9% | 1,696 s | 129 s | 13.1 | 0.383% | 0.383% |
 | `t098A_f143` | interior | 12.4 | 208 | 119k | 0.1% | 589 s | 48 s | 12.3 | 0.000% | 0.000% |
 | `t099D_f126` | coastal | 14.4 | 32 | 2,799k | 49.0% | 3,675 s | 138 s | 26.6 | 0.063% | 0.063% |
+| `t099D_f126` | coastal | 14.4 | 64 | 3,070k | 59.4% | 3,464 s | 155 s | 22.4 | 0.007% | 0.007% |
 | `t101A_f142` | interior | 14.8 | 64 | 1,041k | 7.2% | 925 s | 152 s | 6.1 | 0.010% | 0.010% |
 | `t102D_f122` | coastal | 5.8 | 32 | 79k | 1.0% | 435 s | 31 s | 14.0 | 1.045% | 1.045% |
 | `t102D_f124` | interior | 14.0 | 208 | 377k | 0.1% | 456 s | 89 s | 5.1 | 0.000% | 0.000% |
 | `t103D_f127` | interior | 9.7 | 208 | 68k | 0.0% | 284 s | 48 s | 5.9 | 0.000% | 0.000% |
 | `t104A_f142` | coastal | 14.6 | 32 | 1,080k | 9.8% | 2,457 s | 1,678 s | 1.5 | 36.117% | $\color{green}{\text{22.486\%}}$ |
+| `t106A_f140` | coastal | 14.3 | 208 | 1,948k | 17.6% | 5,893 s | 161 s | 36.6 | 1.555% | 1.080% |
 | `t107D_f123` | coastal | 8.2 | 64 | 83k | 1.9% | 698 s | 82 s | 8.5 | 0.200% | 0.199% |
 | `t108A_f139` | coastal | 15.4 | 64 | 457k | 5.2% | 5,289 s | 1,445 s | 3.7 | 0.231% | $\color{red}{\text{2.418\%}}$ |
 | `t108D_f127` | interior | 14.7 | 208 | 1k | 0.0% | 474 s | 41 s | 11.5 | 0.000% | 0.000% |
 | `t110A_f140` | interior | 8.5 | 208 | 352k | 0.0% | 250 s | 33 s | 7.6 | 0.001% | 0.001% |
 | `t111A_f144` | coastal | 14.7 | 208 | 872k | 3.8% | 3,460 s | 2,582 s | 1.3 | 5.609% | $\color{green}{\text{4.128\%}}$ |
+| `t111A_f144` | coastal | 14.7 | 128 | 1,873k | 18.9% | 4,666 s | 637 s | 7.3 | 0.067% | $\color{red}{\text{0.215\%}}$ |
 | `t111D_f126` | interior | 9.3 | 208 | 698k | 6.3% | 1,240 s | 241 s | 5.1 | 0.001% | 0.001% |
 | `t113A_f142` | interior | 14.3 | 64 | 69k | 0.1% | 979 s | 180 s | 5.4 | 0.178% | 0.162% |
 | `t113D_f126` | interior | 14.3 | 128 | 3,252k | 60.6% | 2,036 s | 168 s | 12.1 | 0.001% | 0.001% |
@@ -637,48 +671,68 @@ than double or half, or more than 0.5 percentage points apart).*
 | `t116D_f126` | coastal | 14.3 | 128 | 519k | 4.8% | 1,783 s | 205 s | 8.7 | 0.042% | 0.053% |
 | `t118D_f132` | interior | 13.9 | 208 | 23k | 0.0% | 381 s | 60 s | 6.3 | 0.000% | 0.000% |
 | `t119A_f140` | interior | 7.3 | 128 | 31k | 0.0% | 429 s | 33 s | 13.0 | 0.001% | 0.001% |
+| `t119A_f142` | coastal | 14.3 | 208 | 88k | 0.3% | 1,544 s | 77 s | 20.1 | 0.648% | 0.647% |
+| `t120A_f139` | coastal | 14.7 | 208 | 2,787k | 30.5% | 1,100 s | 148 s | 7.4 | 0.000% | 0.000% |
+| `t121A_f141` | coastal | 11.6 | 16 | 185k | 3.9% | 919 s | 59 s | 15.5 | (no components) | (no components) |
 | `t121D_f124` | interior | 3.8 | 208 | 134k | 0.0% | 88 s | 16 s | 5.7 | 0.001% | 0.001% |
 | `t122D_f123` | coastal | 7.4 | 208 | 30k | 0.0% | 333 s | 44 s | 7.6 | 0.125% | 0.126% |
 | `t123A_f138` | coastal | 10.8 | 208 | 59k | 0.1% | 596 s | 63 s | 9.5 | 4.167% | 4.248% |
 | `t124A_f139` | coastal | 15.0 | 208 | 588k | 1.3% | 1,142 s | 125 s | 9.1 | 0.010% | 0.010% |
+| `t124A_f140` | coastal | 14.6 | 208 | 644k | 1.1% | 1,260 s | 137 s | 9.2 | 0.043% | 0.044% |
 | `t125A_f134` | interior | 14.3 | 128 | 145k | 0.2% | 651 s | 140 s | 4.7 | 0.001% | 0.001% |
 | `t126A_f140` | interior | 14.4 | 208 | 74k | 0.0% | 540 s | 95 s | 5.7 | 0.000% | 0.000% |
 | `t127A_f142` | interior | 3.8 | 208 | 145k | 0.0% | 106 s | 16 s | 6.6 | 0.001% | 0.001% |
+| `t127D_f125` | coastal | 9.6 | 64 | 622k | 13.1% | 924 s | 73 s | 12.6 | 0.022% | 0.024% |
 | `t128A_f139` | interior | 8.1 | 208 | 52k | 0.0% | 404 s | 43 s | 9.4 | 0.000% | 0.000% |
 | `t128A_f145` | coastal | 7.8 | 128 | 38k | 0.0% | 497 s | 41 s | 12.1 | 0.196% | 0.196% |
 | `t128A_f145` | coastal | 9.3 | 64 | 85k | 0.0% | 600 s | 51 s | 11.8 | 0.139% | 0.139% |
 | `t131D_f122` | coastal | 6.6 | 128 | 243k | 5.5% | 627 s | 42 s | 14.8 | 2.765% | 2.437% |
 | `t132D_f123` | interior | 5.7 | 208 | 808k | 18.2% | 305 s | 44 s | 6.9 | 0.000% | 0.000% |
+| `t135D_f121` | coastal | 2.7 | 64 | 101k | 1.2% | 126 s | 16 s | 7.7 | 0.021% | 0.021% |
 | `t136A_f140` | coastal | 14.3 | 64 | 2,620k | 48.1% | 2,872 s | 146 s | 19.7 | 0.020% | 0.019% |
 | `t138A_f139` | coastal | 10.8 | 208 | 65k | 0.0% | 438 s | 68 s | 6.5 | 0.179% | 0.178% |
 | `t138A_f141` | coastal | 9.3 | 32 | 517k | 5.4% | 1,347 s | 178 s | 7.6 | 2.100% | 2.340% |
 | `t139A_f139` | interior | 11.2 | 208 | 1k | 0.0% | 296 s | 26 s | 11.6 | 0.000% | 0.000% |
+| `t141D_f125` | coastal | 5.7 | 64 | 254k | 8.0% | 408 s | 36 s | 11.2 | 0.386% | 0.385% |
+| `t142A_f144` | coastal | 8.1 | 64 | 46k | 0.0% | 362 s | 75 s | 4.8 | 0.015% | 0.015% |
 | `t144A_f135` | interior | 12.8 | 208 | 5k | 0.0% | 603 s | 49 s | 12.3 | 0.000% | 0.000% |
 | `t144A_f136` | interior | 13.2 | 208 | 88k | 0.0% | 504 s | 82 s | 6.1 | 0.000% | 0.000% |
 | `t144A_f143` | coastal | 10.5 | 64 | 525k | 1.9% | 992 s | 137 s | 7.2 | 0.152% | 0.162% |
 | `t145D_f123` | coastal | 14.4 | 208 | 659k | 6.1% | 1,376 s | 140 s | 9.8 | 0.082% | 0.089% |
+| `t146D_f121` | coastal | 7.0 | 128 | 353k | 10.3% | 608 s | 49 s | 12.5 | 0.005% | 0.004% |
 | `t146D_f123` | interior | 6.6 | 208 | 490k | 2.5% | 225 s | 36 s | 6.3 | 0.000% | 0.000% |
 | `t146D_f123` | interior | 7.0 | 208 | 1,326k | 28.3% | 345 s | 48 s | 7.1 | 0.001% | 0.001% |
+| `t147A_f146` | coastal | 15.1 | 32 | 306k | 5.0% | 1,673 s | 95 s | 17.6 | (no components) | (no components) |
 | `t148A_f142` | coastal | 5.4 | 128 | 4k | 0.0% | 292 s | 21 s | 14.0 | 0.300% | 0.300% |
 | `t149A_f139` | interior | 9.3 | 208 | 346k | 1.1% | 563 s | 45 s | 12.5 | 0.001% | 0.001% |
 | `t151A_f138` | interior | 13.9 | 32 | 157k | 0.7% | 20,095 s | 4,818 s | 4.2 | 12.760% | $\color{green}{\text{5.886\%}}$ |
+| `t151A_f139` | coastal | 14.6 | 64 | 1,039k | 9.9% | 1,728 s | 156 s | 11.0 | 0.009% | 0.010% |
+| `t152A_f139` | coastal | 5.4 | 16 | 12k | 0.0% | 210 s | 43 s | 4.9 | 0.339% | 0.340% |
 | `t152A_f139` | coastal | 5.4 | 208 | 31k | 0.0% | 243 s | 44 s | 5.5 | 0.338% | 0.337% |
+| `t153A_f143` | coastal | 15.4 | 64 | 233k | 1.1% | 820 s | 117 s | 7.0 | 0.014% | 0.014% |
+| `t153A_f143` | coastal | 15.4 | 208 | 293k | 1.1% | 817 s | 119 s | 6.8 | 0.006% | 0.009% |
 | `t155A_f144` | interior | 14.7 | 208 | 782k | 6.8% | 1,336 s | 139 s | 9.6 | 0.015% | 0.012% |
 | `t157A_f144` | coastal | 14.8 | 128 | 196k | 1.3% | 1,031 s | 172 s | 6.0 | 0.138% | 0.118% |
 | `t159A_f134` | interior | 14.2 | 208 | 22k | 0.0% | 496 s | 60 s | 8.3 | 0.000% | 0.000% |
 | `t160D_f122` | coastal | 14.0 | 208 | 428k | 3.5% | 1,848 s | 111 s | 16.6 | 0.510% | 0.564% |
 | `t161D_f123` | interior | 5.4 | 208 | 577k | 14.3% | 262 s | 39 s | 6.7 | 0.001% | 0.001% |
 | `t162A_f142` | coastal | 14.4 | 16 | 400k | 1.2% | 1,222 s | 193 s | 6.3 | 0.393% | 0.395% |
+| `t162D_f121` | coastal | 13.5 | 128 | 144k | 1.1% | 1,316 s | 92 s | 14.2 | 2.462% | 2.759% |
+| `t165D_f123` | coastal | 10.1 | 64 | 215k | 5.0% | 867 s | 257 s | 3.4 | 0.736% | 0.869% |
 | `t165D_f132` | interior | 14.1 | 208 | 0k | 0.0% | 541 s | 40 s | 13.5 | 0.000% | 0.000% |
+| `t166A_f135` | interior | 12.5 | 128 | 110k | 0.0% | 3,161 s | 4,093 s | 0.8 | 12.496% | 12.496% |
 | `t166A_f139` | coastal | 7.0 | 32 | 38k | 0.0% | 560 s | 67 s | 8.4 | 63.759% | 63.759% |
+| `t166A_f139` | coastal | 8.6 | 128 | 43k | 0.0% | 714 s | 63 s | 11.2 | 30.088% | 30.087% |
 | `t168A_f144` | coastal | 14.3 | 208 | 406k | 2.6% | 598 s | 111 s | 5.4 | 0.001% | 0.001% |
 | `t169D_f130` | interior | 13.1 | 208 | 148k | 0.2% | 586 s | 65 s | 9.0 | 0.123% | 0.122% |
 | `t169D_f131` | interior | 3.8 | 208 | 285k | 8.1% | 193 s | 26 s | 7.4 | 1.059% | 1.060% |
+| `t170D_f126` | coastal | 8.1 | 128 | 1,811k | 61.7% | 3,529 s | 81 s | 43.5 | 0.003% | $\color{red}{\text{0.587\%}}$ |
 | `t171A_f141` | interior | 15.1 | 128 | 118k | 0.2% | 1,620 s | 674 s | 2.4 | 0.976% | 0.625% |
 | `t171A_f144` | coastal | 11.9 | 32 | 304k | 2.8% | 696 s | 101 s | 6.9 | 0.020% | 0.023% |
 | `t172D_f127` | coastal | 5.1 | 208 | 50k | 0.0% | 376 s | 126 s | 3.0 | 0.672% | 0.672% |
 | `t172D_f127` | coastal | 4.7 | 64 | 24k | 0.0% | 295 s | 78 s | 3.8 | 0.757% | 0.757% |
 | `t172D_f132` | interior | 6.6 | 208 | 75k | 0.0% | 213 s | 40 s | 5.3 | 0.001% | 0.001% |
+| `t173D_f127` | coastal | 13.1 | 208 | 314k | 0.1% | 691 s | 100 s | 6.9 | 0.193% | 0.193% |
 | `t173D_f127` | coastal | 12.7 | 208 | 172k | 0.0% | 677 s | 120 s | 5.6 | 0.208% | 0.207% |
 
 ## Appendix B: files
