@@ -20,8 +20,10 @@ residue-dense noise, mostly open ocean and sea ice. The tiles solve the noise in
 their seams, and the single-threaded re-optimization then has to reconcile hundreds of thousands of residues.
 
 Removing the noise before unwrapping restores the benefit of tiling, but only if the noisy pixels are both masked
-and filled with a smooth phase. Masking alone leaves the residues in the problem, and a crude fill creates new
-ones. We use a mask built from the residues themselves: 15 x 15 pixel blocks whose residue density exceeds 0.25
+and filled with a smooth phase. snaphu's mask does not remove residues: it only makes the masked pixels free to
+cross, while the residues in them, which come from their noisy wrapped phase, still have to be connected.
+Replacing that phase with a smooth fill removes them; a crude fill, such as copying the nearest good pixel,
+creates new ones (Section 3.2). We use a mask built from the residues themselves: 15 x 15 pixel blocks whose residue density exceeds 0.25
 per loop, restricted to regions at least three blocks thick.
 
 In a synthetic test with a known answer, masked tiled unwrapping is a median 8.1 times faster than the unmasked
