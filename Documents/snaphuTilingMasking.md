@@ -34,7 +34,8 @@ decorrelated data, such as open water, about one loop in three is a residue.
 To unwrap large interferograms faster, snaphu can divide the image into overlapping tiles, unwrap them in
 parallel, and assemble the result. With `-S` it then re-optimizes the assembled solution as a single tile, which
 removes the errors tiling would otherwise introduce at the seams. That last step is single-threaded and works on
-the whole scene.
+the whole scene, but it is normally quick. It starts from the assembled tile solution, which on clean data is
+already almost right, so the solver has little left to change.
 
 We are evaluating this tiled mode (with a build of snaphu 2.0.7 that removes a fixed per-tile delay and speeds up
 part of the network solver) for unwrapping NISAR RUNW products. The goal is to make unwrapping cheap enough to
@@ -236,8 +237,10 @@ corrected run's error rates differ by less than 0.04 percentage points.*
 
 Tiling with `-S` never changed the unwrapped answer in a way that mattered. Its speed, however, depends on the
 residues left after the tiled pass. snaphu's tiled pass is parallel, but the re-optimization that makes the result
-seam-free is not. When the tiles meet in dense noise, that step can take longer than unwrapping the whole scene
-untiled. Removing the noise first moves almost all of the work into the parallel stage. Untiled unwrapping time
+seam-free is not. On clean data the assembled tiles are almost right and that step converges in seconds. When the
+tiles meet in dense noise, each tile pairs the noise residues differently, the assembled solution is far from the
+whole-scene optimum, and the re-optimization can take longer than unwrapping the whole scene untiled. Removing the
+noise first leaves the assembled solution nearly right again, so almost all of the work stays in the parallel stage. Untiled unwrapping time
 depends mostly on frame size and changes little when the noise is masked (Table 1), so the gain from masking goes
 almost entirely to the tiled mode.
 
