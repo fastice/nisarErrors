@@ -20,7 +20,7 @@ residue-dense noise, mostly open ocean and sea ice. The tiles solve the noise in
 their seams, and the single-threaded re-optimization then has to reconcile hundreds of thousands of residues.
 
 Removing the noise before unwrapping restores the benefit of tiling, but only if the noisy pixels are both masked
-and filled with a smooth phase. snaphu's mask does not remove residues: it only makes the masked pixels free to
+and filled with a smooth phase. Snaphu's mask does not remove residues: it only makes the masked pixels free to
 cross, while the residues in them, which come from their noisy wrapped phase, still have to be connected.
 Replacing that phase with a smooth fill removes them; a crude fill, such as copying the nearest good pixel,
 creates new ones (Section 3.2). We use a mask built from the residues themselves: 15 x 15 pixel blocks whose residue density exceeds 0.25
@@ -40,7 +40,7 @@ masked tiled time. Wider tile overlaps reduce this on the worst frames but cost 
 
 ## 1. Introduction
 
-snaphu solves phase unwrapping as a minimum-cost network flow problem. Its cost grows with the number of
+Snaphu solves phase unwrapping as a minimum-cost network flow problem. Its cost grows with the number of
 **residues**: 2 x 2 pixel loops whose wrapped phase differences do not sum to zero, each of which must be
 connected to a residue of the opposite sign or to the edge of the data. In coherent data residues are rare. In
 decorrelated data, such as open water, about one loop in three is a residue.
@@ -90,13 +90,13 @@ output is byte-identical. We checked the first two changes against the unmodifie
 Greenland frames, and the third against the build without it on Antarctic frames here.
 The changes are:
 
-- **No delay between tile processes** (1 line). snaphu pauses before starting each tile process, in proportion to
+- **No delay between tile processes** (1 line). Snaphu pauses before starting each tile process, in proportion to
   the tile size. The pause is unnecessary, because each tile writes its own files and the parent waits for them.
 - **Faster ancestor search** (94 lines added, 6 removed). The tree solver repeatedly searches for the common
   ancestor of two nodes (`FindApex`) by walking up the tree one node at a time. The modified build caches a pointer
   to an ancestor every 32 levels and invalidates the cache when the tree changes, so the search skips most of the
   walk.
-- **No abort on large flows next to masked pixels** (19 lines added, 4 removed). snaphu aborts if any arc carries
+- **No abort on large flows next to masked pixels** (19 lines added, 4 removed). Snaphu aborts if any arc carries
   more flow than its 16-bit cost arithmetic allows: about 160 cycles at the default `NSHORTCYCLE` of 200. A tiled solution can leave that much flow on
   arcs next to masked pixels, which carry no cost and which the solver already ignores when it tracks the largest
   flow. The modified build applies the check to the other arcs only (Section 3.6).
@@ -221,7 +221,7 @@ On that frame it worked for the tiled mode, but it is not the approach we kept:
   127 s tiled, against 164 s).
 
 Whatever mask is used, masking alone does not remove the noise from snaphu's problem; the masked phase must also
-be replaced. The reason is how snaphu treats masked pixels. snaphu works on residues, the 2 x 2 loops of wrapped
+be replaced. The reason is how snaphu treats masked pixels. Snaphu works on residues, the 2 x 2 loops of wrapped
 phase that do not close, and it computes them from the wrapped phase of every pixel, masked or not. Its byte mask
 does not remove those residues. It only sets the cost of crossing a masked pixel to zero. So:
 
@@ -389,7 +389,7 @@ are in the end bins, with their values.*
 
 ### 3.6 An overflow abort
 
-Three frames (`t059D_f122`, `t116D_f126`, `t081D_f127`) first failed. snaphu aborted at the start of the `-S`
+Three frames (`t059D_f122`, `t116D_f126`, `t081D_f127`) first failed. Snaphu aborted at the start of the `-S`
 re-optimization with "((Maximum flow) * NSHORTCYCLE) too large". Each tile leaves its masked pixels at an arbitrary
 cycle count, so the assembled solution jumped by up to 245 cycles across masked areas, while snaphu allows at most
 160 (32,000 divided by `NSHORTCYCLE` 200). Arcs next to masked pixels carry no cost, and snaphu's solver loop
@@ -399,7 +399,7 @@ the second set (`t060A_f139`) still fails, because a jump of 389 cycles lies bet
 
 ### 3.7 Slow frames: the assembly of the tiles
 
-snaphu assembles the tiles by solving a secondary network for the cycle offset of each piece of each tile. On 14 of
+Snaphu assembles the tiles by solving a secondary network for the cycle offset of each piece of each tile. On 14 of
 the 100 frames this solver stopped early ("No overall cost reduction for too many iterations"), and the assembled
 solution contains wrong offsets of tens of cycles between pieces (127 cycles across a 180-pixel boundary on
 `t081D_f127`), which the `-S` pass has to repair. The answer is repaired, but the time is lost: these 14 frames
@@ -429,7 +429,7 @@ not affect the comparison of the two overlaps on the same input. With 3 x 3 tile
 ## 4. Discussion
 
 Tiling with `-S` never changed the unwrapped answer in a way that mattered. Its speed, however, depends on the
-residues left after the tiled pass. snaphu's tiled pass is parallel, but the re-optimization that makes the result
+residues left after the tiled pass. Snaphu's tiled pass is parallel, but the re-optimization that makes the result
 seam-free is not. On clean data the assembled tiles are almost right and that step converges quickly. When the
 tiles meet in dense noise, each tile pairs the noise residues differently, the assembled solution is far from the
 whole-scene optimum, and the re-optimization can take longer than unwrapping the whole scene untiled. Removing the
