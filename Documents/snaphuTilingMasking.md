@@ -1,8 +1,9 @@
 # Tiled phase unwrapping of noisy NISAR interferograms: the cost of residues and a masking remedy
 
 **Status: draft, 2026-11-14.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test of
-the first 10 of 100 frames. The synthetic test is running on all 100 frames, and this note will be extended when
-it finishes (see [Plan](#plan)).
+the first 10 of 100 frames (Section 3.4), with an interim summary of the 21 finished so far (Section 3.5). The
+synthetic test is running on all 100 frames, with a second 100 (P05023 products only) queued behind them, and
+this note will be extended when it finishes (see [Plan](#plan)).
 
 ## Summary
 
@@ -233,6 +234,43 @@ pessimistic.
 radians per pixel. Middle and bottom: pixels with the wrong cycle count in the masked and unmasked solutions
 (red too high, blue too low; grey masked). From the first synthetic run, before the fringe-slope correction; the
 corrected run's error rates differ by less than 0.04 percentage points.*
+
+### 3.5 Synthetic test: the frames finished so far
+
+*Interim: 21 frames, including the 10 in Table 2. This section will be redone when all frames are finished, with
+the full per-frame table in an appendix.*
+
+Table 3 and Figure 4 summarize the 21 frames for which both runs have finished. Masked tiled `-S` unwrapping
+took a median of 104 s per frame against 770 s for unmasked untiled unwrapping (Figure 4a). The median speedup
+is 7.4 times (Figure 4b). The total time fell less, by 4.3 times, from 6.3 h to 1.4 h, because a few frames
+gained little.
+
+Four frames gained less than 2.5 times: `t138A_f141` (1.8), `t152A_f139` (0.8, slower when masked and tiled),
+`t162A_f142` (1.8) and `t172D_f127` (2.3). All four are frames the synthetic test barely unwraps, with 10-17% of
+pixels wrong in both runs. On such frames the tiles probably disagree over large areas, so the `-S`
+re-optimization has much left to change, as on the unmasked coastal frames in Section 3.1. Errors this large may
+say more about the synthetic interferogram than about the method (Section 2.4).
+
+Accuracy is unchanged on most frames (Figure 4c, d). On 14 of the 19 frames that could be scored, the masked tiled
+`-S` error is within 0.07 percentage points of the unmasked untiled error, and no frame is substantially better.
+Three are slightly worse (`t067A_f145` +0.14, `t172D_f127` +0.22 and `t138A_f141` +0.34 percentage points). Two
+are substantially worse: `t170A_f145` (+1.3 points, caused by the mask; Section 3.4) and `t162A_f142` (14.0% to
+16.1%, not yet attributed).
+
+*Table 3. Synthetic test, the 21 frames finished so far, by class. Totals are summed wall-clock times. "Wrong" is
+the median share of scored pixels with the wrong cycle count. "Substantially worse" uses the rule of Table 2.*
+
+| Set | Frames | Unmasked untiled, total | Masked tiled `-S`, total | Speedup, median (range) | Wrong, unmasked untiled | Wrong, masked tiled `-S` | Substantially worse |
+|---|---|---|---|---|---|---|---|
+| all | 21 | 6.3 h | 1.4 h | 7.4 (0.8-19.3) | 0.530% | 0.554% | 2 of 19 |
+| coastal | 19 | 5.9 h | 1.4 h | 7.5 (0.8-19.3) | 0.771% | 0.788% | 2 of 17 |
+| interior | 2 | 0.4 h | 0.05 h | 7.3 (7.1-7.4) | 0.000% | 0.000% | 0 of 2 |
+
+![Figure 4](images/snaphuTiling_syntheticSummary.png)
+*Figure 4. Synthetic test, the 21 frames finished so far. (a) Wall time of each run, with medians (dashed) and
+totals. (b) Speedup, stacked by class, with the median (dashed). (c) Share of scored pixels with the wrong cycle
+count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially
+worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled.*
 
 ## 4. Discussion
 
