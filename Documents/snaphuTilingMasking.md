@@ -134,7 +134,8 @@ per-component ambiguity correction against the velocity model.
 
 To measure error, we build a synthetic interferogram with a known answer for each frame:
 
-- **Truth.** The phase predicted from the GrIMP velocity model on the RUNW grid (`simPhase/velSim.tif`).
+- **Truth.** The phase predicted on the RUNW grid from the MEaSUREs phase-based Antarctic velocity map
+  (`simPhase/velSim.tif`).
 - **Noise.** At each pixel, the phase error of an L-look interferogram with that pixel's coherence, drawn from the
   exact distribution of a two-channel complex Wishart matrix (two random draws per pixel). The noise therefore
   follows the frame's real coherence pattern.
@@ -175,8 +176,8 @@ Where the masked tiled run is substantially less accurate, we also unwrap the ma
 unmodified snaphu. Comparing that run with the other two separates the effect of the mask from the effect of
 tiling.
 
-Pixels where the truth is exactly zero are treated as missing: the velocity model stores zero, not a no-data
-value, where it has no coverage, which is mostly over ice shelves, ice tongues and the ocean. Those pixels are
+Pixels where the truth is exactly zero are treated as missing: the simulated phase is zero, not a no-data value,
+where the velocity map has no coverage, which is mostly over ice shelves, ice tongues and the ocean. Those pixels are
 filled and left out of the unwrapping and the scoring, like pixels with zero coherence or in sub-swath gaps. A
 frame is skipped if the model covers less than half of its coherent pixels (RUNW coherence above 0.5), and is
 replaced by another frame of the same class chosen by the same rule (Section 2.1). The first version of the test
