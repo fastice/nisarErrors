@@ -305,9 +305,18 @@ solution of the same secondary network for `t081D_f127` with 64-bit costs is onl
 overlaps, and the secondary costs then favour large offsets. Changes to the assembly did not help: scaling the
 secondary costs differently, solving the secondary network twice at two cost resolutions, and choosing the offsets
 between whole tiles jointly from all overlaps (which raised the agreement in the overlaps from 50% to 85% of
-pixels). Wider tile overlaps do help: on `t081D_f127`, overlaps of 400 pixels instead of 200 cut the masked tiled
-`-S` time from 3,193 s to 1,466 s (3 x 3 tiles: 1,924 s), against 11,098 s unmasked untiled. A test on 18 frames is
-running.
+pixels).
+
+Wider tile overlaps give the same answer at about the same total cost. We reran masked tiled `-S` with overlaps of
+400 pixels instead of 200 on 17 frames: 13 slow frames (the ones whose assembly stopped early, and three that were
+slow without stopping) and 4 normal ones. Every frame's error was unchanged to within 0.004 percentage points. The
+slow frames mostly ran faster (`t081D_f127` 3,193 s to 1,466 s, `t173D_f127` 866 s to 428 s, `t138A_f141` 1,736 s to
+1,108 s), and the assembly converged on six of them, but `t111A_f144` ran slower (2,375 s to 4,494 s). Three of the
+four normal frames ran about 20% slower, because the tiles are larger. In total the 17 frames took 12% less time
+(12,516 s against 14,224 s), but they are mostly slow frames; weighting the two groups as in the 100-frame set
+(Section 3.5) gives roughly the same total time either way. The one frame that aborted at 200 pixels
+(`t060A_f139`, Section 3.6) runs at 400 pixels. These runs used the uncorrected synthetic inputs (Plan), which does
+not affect the comparison of the two overlaps on the same input. With 3 x 3 tiles, `t081D_f127` took 1,924 s.
 
 ## 4. Discussion
 
@@ -331,7 +340,7 @@ would also limit the damage.
 
 The fragmentation that hurts accuracy also costs time. When masked and decorrelated areas cut a tile into pieces,
 the tiles disagree in their overlaps, snaphu's assembly fails to converge, and the `-S` pass does the work instead
-(Section 3.7). Wider overlaps reduce this, at the price of larger tiles.
+(Section 3.7). Wider overlaps reduce this on the worst frames, but cost about as much on the others.
 
 Agreement with JPL's solution is a weak test. Both it and ours are minimum-cost solutions to the same wrapped
 phase, and their disagreements are confined to fragments whose offsets the data do not determine. The synthetic
@@ -352,7 +361,8 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
    wrong cycle count). The losses come from disconnecting fragments of good data. The mask rule, not the use of
    tiles, is what needs refining.
 5. On one frame in seven, snaphu's assembly of the tiles fails to converge and `-S` repairs it at a large cost in
-   time. This is not a solver limitation; wider tile overlaps reduce it.
+   time. This is not a solver limitation. Wider tile overlaps (400 pixels) shift time from these frames to the
+   others without changing the answer, and save little overall.
 
 ## Plan
 
@@ -361,8 +371,8 @@ lost accuracy (all to the mask). Next:
 
 1. **Second 100 frames.** Repeat the summary for the second set (P05023 products only), running now, and for both
    sets together.
-2. **Tile overlaps.** Finish the test of 400-pixel overlaps (18 frames: the slow and failed frames and a few
-   normal ones), and weigh the time saved on slow frames against the larger tiles on the others.
+2. **Tile overlaps.** Repeat the 400-pixel overlap comparison (Section 3.7) on a random sample of the corrected
+   frames, together with a timing of stock snaphu against the modified build.
 3. **Gentler masks.** Compare frames the mask helped (`t151A_f138`, `t044D_f123`) with frames it hurt (`t032D_f121`,
    `t172D_f127`), and test mask variants, for example masking only residue regions connected to open ocean, or a
    different thickness rule.
