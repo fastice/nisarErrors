@@ -1,7 +1,7 @@
 # Tiled phase unwrapping of noisy NISAR interferograms: the cost of residues and a masking remedy
 
 **Status: draft, 2026-11-14.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test of
-the first 10 of 100 frames (Section 3.4), with an interim summary of the 21 finished so far (Section 3.5). The
+the first 10 of 100 frames (Section 3.4), with an interim summary of the 62 finished so far (Section 3.5). The
 synthetic test is running on all 100 frames, with a second 100 (P05023 products only) queued behind them, and
 this note will be extended when it finishes (see [Plan](#plan)).
 
@@ -62,7 +62,8 @@ RUNW's 13 x 16 looks. The two modes compared are:
 
 - **untiled**: the unmodified snaphu release, as used for production unwrapping;
 - **tiled with `-S`**: the modified build, 4 x 4 tiles with 200-pixel overlaps, 16 processes, followed by the
-  single-tile re-optimization. Its output is byte-identical to the unmodified release for the same mode.
+  single-tile re-optimization. Its output is byte-identical to the unmodified release for the same mode,
+  except that it no longer aborts when masked areas carry large flows (Section 3.5).
 
 Runs were made on a 48-core machine shared with other work. Wall-clock times are therefore indicative to perhaps
 20%.
@@ -237,40 +238,65 @@ corrected run's error rates differ by less than 0.04 percentage points.*
 
 ### 3.5 Synthetic test: the frames finished so far
 
-*Interim: 21 frames, including the 10 in Table 2. This section will be redone when all frames are finished, with
-the full per-frame table in an appendix.*
+*Interim: 62 of the 100 frames (2026-11-14, 21:30), including the 10 in Table 2. This section will be redone when
+all frames are finished, with the full per-frame table in an appendix.*
 
-Table 3 and Figure 4 summarize the 21 frames for which both runs have finished. Masked tiled `-S` unwrapping
-took a median of 104 s per frame against 770 s for unmasked untiled unwrapping (Figure 4a). The median speedup
-is 7.4 times (Figure 4b). The total time fell less, by 4.3 times, from 6.3 h to 1.4 h, because a few frames
-gained little.
+Table 3 and Figure 4 summarize the 62 frames for which both runs have finished (54 coastal, 8 interior; most
+interior frames are later in the queue). Masked tiled `-S` unwrapping took a median of 124 s per frame against
+928 s for unmasked untiled unwrapping (Figure 4a). The median speedup is 7.3 times (Figure 4b), and the total
+time fell 6.6 times, from 30.7 h to 4.6 h.
 
-Four frames gained less than 2.5 times: `t138A_f141` (1.8), `t152A_f139` (0.8, slower when masked and tiled),
-`t162A_f142` (1.8) and `t172D_f127` (2.3). All four are frames the synthetic test barely unwraps, with 10-17% of
-pixels wrong in both runs. On such frames the tiles probably disagree over large areas, so the `-S`
-re-optimization has much left to change, as on the unmasked coastal frames in Section 3.1. Errors this large may
-say more about the synthetic interferogram than about the method (Section 2.4).
+**Accuracy.** Most frames are unchanged (Figure 4c, d). On 36 of the 58 frames that could be scored the two
+errors are within 0.07 percentage points of each other, and on 47 within 0.5 points. The remaining differences
+go both ways, and six frames are substantially worse and six substantially better (Table 3):
 
-Accuracy is unchanged on most frames (Figure 4c, d). On 14 of the 19 frames that could be scored, the masked tiled
-`-S` error is within 0.07 percentage points of the unmasked untiled error, and no frame is substantially better.
-Three are slightly worse (`t067A_f145` +0.14, `t172D_f127` +0.22 and `t138A_f141` +0.34 percentage points). Two
-are substantially worse: `t170A_f145` (+1.3 points, caused by the mask; Section 3.4) and `t162A_f142` (14.0% to
-16.1%, not yet attributed).
+- Worse: `t170A_f145` (1.2% to 2.5%) and `t059D_f122` (1.7% to 3.7%), both caused by the mask, since unwrapping
+  the masked input untiled gives the same error; `t123A_f138` (3.1% to 5.0%), `t111A_f144` (5.3% to 7.7%),
+  `t162A_f142` (14.0% to 16.1%) and `t032D_f121` (6.5% to 32.9%), not yet attributed. The loss on `t032D_f121`
+  is far outside the other differences and needs a closer look.
+- Better: `t044D_f123` (3.6% to 0.09%), `t131D_f122` (10.3% to 8.3%), `t115D_f127` (13.7% to 12.2%),
+  `t057D_f127` (26.3% to 25.5%), `t030D_f122` (2.0% to 1.5%) and `t073D_f123` (0.15% to 0.02%). Presumably
+  the mask removes noise residues that untiled snaphu would otherwise connect through the data; this is not yet
+  checked.
 
-*Table 3. Synthetic test, the 21 frames finished so far, by class. Totals are summed wall-clock times. "Wrong" is
-the median share of scored pixels with the wrong cycle count. "Substantially worse" uses the rule of Table 2.*
+**An overflow abort.** Three frames (`t059D_f122`, `t116D_f126`, `t081D_f127`) first failed. snaphu aborted at
+the start of the `-S` re-optimization with "((Maximum flow) * NSHORTCYCLE) too large". Each tile leaves its masked
+pixels at an arbitrary cycle count, so the assembled solution jumped by up to 245 cycles across masked areas,
+while snaphu allows at most 160 (32,000 divided by `NSHORTCYCLE` 200). Arcs next to masked pixels carry no cost,
+and snaphu's solver loop already ignores them when it tracks the largest flow, so the modified build now applies
+the initial check to the other arcs only. On frames that passed the check its output is byte-identical to the
+previous build.
 
-| Set | Frames | Unmasked untiled, total | Masked tiled `-S`, total | Speedup, median (range) | Wrong, unmasked untiled | Wrong, masked tiled `-S` | Substantially worse |
-|---|---|---|---|---|---|---|---|
-| all | 21 | 6.3 h | 1.4 h | 7.4 (0.8-19.3) | 0.530% | 0.554% | 2 of 19 |
-| coastal | 19 | 5.9 h | 1.4 h | 7.5 (0.8-19.3) | 0.771% | 0.788% | 2 of 17 |
-| interior | 2 | 0.4 h | 0.05 h | 7.3 (7.1-7.4) | 0.000% | 0.000% | 0 of 2 |
+**Slow frames: the tile stitching.** snaphu assembles the tiles by solving a secondary network for the cycle
+offset of each piece of each tile. On 9 of the 62 frames this solver stopped early ("No overall cost reduction
+for too many iterations") after clipping its incremental costs, which it holds as 16-bit integers. The assembled
+solution then contains wrong offsets of tens of cycles between pieces (127 cycles across a 180-pixel boundary on
+`t081D_f127`), which the `-S` pass has to repair. The final answer is repaired, but the time is lost: these nine
+frames have a median speedup of 2.6 against 7.5 for the other 53, and take about half of the masked tiled `-S`
+time (2.4 of 4.6 h). Four of the seven frames that gained less than 2.5 times are among them (`t138A_f141` 1.8,
+`t162A_f142` 1.8, `t172D_f127` 2.3, `t166A_f139` 2.4). The other three (`t152A_f139` 0.8, `t057D_f127` 0.9 and
+`t173D_f127` 1.1) are not, and are not yet explained. Three changes to the stitching were tried on `t081D_f127`
+without removing the problem: scaling the secondary costs by the mean length of the arcs that carry cost,
+scaling them down further to avoid clipping, and estimating the offsets between whole tiles from unmasked edge
+pixels only.
+
+*Table 3. Synthetic test, the 62 frames finished so far, by class. Totals are summed wall-clock times. "Wrong" is
+the median share of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use
+the rule of Table 2 in each direction.*
+
+| Set | Frames | Unmasked untiled, total | Masked tiled `-S`, total | Speedup, median (range) | Wrong, unmasked untiled | Wrong, masked tiled `-S` | Substantially worse | Substantially better |
+|---|---|---|---|---|---|---|---|---|
+| all | 62 | 30.7 h | 4.6 h | 7.3 (0.8-41.2) | 0.636% | 0.551% | 6 of 58 | 6 of 58 |
+| coastal | 54 | 29.8 h | 4.5 h | 8.4 (0.8-41.2) | 0.965% | 0.922% | 6 of 50 | 6 of 50 |
+| interior | 8 | 0.8 h | 0.1 h | 6.2 (5.0-7.4) | 0.000% | 0.000% | 0 of 8 | 0 of 8 |
 
 ![Figure 4](images/snaphuTiling_syntheticSummary.png)
-*Figure 4. Synthetic test, the 21 frames finished so far. (a) Wall time of each run, with medians (dashed) and
-totals. (b) Speedup, stacked by class, with the median (dashed). (c) Share of scored pixels with the wrong cycle
-count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially
-worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled.*
+*Figure 4. Synthetic test, the 62 frames finished so far. (a) Wall time of each run, with medians (dashed) and
+totals; runs longer than 4,000 s are in the last bin (unmasked untiled | masked tiled `-S`). (b) Speedup, stacked
+by class, with the median (dashed). (c) Share of scored pixels with the wrong cycle count, masked tiled `-S`
+against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially worse are labelled. (d)
+Change in that share, masked tiled `-S` minus unmasked untiled; changes beyond ±3 points are in the end bins,
+with their values.*
 
 ## 4. Discussion
 
@@ -317,18 +343,20 @@ When all 100 synthetic frames are done:
    `diagOceanMask/synthSummary.py`:
    - a summary table by class (all, coastal, interior): frames, total time for each run, median and range of
      the speedup, median share of wrong pixels for each run, and the number of frames that are substantially
-     worse;
+     worse or better;
    - a four-panel figure: (a) histograms of the two runs' wall times; (b) histogram of the speedup, by class;
      (c) wrong-pixel share of the two runs against each other, on
      log axes; (d) histogram of the change in wrong-pixel share;
    - the full per-frame table, with the same colour rule as Table 2, in an appendix.
 2. **Frames that lose accuracy.** Check each one as `t170A_f145` was checked (masked untiled and unmasked tiled),
    to attribute the loss to the mask or to tiling.
-3. **Gentler masks.** Test mask variants on those frames, for example masking only residue regions connected to
+3. **Tile stitching.** Find why the secondary solver starts tens of cycles from the answer on the slow frames,
+   and fix it using the data alone; also explain the slow frames where it converges.
+4. **Gentler masks.** Test mask variants on those frames, for example masking only residue regions connected to
    open ocean, or a different thickness rule.
-4. **Production.** Settle the mask rule, and add the preprocessing (residue mask, smooth fill of masked and
+5. **Production.** Settle the mask rule, and add the preprocessing (residue mask, smooth fill of masked and
    sub-swath pixels) ahead of tiled unwrapping in production.
-5. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
+6. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
 
 ## Appendix: files
 
@@ -343,3 +371,4 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `diagOceanMask/synthTest.py` | the synthetic test; results in `synth2/{none,mask0.25}/<frame>/result.json` |
 | `diagOceanMask/synth2/queueAll.sh` | the queue working through all 100 frames |
 | `diagOceanMask/synthSummary.py` | summary table, per-frame table and figure for the synthetic test |
+| `bin/snaphu-2.0.7-grimpopt-maskflow`, `bin/snaphu-2.0.7-grimp-maskflow.patch` | the modified snaphu build used for masked tiled `-S` since 2026-11-14, and its patch against snaphu 2.0.7 |
