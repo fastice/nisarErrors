@@ -275,8 +275,15 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 
 When all 100 synthetic frames are done:
 
-1. **Full results.** Extend Table 2 and summarize speed and accuracy by class (coastal or interior), size and
-   noise level.
+1. **Full results.** Keep Table 2 (the first 10 frames) in the main text and add, from
+   `diagOceanMask/synthSummary.py`:
+   - a summary table by class (all, coastal, interior): frames, total time for each run, median and range of
+     the speedup, median share of wrong pixels for each run, and the number of frames that are substantially
+     worse;
+   - a four-panel figure: (a) wall times of the two runs against each other, with lines of constant speedup;
+     (b) speedup against the number of residues; (c) wrong-pixel share of the two runs against each other, on
+     log axes; (d) histogram of the change in wrong-pixel share;
+   - the full per-frame table, with the same colour rule as Table 2, in an appendix.
 2. **Frames that lose accuracy.** Check each one as `t170A_f145` was checked (masked untiled and unmasked tiled),
    to attribute the loss to the mask or to tiling.
 3. **Gentler masks.** Test mask variants on those frames, for example masking only residue regions connected to
@@ -297,3 +304,4 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `diagOceanMask/patchVsSynthetic.py` | local test of disagreeing fragments against the velocity-model phase |
 | `diagOceanMask/synthTest.py` | the synthetic test; results in `synth2/{none,mask0.25}/<frame>/result.json` |
 | `diagOceanMask/synth2/queueAll.sh` | the queue working through all 100 frames |
+| `diagOceanMask/synthSummary.py` | summary table, per-frame table and figure for the synthetic test |
