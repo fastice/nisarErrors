@@ -397,7 +397,7 @@ Table 2 in each direction.*
 than 4,000 s are in the last bin (unmasked untiled | masked tiled `-S`). (b) Speedup, stacked by class, with the
 median (dashed); speedups above 30 are in the last bin, with their values. (c) Share of scored pixels with the wrong
 cycle count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially
-worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled; changes beyond ±3 points
+worse are labelled. (d) Change in that share, masked tiled `-S` minus unmasked untiled (negative where the masked run is more accurate); changes beyond ±3 points
 are in the end bins, with their values.*
 
 ### 3.6 An overflow abort
@@ -407,18 +407,22 @@ re-optimization with "((Maximum flow) * NSHORTCYCLE) too large". Each tile leave
 cycle count, so the assembled solution jumped by up to 245 cycles across masked areas, while snaphu allows at most
 160 (32,000 divided by `NSHORTCYCLE` 200). Arcs next to masked pixels carry no cost, and snaphu's solver loop
 already ignores them when it tracks the largest flow, so the modified build now applies the initial check to the
-other arcs only. On frames that passed the check its output is byte-identical to the previous build. One frame of
-the second set (`t060A_f139`) still fails, because a jump of 389 cycles lies between unmasked pixels (Section 3.7).
+other arcs only. On frames that passed the check its output is byte-identical to the previous build. With this
+change, no frame of the corrected synthetic test aborts. One frame (`t060A_f139`) also failed in the first version
+of the test, because a jump of 389 cycles lay between unmasked pixels; that jump came from the zero-truth areas
+(Section 2.5), and with those excluded the frame runs.
 
 ### 3.7 Slow frames: the assembly of the tiles
 
-Snaphu assembles the tiles by solving a secondary network for the cycle offset of each piece of each tile. On 14 of
-the 100 frames this solver stopped early ("No overall cost reduction for too many iterations"), and the assembled
-solution contains wrong offsets of tens of cycles between pieces (127 cycles across a 180-pixel boundary on
-`t081D_f127`), which the `-S` pass has to repair. The answer is repaired, but the time is lost: these 14 frames
-have a median speedup of 3.0 against 7.8 for the other 86, and take two thirds of the masked tiled `-S` time
-(6.1 of 9.0 h). If they ran at the median speedup of the others, the total would fall to about 5.6 h, a speedup of
-about 9.4 rather than 5.9.
+Snaphu assembles the tiles by solving a secondary network for the cycle offset of each piece of each tile. On
+12 of the 147 frames finished so far (provisional, corrected test) this solver stopped early ("No overall cost
+reduction for too many iterations"), and the assembled solution contains wrong offsets of tens of cycles between
+pieces (127 cycles across a 180-pixel boundary on `t081D_f127` in the first version of the test), which the `-S`
+pass has to repair. The answer is repaired, but much of the time saving is lost: these 12 frames take 55% of
+the masked tiled `-S` time. If they ran at the median speedup of the other frames (8.7 times), the total would
+fall from 7.6 h to 4.9 h, a speedup of about 10 rather than 6.5. Even on these frames, masked tiled
+`-S` unwrapping is still faster than unmasked untiled unwrapping: a median 3.4 times (1.3 to 7.9), and
+3.1 times in total.
 
 The cause lies in the tiles, not in the solver. The solver works with costs clipped to 16-bit integers, but an exact
 solution of the same secondary network for `t081D_f127` with 64-bit costs is only 16% cheaper and still contains a
@@ -463,6 +467,14 @@ The fragmentation that hurts accuracy also costs time. When masked and decorrela
 the tiles disagree in their overlaps, snaphu's assembly fails to converge, and the `-S` pass does the work instead
 (Section 3.7). Wider overlaps reduce this on the worst frames, but cost about as much on the others.
 
+Antarctica is in some ways a special case. Its coastal frames carry large areas of open ocean and sea ice, which
+make up most of the noise studied here. The interior frames, coherent ice with little noise, are closer to most of
+the land and ice NISAR images elsewhere. On the 76 interior frames finished so far, masked tiled `-S` unwrapping is a
+median 7.6 times faster than unmasked untiled unwrapping (6.4 times in total), and accuracy is unchanged on
+74 of them to within 0.07 percentage points. That suggests tiling with `-S` could speed up NISAR unwrapping
+globally, not only in Antarctica, although regions with other kinds of decorrelation, such as dense vegetation, would
+need their own test.
+
 Agreement with the RUNW solution is a weak test. Both it and the masked solution are minimum-cost solutions to the same wrapped
 phase, and their disagreements are confined to fragments whose offsets the data do not determine. The synthetic
 test is the more informative measure, with two limitations. Its truth is a velocity model, which is aliased at
@@ -470,20 +482,26 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 
 ## 5. Conclusions
 
-1. Tiled unwrapping with `-S` gives the same result as untiled unwrapping. On noisy coastal frames it is fast only
-   if the residue-dense noise is removed first.
+1. Tiled unwrapping with `-S` gives the same result as untiled unwrapping of the same input. Combined with the
+   residue mask, it gives effectively the same accuracy as the production approach: 1.50% against
+   1.55% of pixels with the wrong cycle count on average (median 0.025% against 0.033%), on the
+   144 frames scored so far. On noisy coastal frames tiling is fast only if the residue-dense noise is removed
+   first.
 2. Removing the noise requires both masking and a smooth fill of the masked pixels, together with filling the
    zero-valued sub-swath edges of the RUNW.
 3. A residue-density mask (15 x 15 blocks, threshold 0.25, regions at least three blocks thick) makes masked tiled
-   unwrapping a median 7.3 times faster than the production approach, and 5.9 times faster in total, on 100
-   synthetic frames, with the same accuracy on most of them.
-4. The mask changes accuracy on about one frame in six, more often for the better (10 frames) than for the worse
-   (6), but the losses are larger, and on balance it costs a little (a mean of 3.8% against 3.6% of pixels with the
-   wrong cycle count). The losses come from disconnecting fragments of good data. The mask rule, not the use of
-   tiles, is what needs refining.
-5. On one frame in seven, snaphu's assembly of the tiles fails to converge and `-S` repairs it at a large cost in
-   time. This is not a solver limitation. Wider tile overlaps (400 pixels) shift time from these frames to the
-   others without changing the answer, and save little overall.
+   unwrapping a median 8.3 times faster than the production approach, and 6.5 times faster in total
+   (147 synthetic frames so far, provisional).
+4. The mask changes accuracy substantially on only a few frames, 6 for the better and 3 for the worse, and on
+   average it costs nothing. The losses come from disconnecting fragments of good data; the mask rule, not the
+   use of tiles, is what could be refined.
+5. On about one frame in 12, snaphu's assembly of the tiles fails to converge and `-S` repairs it at a cost in
+   time; these frames are still a median 3.4 times faster than untiled. This is not a solver limitation. Wider tile
+   overlaps (400 pixels) shift time from these frames to the others without changing the answer, and save little
+   overall.
+6. Antarctica's coastal frames, with open ocean and sea ice, are an unusually hard case. The interior frames are
+   more representative of the rest of the world, and on them masked tiled unwrapping is a median 7.6 times faster
+   with no loss of accuracy, which suggests that tiling could speed up NISAR unwrapping globally.
 
 ## Plan
 
