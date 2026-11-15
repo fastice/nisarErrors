@@ -112,8 +112,8 @@ The changes are:
   arcs next to masked pixels, which carry no cost and which the solver already ignores when it tracks the largest
   flow. The modified build applies the check to the other arcs only (Section 3.6).
 
-Runs were made on machines shared with other work: a 48-core machine and, for the corrected synthetic test, also a
-96-core machine. Both runs of a frame were always made on the same machine. Wall-clock times are therefore
+Runs were made on two machines, each with 48 physical cores, shared with other work. Both runs of a frame were
+always made on the same machine. Wall-clock times are therefore
 indicative to perhaps 20%, and speedups are more reliable than absolute times.
 
 ### 2.3 Comparing solutions
