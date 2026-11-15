@@ -197,7 +197,8 @@ near its edges differently, and the re-optimization then has to reconcile them a
 
 ![Figure 1](images/snaphuTiling_t107D_residuesAndTiles.png)
 *Figure 1. Residue density on `t107D_f123` (purple, log scale), the 4 x 4 snaphu tiles (orange; shading = 200-pixel
-overlap) and the ocean more than 10 km from land or ice (blue). Numbers give the residues in each tile.*
+overlap) and the ocean more than 10 km from land or ice (blue), the mask of our first attempt to remove the noise
+(Section 3.2). Numbers give the residues in each tile.*
 
 JPL's production processing does not remove this noise either. The products list a water mask among their
 inputs, but the recorded unwrapping preprocessing names only a sub-swath mask. The unwrapped phase over the
@@ -206,12 +207,23 @@ connected components. Unmasked untiled unwrapping is therefore the right referen
 
 ### 3.2 Noise must be masked and filled
 
-Removing the noise from snaphu's problem takes more than a mask. snaphu's byte mask makes masked pixels free to
-cut through, but their wrapped phase still defines the residues to be solved:
+Our first attempt to remove the noise was an ocean mask, the approach JPL's processing appears to anticipate (it
+lists a water mask among its inputs). We masked the ocean more than 10 km from land or ice, taken from our
+Antarctic ice mask and mapped into radar geometry with the frame's orbit (blue in Figure 1, 27% of `t107D_f123`).
+On that frame it worked for the tiled mode, but it is not the approach we kept:
 
-- **Mask only.** Masking the ocean more than 10 km offshore in the byte mask alone left the untiled time unchanged
-  (827 s against 775 s). The tiled time fell to 164 s, because the masked regions no longer contributed cost to
-  the re-optimization.
+- It removes only open ocean. Sea ice, the 10 km coastal margin, fjords and decorrelated areas on land keep their
+  noise, and on many coastal frames these hold much of it.
+- It depends on an external mask, which must be current and geocoded into radar geometry for every frame.
+- The residue mask of Section 3.3, which needs only the interferogram itself, did better on the same frame (116 to
+  127 s tiled, against 164 s).
+
+The ocean-mask runs also showed that removing the noise from snaphu's problem takes more than a mask. snaphu's
+byte mask makes masked pixels free to cut through, but their wrapped phase still defines the residues to be solved:
+
+- **Mask only.** Masking the ocean in the byte mask alone left the untiled time unchanged (827 s against 775 s).
+  The tiled time fell from 1,133 s to 164 s, because the masked regions no longer contributed cost to the
+  re-optimization.
 - **Mask and fill.** Replacing the masked phase with a fill removes the masked residues altogether.
 
 The kind of fill matters. A nearest-neighbour fill leaves a phase step where fills from two sides of a thin masked
