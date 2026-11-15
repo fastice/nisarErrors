@@ -109,7 +109,13 @@ Two unwrapped solutions can differ by an arbitrary whole number of cycles betwee
 therefore compare them per *joint* component, meaning each pair of overlapping components from the two
 solutions. Within each pair we remove the pair's median cycle offset and count the pixels that still differ by
 one or more cycles. Against the real data this measures **disagreement** between two minimum-cost solutions, not
-error.
+error. In the synthetic test the truth takes the place of the second solution, and the same count measures error
+(Section 2.4).
+
+Specifically, we evaluate intra-component error, not inter-component error. A component whose phase is off from the
+reference by a whole number of cycles counts as correct; only pixels whose cycle count differs from the rest of
+their component count as wrong. Offsets between components are left to later processing, such as the
+per-component ambiguity correction against the velocity model.
 
 ### 2.4 Synthetic test
 
