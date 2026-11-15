@@ -409,10 +409,11 @@ cycle count, so the assembled solution jumped by up to 245 cycles across masked 
 160 (32,000 divided by `NSHORTCYCLE` 200). Arcs next to masked pixels carry no cost, and snaphu's solver loop
 already ignores them when it tracks the largest flow, so the modified build now applies the initial check to the
 other arcs only. On frames that passed the check its output is byte-identical to the previous build. With this
-change, no frame of the corrected synthetic test aborts. Without it, 9 of the first 181 masked tiled runs (5%)
-would have: their largest flows next to masked pixels were 164 to 338 cycles, while elsewhere they stayed within
-the limit (2 to 117 cycles). Masked tiled unwrapping therefore needs the modified snaphu. Untiled unwrapping, masked
-or not, builds no tile solution and is not affected. One frame (`t060A_f139`) also failed in the first version
+change, no frame of the corrected synthetic test aborts. Without the snaphu modifications, that is with stock
+snaphu 2.0.7, 9 of the first 181 masked tiled runs (5%) would have aborted: their largest flows next to masked
+pixels were 164 to 338 cycles, while elsewhere they stayed within the limit (2 to 117 cycles). Masked tiled
+unwrapping therefore requires the modified snaphu; with stock snaphu it fails on about one frame in twenty.
+Untiled unwrapping, masked or not, builds no tile solution and works with stock snaphu. One frame (`t060A_f139`) also failed in the first version
 of the test, because a jump of 389 cycles lay between unmasked pixels; that jump came from the zero-truth areas
 (Section 2.5), and with those excluded the frame runs.
 
@@ -492,7 +493,8 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
    144 frames scored so far. On noisy coastal frames tiling is fast only if the residue-dense noise is removed
    first.
 2. Removing the noise requires both masking and a smooth fill of the masked pixels, together with filling the
-   zero-valued sub-swath edges of the RUNW.
+   zero-valued sub-swath edges of the RUNW. Masked tiled unwrapping also requires the modified snaphu: stock
+   snaphu 2.0.7 aborts on about 5% of masked frames (Section 3.6).
 3. A residue-density mask (15 x 15 blocks, threshold 0.25, regions at least three blocks thick) makes masked tiled
    unwrapping a median 8.3 times faster than the production approach, and 6.5 times faster in total
    (147 synthetic frames so far, provisional).
