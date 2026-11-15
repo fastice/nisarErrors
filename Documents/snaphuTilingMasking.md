@@ -383,7 +383,8 @@ frame. 10 frames change substantially for the better and 7 for the worse (Table 
 - Better: `t104A_f142` (36% to 22%), `t151A_f138` (13% to 5.9%), `t076A_f138` (5.7% to 0.17%), `t061A_f142` (5.4% to 0.63%), `t060A_f139` (9.2% to 7.4%), `t111A_f144` (5.6% to 4.1%), `t047A_f141` (1.3% to 0.2%), `t073D_f123` (0.14% to 0.015%), `t087A_f142` (0.036% to 0.016%), `t059D_f123` (0.015% to 0.00031%).
 - Worse: `t059D_f122` (2.4% to 14%), `t108A_f139` (0.23% to 2.4%), `t010D_f124` (0.56% to 2.4%), `t097D_f125` (0.39% to 1.4%), `t170D_f126` (0.0027% to 0.59%), `t033A_f141` (0.064% to 0.35%), `t111A_f144` (0.067% to 0.22%).
 
-ATTRIBUTION_PLACEHOLDER
+Whether these losses come from the mask or from tiling is being checked by unwrapping the masked input untiled
+(Plan).
 
 *Table 3. Synthetic test, all 200 frames, by class. Totals are summed wall-clock times. "Wrong" is the median share
 of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use the rule of
