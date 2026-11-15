@@ -1,34 +1,39 @@
 # Tiled phase unwrapping of noisy NISAR interferograms: the cost of residues and a masking remedy
 
-**Status: draft, 2026-11-15.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test on
-100 frames (Sections 3.4 and 3.5, Appendix A). A second set of 100 frames (P05023 products only) and a test of wider
-tile overlaps are running, and this note will be extended when they finish (see [Plan](#plan)).
+**Status: draft, 2026-11-15.** Based on real-data diagnostics for 5 Antarctica40 frames and a synthetic test. The
+first version of the synthetic test (Sections 3.4 to 3.7, Appendix A) used a truth that is zero, not missing, where
+the velocity model has no coverage. A corrected version is running on 200 frames; the Summary gives its provisional
+results, and the results sections will be redone from it (see [Plan](#plan)).
 
 ## Summary
 
-Unwrapping with snaphu split into 4 x 4 tiles, followed by a single-tile re-optimization (`-S`), was about 2.5
-times faster than untiled snaphu on 80 MHz Greenland interferograms, with identical results. On 40 MHz
-Antarctic interferograms the same approach was often slower than untiled snaphu. We show that the slowdown comes
-from residue-dense noise, mostly open ocean and sea ice. The tiles solve the noise independently, they disagree
-along their seams, and the single-threaded re-optimization then has to reconcile hundreds of thousands of
-residues.
+These experiments are designed to see if the wall-clock time for snaphu can be reduced by using tiled rather than
+untiled unwrapping. Specifically, we investigate tiling with the `-S` option, which splits the interferogram into
+tiles (here 4 x 4) that are unwrapped in parallel, assembles them, and then re-optimizes the assembled solution as a
+single tile so that the result has no errors along the tile seams. Production unwrapping of NISAR RUNW products uses
+untiled snaphu, which runs on a single core because its network solver is sequential.
+
+On 80 MHz Greenland interferograms, tiled unwrapping with `-S` was about 2.5 times faster than untiled unwrapping,
+with identical results. On 40 MHz Antarctic interferograms it was often slower. The slowdown comes from
+residue-dense noise, mostly open ocean and sea ice. The tiles solve the noise independently, they disagree along
+their seams, and the single-threaded re-optimization then has to reconcile hundreds of thousands of residues.
 
 Removing the noise before unwrapping restores the benefit of tiling, but only if the noisy pixels are both masked
 and filled with a smooth phase. Masking alone leaves the residues in the problem, and a crude fill creates new
 ones. We use a mask built from the residues themselves: 15 x 15 pixel blocks whose residue density exceeds 0.25
 per loop, restricted to regions at least three blocks thick.
 
-In a synthetic test with a known answer on 100 frames, masked tiled unwrapping was a median 7.3 times faster than
-the unmasked untiled unwrapping used in production, and 5.9 times faster in total (9.0 h against 52.6 h). Accuracy
-was unchanged on most frames: on 69 of the 94 that could be scored the two error rates differ by less than 0.07
-percentage points. The mask made 10 frames substantially more accurate and 6 substantially less, the latter by
-disconnecting pieces of good data whose relative cycle offsets then went wrong. On balance it cost a little
-accuracy (a mean of 3.8% of pixels with the wrong cycle count, against 3.6%). In every case checked the change came
-from the mask, not from tiling.
+In a synthetic test with a known answer, masked tiled unwrapping is a median 8.1 times faster than the unmasked
+untiled unwrapping used in production (provisional, 119 of 200 frames, 50 of them coastal). Scaled to the 1,803
+frame locations of the Antarctica40 project (30% coastal), one pass of unwrapping would take about 80 h instead of
+about 570 h, about 7 times less. Accuracy is unchanged on almost every frame: on 103 of the 116 frames that could
+be scored the two error rates differ by less than 0.07 percentage points, and the mean share of pixels with the
+wrong cycle count is 1.2% in both. The mask makes a few frames substantially more accurate (5) and a few less
+accurate (3); the losses come from disconnecting pieces of good data whose relative cycle offsets then go wrong.
 
-On 14 of the 100 frames snaphu's assembly of the tiles fails to converge. The `-S` re-optimization repairs the
-result, so the answer is unaffected, but these frames gain a median of only 3.0 times and take two thirds of the
-masked tiled time.
+On about one frame in fifteen, snaphu's assembly of the tiles fails to converge. The `-S` re-optimization repairs
+the result, so the answer is unaffected, but these frames lose most of the speedup and take about half of the
+masked tiled time. Wider tile overlaps reduce this on the worst frames but cost about as much on the others.
 
 ## 1. Introduction
 
