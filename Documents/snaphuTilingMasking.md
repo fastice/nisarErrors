@@ -101,7 +101,8 @@ solutions are scored over the same pixels: those the mask keeps.
 
 ### 3.1 Tiling is slow when residue-dense noise remains in the interferogram
 
-How much time tiling saves depends on how many residues are left after the tiled pass, and on where they are.
+These runs use the real RUNW phase, rewrapped, with no mask. How much time tiling saves depends on how many
+residues are left after the tiled pass, and on where they are.
 Coherent frames have few residues and tile well. The interior frame `t085D_f129` (31,000 residues) was 3.5 times
 faster tiled, in line with the Greenland results. Coastal frames carry large areas of open ocean, where nearly
 every third loop is a residue. The coastal frame `t107D_f123` has 714,000 residues (8.7% of all loops). Untiled
