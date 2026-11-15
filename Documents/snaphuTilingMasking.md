@@ -319,48 +319,47 @@ already noise.
 
 ### 3.4 Synthetic test: speed and accuracy
 
-Table 2 gives the results for the first 10 frames. Masked tiled `-S` unwrapping is **7-19 times faster** than
-unmasked untiled unwrapping, median 10.1 times. Together the ten frames took 11,200 s unmasked untiled and 923 s
-masked tiled `-S`. The largest gains are on large, noisy coastal frames, where untiled unwrapping is
-slowest.
+Table 2 gives the results for the first ten frames of the set. Two of the ten first drawn, `t078D_f122` and
+`t170A_f145`, were replaced by `t047A_f141` and `t079D_f123`, because the velocity map covers too little of them
+(Section 2.1); the replacements' untiled runs are still running. On the eight frames with both runs finished,
+masked tiled `-S` unwrapping is **7-15 times faster** than unmasked untiled unwrapping, median 8.0 times; together
+they took 7,355 s unmasked untiled and 721 s masked tiled `-S`. The largest gains are on large, noisy coastal frames,
+where untiled unwrapping is slowest.
 
-*Table 2. Synthetic test, first 10 frames: unmasked untiled against masked tiled `-S`. "Wrong" is the share of
-scored pixels whose cycle count is wrong. Red marks a masked tiled `-S` error substantially worse than the unmasked
-untiled one (more than double, or more than 0.5 percentage points higher); no value is substantially better.*
+*Table 2. Synthetic test, first ten frames: unmasked untiled against masked tiled `-S`. "Wrong" is the share of
+scored pixels whose cycle count is wrong. Colour would mark a masked tiled `-S` error substantially worse (red) or
+better (green) than the unmasked untiled one (more than double or half, or more than 0.5 percentage points apart);
+none is.*
 
 | Frame | Class | Size (Mpx) | L | Residues | Masked | Unmasked untiled | Masked tiled `-S` | Speedup | Wrong, unmasked untiled | Wrong, masked tiled `-S` |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `t003D_f121` | coastal | 7.0 | 16 | 1,915k | 77.8% | 770 s | 53 s | 14.6 | (no components) | (no components) |
-| `t014A_f143` | coastal | 6.6 | 128 | 767k | 31.6% | 677 s | 81 s | 8.4 | 0.530% | 0.554% |
+| `t003D_f121` | coastal | 7.0 | 16 | 138k | 2.4% | 670 s | 45 s | 15.0 | (no components) | (no components) |
+| `t014A_f143` | coastal | 6.6 | 128 | 219k | 6.8% | 366 s | 50 s | 7.3 | 0.092% | 0.104% |
 | `t048A_f137` | interior | 12.4 | 208 | 287k | 2.7% | 514 s | 72 s | 7.1 | 0.000% | 0.000% |
-| `t055D_f125` | coastal | 9.3 | 64 | 1,638k | 47.4% | 1,543 s | 100 s | 15.4 | 0.061% | 0.068% |
-| `t064A_f140` | coastal | 14.6 | 16 | 3,408k | 55.8% | 3,233 s | 168 s | 19.3 | 0.203% | 0.203% |
-| `t078D_f122` | coastal | 3.9 | 16 | 989k | 73.9% | 270 s | 23 s | 11.6 | 0.228% | 0.227% |
+| `t055D_f125` | coastal | 9.3 | 64 | 633k | 14.1% | 958 s | 74 s | 13.0 | 0.059% | 0.062% |
+| `t064A_f140` | coastal | 14.6 | 32 | 2,083k | 30.2% | 2,388 s | 157 s | 15.2 | 0.062% | 0.062% |
+| `t047A_f141` | coastal | 14.8 | 64 | 1,219k | 14.3% | (running) | 171 s |  | (running) | 0.203% |
 | `t085D_f129` | interior | 12.5 | 208 | 54k | 0.1% | 769 s | 104 s | 7.4 | 0.000% | 0.000% |
-| `t107D_f123` | coastal | 8.2 | 64 | 686k | 23.3% | 870 s | 102 s | 8.6 | 0.960% | 0.921% |
-| `t144A_f143` | coastal | 10.5 | 64 | 1,420k | 26.1% | 2,332 s | 191 s | 12.2 | 0.970% | 0.929% |
-| `t170A_f145` | coastal | 3.5 | 32 | 820k | 59.7% | 222 s | 30 s | 7.3 | 1.152% | $\color{red}{\text{2.488\%}}$ |
+| `t107D_f123` | coastal | 8.2 | 64 | 83k | 1.9% | 698 s | 82 s | 8.5 | 0.200% | 0.199% |
+| `t144A_f143` | coastal | 10.5 | 64 | 525k | 1.9% | 992 s | 137 s | 7.2 | 0.152% | 0.162% |
+| `t079D_f123` | coastal | 9.0 | 128 | 70k | 0.1% | (running) | 59 s |  | (running) | 0.206% |
 
-On 8 of the 9 frames that could be scored, the masked tiled `-S` error is within 0.03 percentage points of the
-unmasked untiled error (median 0.215% against 0.216%). One frame, `t003D_f121`, is almost entirely noise, and neither run
-produced a connected component. The exception is `t170A_f145`, where the masked tiled `-S` error is twice the unmasked untiled error.
+On all seven frames that could be scored, the masked tiled `-S` error is within 0.02 percentage points of the
+unmasked untiled error. One frame, `t003D_f121`, is almost entirely noise, and neither run produced a connected
+component. Wherever the masked input was also unwrapped untiled, tiled and untiled unwrapping of the same input
+gave the same error (Section 3.5).
 
-Diagnostic runs on that frame separate the two changes. Unmasked tiled `-S` unwrapping gives exactly the
-unmasked untiled error (1.152%), and masked untiled unwrapping gives exactly the masked tiled `-S` error (2.488%). The extra error therefore comes
-from the mask, as on `t138A_f141` in the real data, and not from tiling. On every frame where both were run, tiled
-and untiled unwrapping of the same input gave the same error.
-
-Most of the remaining error is not caused by noise. On `t107D_f123` nearly all of it lies in a narrow rim along the
-ice front (Figure 5). There the velocity-model phase jumps by up to 38 radians per pixel between ice and ocean,
-which no unwrapper can recover from a wrapped interferogram, and the masked and unmasked runs make the same
-mistakes. In real data such fronts lose coherence before the jump matters, so this part of the synthetic error is
-pessimistic.
+Most of the remaining error is not caused by noise or by unwrapping, but by the truth. On `t107D_f123`, 96% of the
+wrong pixels lie within 10 pixels of the edge of the velocity map's coverage, along the ice front (Figure 5). There
+the simulated phase changes by a median of 12 radians per pixel, far more than any unwrapper can follow, while the
+real interferogram is coherent (median coherence 0.58) and changes by only 0.38 radians per pixel. The steep edge
+belongs to the velocity map, not to the ice, and the masked and unmasked runs make the same errors there. This part
+of the synthetic error therefore says nothing about the unwrapping methods.
 
 ![Figure 5](images/snaphuTiling_t107D_syntheticErrors.png)
-*Figure 5. Synthetic test on `t107D_f123`. Top: phase gradient of the truth; blue outlines where it exceeds π
-radians per pixel. Middle and bottom: pixels with the wrong cycle count in the masked and unmasked solutions
-(red too high, blue too low; grey masked). From the first synthetic run, before the fringe-slope correction; the
-corrected run's error rates differ by less than 0.04 percentage points.*
+*Figure 5. Synthetic test on `t107D_f123` (corrected test). (a) Phase gradient of the truth, with blue outlines where
+it exceeds pi radians per pixel; blank where the velocity map has no data. (b, c) Pixels with the wrong cycle count
+in the masked tiled `-S` and unmasked untiled solutions; dark grey is masked or has no truth.*
 
 ### 3.5 Synthetic test: all 100 frames
 
