@@ -280,8 +280,8 @@ When all 100 synthetic frames are done:
    - a summary table by class (all, coastal, interior): frames, total time for each run, median and range of
      the speedup, median share of wrong pixels for each run, and the number of frames that are substantially
      worse;
-   - a four-panel figure: (a) wall times of the two runs against each other, with lines of constant speedup;
-     (b) speedup against the number of residues; (c) wrong-pixel share of the two runs against each other, on
+   - a four-panel figure: (a) histograms of the two runs' wall times; (b) histogram of the speedup, by class;
+     (c) wrong-pixel share of the two runs against each other, on
      log axes; (d) histogram of the change in wrong-pixel share;
    - the full per-frame table, with the same colour rule as Table 2, in an appendix.
 2. **Frames that lose accuracy.** Check each one as `t170A_f145` was checked (masked untiled and unmasked tiled),
