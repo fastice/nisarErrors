@@ -71,28 +71,25 @@ interferograms combine the phase predicted by the velocity map with noise matche
 ### 2.1 Data
 
 We use 200 Antarctica40 RUNW products: 40 MHz (`_4000_`), HH, unwrapped on the 13 x 16 look RUNW grid (Figure 1).
-They were drawn from the 17,594 products of the project, covering 1,803 frame locations, in two sets of 100, each
-with 60 **coastal** frames (footprint touching ocean, ice shelf or the grounding zone in our Antarctic ice mask)
-and 40 **interior** frames (fully grounded). Coastal frames are deliberately over-represented, since they hold
-the noise: they are 30% of the project's frame locations. Within each class, frames were taken in turn from
-different tracks, each time preferring the pass direction, 2-degree latitude band and month used least so far.
-The second set excludes the frames of the first and is restricted to the latest processing version (`P05023`).
-
-Ten coastal frames, six in the first set and four in the second, were dropped from the synthetic test because the
-velocity model covers less than half of their coherent pixels (Section 2.5). Each was replaced by another coastal
-frame chosen in the same way, so the synthetic test has 200 frames.
+They were drawn from the 17,594 products of the project, which cover 1,803 frame locations: 120 **coastal**
+frames (footprint touching ocean, ice shelf or the grounding zone in our Antarctic ice mask) and 80 **interior**
+frames (fully grounded). Coastal frames are deliberately over-represented, since they hold the noise: they are 30%
+of the project's frame locations. Within each class, frames were taken in turn from different tracks, each time
+preferring the pass direction, 2-degree latitude band and month used least so far. Ten coastal frames were
+replaced because the velocity model covers less than half of their coherent pixels (Section 2.5).
 
 Each product's own unwrapped phase, rewrapped, together with its coherence, forms the interferogram we unwrap. The
 RUNW's unwrapped phase and connected components serve as a reference solution.
 
 ![Figure 1](images/snaphuTiling_frameMap.png)
-*Figure 1. The 200 frames of the synthetic test, coastal (blue) and interior (orange), first set filled and second
-set outlined, over the grounded ice of our Antarctic ice mask (grey), in polar stereographic projection.*
+*Figure 1. The 200 frames, coastal (blue) and interior (orange), over ice speed from the latest NISAR Antarctic
+velocity mosaic (multi-year, June 2025 to November 2026), in polar stereographic projection.*
 
 ### 2.2 Unwrapping
 
-All runs use snaphu 2.0.7 with the statistical cost mode `SMOOTH`, an MCF initialization, `NCORRLOOKS 139`, and the
-RUNW's 13 x 16 looks. The two modes compared are:
+Untiled runs use snaphu 2.0.7, and tiled runs a slightly modified version of it (below). Both use the statistical
+cost mode `SMOOTH`, an MCF initialization, `NCORRLOOKS 139` and the RUNW's 13 x 16 looks. The two modes compared
+are:
 
 - **untiled**: the unmodified snaphu release, as used for production unwrapping;
 - **tiled with `-S`**: a slightly modified build of snaphu 2.0.7 (below), 4 x 4 tiles with 200-pixel overlaps, 16
