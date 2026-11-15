@@ -54,7 +54,8 @@ already almost right, so the solver has little left to change.
 We are evaluating this tiled mode (with a modified build of snaphu 2.0.7 that removes a fixed per-tile delay and speeds up
 part of the network solver) for unwrapping NISAR RUNW products. The goal is to make unwrapping cheap enough to
 redo routinely, for example after correcting the interferogram, without changing the answer. On 68 Greenland
-frames the tiled mode was 2.5 times faster and gave identical results. On the first Antarctic coastal frame it
+frames the tiled mode was 2.5 times faster and gave identical results (it would likely be faster still with the
+masking described below). On the first Antarctic coastal frame it
 was 1.5 times *slower*. This note explains why, describes a preprocessing step that removes the penalty, and
 tests whether that step costs accuracy.
 
