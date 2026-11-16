@@ -170,9 +170,8 @@ To measure error, we build a synthetic interferogram with a known answer for eac
 
 Each synthetic frame is unwrapped twice: **unmasked untiled**, the production approach, and **masked tiled `-S`**.
 Both runs use the same noisy interferogram (the noise is seeded per frame), and the masked run additionally applies
-the residue mask and smooth fill (Section 3.3). Each solution is scored as the share of pixels, in its connected
-components, whose cycle count differs from the component's median offset against the truth (Section 2.3). Both
-solutions are scored over the same pixels: those the mask keeps.
+the residue mask and smooth fill (Section 3.3). Both solutions are scored against the truth over the same pixels
+(Section 2.6).
 
 Where the masked tiled run is substantially less accurate, we also unwrap the masked input untiled with the
 unmodified snaphu. Comparing that run with the other two separates the effect of the mask from the effect of
@@ -187,6 +186,41 @@ treated zero truth as data (see the status note at the top).
 
 Each machine runs at most five untiled and three tiled unwrappings at a time, and both runs of a frame are made on
 the same machine. Wall-clock and CPU times come from `/usr/bin/time`.
+
+### 2.6 How the synthetic test is scored
+
+Each solution is compared with the truth one connected component at a time (Section 2.3). For a component c, with
+unwrapped phase U and truth T, the error of a pixel in cycles is
+
+e = round[ ((U - T) - median_c(U - T)) / 2 pi ],
+
+and the pixel is wrong if e is not zero. The share of wrong pixels is counted over the **scored pixels that lie in a
+component**: pixels with data and truth that the residue mask keeps, the same set for both solutions. The share of
+scored pixels in a component (the coverage) is reported separately; it is 96% or more on most frames and almost
+always the same for both runs.
+
+The share is therefore relative to the area that was unwrapped and scored, not to the frame. A frame with 50% wrong
+pixels but only 10% of its area scored has 5% of its area wrong, less than a frame with 10% wrong over its whole area.
+Frames with little coherent ice can rank high on this measure while the affected area is small.
+
+Figure 2 uses the worst frame of the test, `t166A_f139` (19 July), as an example. The truth has a floating tongue
+whose shear margins are steeper than a cycle per pixel in places (c). Both unwrappings lose about 13 cycles across
+them, the same way (a, b), and keep the tongue in the same component as the grounded ice to the north (e). That
+component holds 64% of the scored pixels, in two large groups 13 cycles apart (49% of the component at -5 cycles, 40%
+at +8). Its median offset falls between them, so every pixel of the component counts as wrong: 63.8%. Counting from
+the component's most common offset instead, the part that would need fixing is the tongue, 33.1% of the scored
+pixels (f). Here the scored pixels are 38% of the frame, so the tongue is about 12% of the frame's area.
+
+The median and the most common offset give the same count unless a component splits into groups of similar size.
+Of the 193 frames that could be scored, the two counts differ by more than one percentage point only on this one.
+All the results below use the median, as defined above.
+
+![Figure 2](images/snaphuTiling_scoringExample.png)
+*Figure 2. Scoring, on the worst frame of the synthetic test (`t166A_f139`, 19 July). (a, b) Wrong cycles counted
+from each component's median offset, unmasked untiled and masked tiled `-S` (identical here); (c) the truth's gradient,
+with the tongue's shear margins; (d) coherence where the masked run unwraps; (e) the masked run's connected components,
+and the scoring formulas; (f) wrong cycles counted from each component's most common offset, the part that would need
+fixing. Every third pixel shown.*
 
 ## 3. Results
 
@@ -206,13 +240,13 @@ every third loop is a residue. The coastal frame `t107D_f123` has 714,000 residu
 snaphu took 775 s and the tiled mode 1,133 s, with identical results.
 
 The tiled run averaged only 1.4 busy cores. Its parallel stage is short, and almost all of the time goes to the
-single-threaded re-optimization. Figure 2 shows why that step is expensive. 77% of the residues lie in open
+single-threaded re-optimization. Figure 3 shows why that step is expensive. 77% of the residues lie in open
 ocean, and they are concentrated in a few tiles (five of the sixteen hold 107,000-139,000 residues each, most of
 the rest fewer than 5,000). Several seams run straight through the densest areas. Each tile pairs the residues
 near its edges differently, and the re-optimization then has to reconcile them across the whole scene.
 
-![Figure 2](images/snaphuTiling_t107D_residuesAndTiles.png)
-*Figure 2. Residue density on `t107D_f123` (purple, log scale), the 4 x 4 snaphu tiles (orange; shading = 200-pixel
+![Figure 3](images/snaphuTiling_t107D_residuesAndTiles.png)
+*Figure 3. Residue density on `t107D_f123` (purple, log scale), the 4 x 4 snaphu tiles (orange; shading = 200-pixel
 overlap) and the ocean more than 10 km from land or ice (blue), the mask of our first attempt to remove the noise
 (Section 3.2). Numbers give the residues in each tile.*
 
@@ -225,7 +259,7 @@ connected components. Unmasked untiled unwrapping is therefore the right referen
 
 Our first attempt to remove the noise was an ocean mask, the approach JPL's processing appears to anticipate (it
 lists a water mask among its inputs). We masked the ocean more than 10 km from land or ice, taken from our
-Antarctic ice mask and mapped into radar geometry with the frame's orbit (blue in Figure 2, 27% of `t107D_f123`).
+Antarctic ice mask and mapped into radar geometry with the frame's orbit (blue in Figure 3, 27% of `t107D_f123`).
 On that frame it worked for the tiled mode, but it is not the approach we kept:
 
 - It removes only open ocean. Sea ice, the 10 km coastal margin, fjords and decorrelated areas on land keep their
@@ -248,12 +282,12 @@ does not remove those residues. It only sets the cost of crossing a masked pixel
   masked area contributes no residues at all. The problem shrinks for both modes, and the masked pixels still cost
   nothing to cross.
 
-Figure 3 shows the difference on part of `t107D_f123`. With the mask alone, 57,611 residues remain inside the
+Figure 4 shows the difference on part of `t107D_f123`. With the mask alone, 57,611 residues remain inside the
 masked area of this crop (b); after the fill, 413 remain, nearly all along its edge (d). The small unmasked squares inside
 the masked area are blocks whose residue density fell below the threshold (Section 3.3); they keep their noise.
 
-![Figure 3](images/snaphuTiling_maskAndFill.png)
-*Figure 3. Masking with and without a fill, on a 600 x 600 pixel crop of `t107D_f123` where the residue mask meets
+![Figure 4](images/snaphuTiling_maskAndFill.png)
+*Figure 4. Masking with and without a fill, on a 600 x 600 pixel crop of `t107D_f123` where the residue mask meets
 coherent ice. (a) Wrapped phase, with the edge of the masked area outlined. (b) Residues (red) with the mask alone:
 the masked area keeps all its residues. (c) Wrapped phase after the smooth fill. (d) Residues after the fill: the
 masked area (grey) has almost none.*
@@ -300,7 +334,7 @@ run at the same threshold.*
 | `t055D_f125` | coastal | 54.8% / 46.5% | 1,187 / 1,583 s | 99 (12.0x) / $\color{red}{\text{199}}$ (8.0x) s | 0.166 / 0.143 |
 | `t138A_f141` | coastal | 57.5% / 39.3% | 1,571 / $\color{red}{\text{2,933}}$ s | 374 (4.2x) / $\color{red}{\text{1,427}}$ (2.1x) s | 24.1 / $\color{red}{\text{29.9}}$ |
 
-Frames that are mostly noise are the difficult case (Figure 4). On `t138A_f141`, about 40-60% of the frame is
+Frames that are mostly noise are the difficult case (Figure 5). On `t138A_f141`, about 40-60% of the frame is
 masked. The good data that remains is a set of fragments (glacier tongues, ice-shelf pieces, rough ground) linked
 only by narrow strips. The RUNW solution connects these fragments through rough terrain that the mask removes, and
 the two solutions differ in the relative cycle offsets of several of them (24-30% of compared pixels).
@@ -310,8 +344,8 @@ velocity-model phase favoured the masked solution on some fragments and the RUNW
 model itself is several cycles off, near fronts and glacier tongues. Raising the threshold kept more of the
 connecting terrain but made both modes much slower, without reducing the disagreement.
 
-![Figure 4](images/snaphuTiling_t138A_maskThresholds.png)
-*Figure 4. The residue mask on `t138A_f141` at four thresholds (purple). Red marks masked pixels that the RUNW solution
+![Figure 5](images/snaphuTiling_t138A_maskThresholds.png)
+*Figure 5. The residue mask on `t138A_f141` at four thresholds (purple). Red marks masked pixels that the RUNW solution
 placed in a connected component.*
 
 A carrier correction made no difference to unwrapping cost. Adding the GrIMP rubber-sheet carrier correction, with
@@ -351,22 +385,22 @@ component. Wherever the masked input was also unwrapped untiled, tiled and until
 gave the same error (Section 3.5).
 
 Most of the remaining error is not caused by noise or by unwrapping, but by the truth. On `t107D_f123`, 96% of the
-wrong pixels lie within 10 pixels of the edge of the velocity map's coverage, along the ice front (Figure 5). There
+wrong pixels lie within 10 pixels of the edge of the velocity map's coverage, along the ice front (Figure 6). There
 the simulated phase changes by a median of 12 radians per pixel, far more than any unwrapper can follow, while the
 real interferogram is coherent (median coherence 0.58) and changes by only 0.38 radians per pixel. The steep edge
 belongs to the velocity map, not to the ice, and the masked and unmasked runs make the same errors there. This part
 of the synthetic error therefore says nothing about the unwrapping methods.
 
-![Figure 5](images/snaphuTiling_t107D_syntheticErrors.png)
-*Figure 5. Synthetic test on `t107D_f123` (corrected test). (a) Phase gradient of the truth, with blue outlines where
+![Figure 6](images/snaphuTiling_t107D_syntheticErrors.png)
+*Figure 6. Synthetic test on `t107D_f123` (corrected test). (a) Phase gradient of the truth, with blue outlines where
 it exceeds pi radians per pixel; blank where the velocity map has no data. (b, c) Pixels with the wrong cycle count
 in the masked tiled `-S` and unmasked untiled solutions; dark grey is masked or has no truth.*
 
 ### 3.5 Synthetic test: all frames
 
-Table 3 and Figure 6 summarize the 200 frames (120 coastal, 80 interior); Appendix A lists every frame. Masked
+Table 3 and Figure 7 summarize the 200 frames (120 coastal, 80 interior); Appendix A lists every frame. Masked
 tiled `-S` unwrapping took a median of 77 s per frame against 636 s for unmasked untiled unwrapping
-(Figure 6a). The median speedup is 8.9 times (Figure 6b), and the total time fell 7.1 times, from 74.3 h to
+(Figure 7a). The median speedup is 8.9 times (Figure 7b), and the total time fell 7.1 times, from 74.3 h to
 10.4 h. Coastal frames gain more (median 11.0 times) than interior frames (median 7.6 times), because their
 untiled runs spend longest on the noise.
 
@@ -376,7 +410,7 @@ locations would take about 658 h unmasked untiled and about 107 h masked tiled `
 from resampling the frames: 4.5 to 9.3 times). The hours are single-frame wall-clock times on shared machines;
 the ratio is the more robust number.
 
-**Accuracy.** Most frames are unchanged (Figure 6c, d). On 165 of the 193 frames that could be scored the two errors
+**Accuracy.** Most frames are unchanged (Figure 7c, d). On 165 of the 193 frames that could be scored the two errors
 are within 0.07 percentage points of each other, and on 181 within 0.5 points. The median share of wrong pixels is
 0.059% unmasked untiled and 0.057% masked tiled `-S`, and the mean 1.64% and 1.55%. The mean is
 dominated by a few frames that neither run unwraps well (up to about 60% wrong in both), the median by the typical
@@ -401,8 +435,8 @@ Table 2 in each direction.*
 | coastal | 120 | 45.6 h | 5.1 h | 11.0 (1.3-62.2) | 0.232% | 0.228% | 7 of 113 | 6 of 113 |
 | interior | 80 | 28.7 h | 5.3 h | 7.6 (0.8-141.8) | 0.001% | 0.000% | 0 of 80 | 4 of 80 |
 
-![Figure 6](images/snaphuTiling_syntheticSummary.png)
-*Figure 6. Synthetic test, all 200 frames. (a) Wall time of each run, with medians (dashed) and totals; runs longer
+![Figure 7](images/snaphuTiling_syntheticSummary.png)
+*Figure 7. Synthetic test, all 200 frames. (a) Wall time of each run, with medians (dashed) and totals; runs longer
 than 4,000 s are in the last bin (unmasked untiled | masked tiled `-S`). (b) Speedup, stacked by class, with the
 median (dashed); speedups above 30 are in the last bin, with their values. (c) Share of scored pixels with the wrong
 cycle count, masked tiled `-S` against unmasked untiled, on log axes (zero plotted at 0.001%); frames substantially
@@ -757,7 +791,8 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `diagOceanMask/synthTest.py` | the synthetic test; results in `synth2/{none,mask0.25}/<frame>/result.json` |
 | `diagOceanMask/synth2/queueAll.sh` | the queue working through all 100 frames |
 | `diagOceanMask/synthSummary.py` | summary table, per-frame table and figure for the synthetic test |
-| `diagOceanMask/figMaskAndFill.py` | Figure 3 (masking with and without a fill) |
+| `diagOceanMask/figScoringExample.py` | Figure 2 (how the synthetic test is scored) |
+| `diagOceanMask/figMaskAndFill.py` | Figure 4 (masking with and without a fill) |
 | `diagOceanMask/figFrameMap.py` | Figure 1 (map of the 200 frames) |
 | `frames3.csv` | the ten replacement frames, with the set and the frame each replaces |
 | `bin/snaphu-2.0.7-grimpopt-maskflow`, `bin/snaphu-2.0.7-grimp-maskflow.patch` | the modified snaphu build used for masked tiled `-S` since 2026-11-14, and its patch against snaphu 2.0.7 |
