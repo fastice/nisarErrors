@@ -6,7 +6,8 @@
 ## Summary
 
 [whirlwind](https://github.com/scottstanie/whirlwind-insar) (version 0.10.0) is a multithreaded minimum-cost-flow
-unwrapper written in Rust. We ran it with default settings on the unmasked synthetic interferograms of all 200 frames.
+unwrapper written in Rust. We ran it with default settings on all 200 synthetic interferograms, both unmasked and with
+the same residue mask that snaphu `-S` uses. Unless stated otherwise, "whirlwind" below means the unmasked run.
 We compared it with snaphu in two configurations: masked tiled `-S`, which is the recommended configuration from the
 snaphu study, and unmasked untiled, which is used in production now.
 
@@ -22,6 +23,10 @@ snaphu study, and unmasked untiled, which is used in production now.
   the score. For a fair comparison, all whirlwind scores here first cut its components with snaphu's own rule,
   which keeps only components larger than 1% of the frame. After the cut, both unwrappers have a median of one
   component, and the area held by the largest components is nearly the same (Section 3.4).
+- **Masked whirlwind.** Masking makes whirlwind about 15% slower in total (10.0 h against 8.7 h), unlike snaphu,
+  which masking makes much faster. It makes whirlwind slightly more accurate: the median is 0.072% against
+  0.085%, and masking helps 15 frames and hurts 6. It is still less accurate than snaphu `-S` on the median
+  (Section 3.6).
 - **Settings.** No whirlwind option we tried (Goldstein filtering, interpolation, downsampling) fixes its worst
   frames (Section 3.5).
 
@@ -32,9 +37,13 @@ where it is twice as fast and the accuracy difference is a few thousandths of a 
 
 | | snaphu untiled | snaphu `-S` | whirlwind |
 |---|---|---|---|
-| Input | unmasked (`synth3/none`) | residue mask 0.25 (`synth3/mask0.25`) | unmasked (`synth3/none`) |
+| Input | unmasked (`synth3/none`) | residue mask 0.25 (`synth3/mask0.25`) | unmasked (`synth3/none`) and masked (`synth3/mask0.25`), two separate runs |
 | Configuration | `BASE_CONF`: SMOOTH, MCF, NCORRLOOKS 139 | 4 x 4 tiles, 200 px overlap, NPROC 16, `-S` | defaults, `--nlooks 139`, 16 rayon threads |
 | Host | petermann / ryder | petermann / ryder | helheim, 10 frames at a time |
+
+**Whirlwind options.** Every result except Section 3.5 uses whirlwind's defaults: no Goldstein filtering
+(`--goldstein-alpha` 0), no `--interpolate` and no `--downsample` (factor 1). The command for each run is saved in
+`<mode>/<key>/ww.cmd`, and none of the 400 commands contains any of these options.
 
 **Scoring.** Scoring is the same as for snaphu (`synthTest.wrongCycles`). A pixel is wrong if its difference
 from the truth, after removing the median offset of its connected component, rounds to a nonzero number of
@@ -54,38 +63,43 @@ and its peak memory use was 1.1 GB median and 1.8 GB maximum.
 
 ## 2. Speed
 
-| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked |
-|---|---|---|---|
-| Median wall, all | 636 s | 77 s | 98 s |
-| Median wall, coastal (120) | 936 s | 98 s | 182 s |
-| Median wall, interior (80) | 478 s | 53 s | 27 s |
-| Total wall, all | 74.3 h | 10.4 h | 8.7 h |
-| Total CPU, all | 74.3 h | 31.3 h | 9.8 h |
+| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked | whirlwind masked |
+|---|---|---|---|---|
+| Median wall, all | 636 s | 77 s | 98 s | 96 s |
+| Median wall, coastal (120) | 936 s | 98 s | 182 s | 193 s |
+| Median wall, interior (80) | 478 s | 53 s | 27 s | 31 s |
+| Total wall, all | 74.3 h | 10.4 h | 8.7 h | 10.0 h |
+| Total CPU, all | 74.3 h | 31.3 h | 9.8 h | 11.1 h |
 
 | Whirlwind speedup | vs untiled, median | vs untiled, total | vs `-S`, median | vs `-S`, total |
 |---|---|---|---|---|
-| all | 8.7x | 8.5x | 0.9x | 1.2x |
-| coastal | 5.5x | 6.0x | 0.6x | 0.7x |
-| interior | 16.3x | 24.2x | 2.0x | 4.5x |
+| unmasked, all | 8.7x | 8.5x | 0.9x | 1.2x |
+| unmasked, coastal | 5.5x | 6.0x | 0.6x | 0.7x |
+| unmasked, interior | 16.3x | 24.2x | 2.0x | 4.5x |
+| masked, all | 8.0x | 7.4x | 0.8x | 1.0x |
+| masked, coastal | 5.4x | 5.2x | 0.5x | 0.6x |
+| masked, interior | 15.8x | 22.3x | 2.0x | 4.1x |
 
-Whirlwind's threads help little: CPU time is only 1.1 times wall time. On coastal frames it is limited by the
-same residue-dense ocean and sea-ice noise that the residue mask removes for snaphu.
+Whirlwind's threads help little: CPU time is only 1.1 times wall time. Unlike snaphu, whirlwind does not get
+faster when the residue-dense areas are masked.
 
 ## 3. Accuracy
 
 ### 3.1 Summary
 
-Statistics cover the 193 frames where all three runs have at least one component.
+Statistics cover the 193 frames where all four runs have at least one component.
 
-| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked |
-|---|---|---|---|
-| Wrong, median, all | 0.059% | 0.057% | 0.085% |
-| Wrong, median, coastal | 0.232% | 0.228% | 0.229% |
-| Wrong, median, interior | 0.001% | 0.000% | 0.006% |
-| Wrong, mean, all | 1.64% | 1.55% | 1.41% |
-| Coverage, median, all | 87.2% | 87.8% | 89.2% |
-| Coverage, median, coastal | 78.0% | 78.1% | 81.5% |
-| Whirlwind substantially worse / better | 49 / 22 | 50 / 20 | |
+| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked | whirlwind masked |
+|---|---|---|---|---|
+| Wrong, median, all | 0.059% | 0.057% | 0.085% | 0.072% |
+| Wrong, median, coastal | 0.232% | 0.228% | 0.229% | 0.221% |
+| Wrong, median, interior | 0.001% | 0.000% | 0.006% | 0.008% |
+| Wrong, mean, all | 1.64% | 1.55% | 1.41% | 1.26% |
+| Coverage, median, all | 87.2% | 87.8% | 89.2% | 89.5% |
+| Coverage, median, coastal | 78.0% | 78.1% | 81.5% | 82.5% |
+| Components after the 1% cut, median (max) | | 1 (6) | 1 (7) | 1 (7) |
+| Whirlwind unmasked substantially worse / better | 49 / 22 | 50 / 20 | | |
+| Whirlwind masked substantially worse / better | 51 / 22 | 51 / 22 | | |
 
 ### 3.2 Why whirlwind is worse more often but has the lower mean
 
@@ -198,6 +212,8 @@ distribution over frames of the share held by the largest one, two and five comp
 
 ### 3.5 Whirlwind options
 
+This is a separate test on four frames; no other result in this document uses these options.
+
 We reran four of the worst whirlwind frames with the options that change the solution:
 
 - `--goldstein-alpha 0.7`
@@ -220,6 +236,22 @@ Each run was scored on snaphu `-S`'s components, so that every run has the same 
 
 None of the options is a general improvement over the defaults.
 
+### 3.6 Masked whirlwind
+
+Whirlwind run on the masked input (the residue mask that snaphu `-S` uses) is scored the same way, after the 1%
+component cut. Before the cut it has a median of 32 components (54 on coastal frames, maximum 392); after the cut,
+a median of one.
+
+- **Speed.** Masking makes whirlwind slower: 10.0 h against 8.7 h in total, and 193 s against 182 s for the median
+  coastal frame. Masking makes snaphu tiled unwrapping much faster, but it does not help whirlwind.
+- **Accuracy.** Masking makes whirlwind slightly more accurate. The median is 0.072% against 0.085% unmasked and
+  the mean is 1.26% against 1.41%. Compared frame by frame with unmasked whirlwind, masking makes 15 frames
+  substantially better and 6 worse (194 frames). The largest gains are on `t104A_f142` (32.8% to 23.5%), `t060A_f139` (17.2% to 8.7%) and `t151A_f138`
+  (3.48% to 0.02%). The largest loss is on `t144A_f143` (0.23% to 2.04%).
+- **Against snaphu `-S`.** Masked whirlwind is still slightly worse on the median (0.072% against 0.057%), and it
+  is substantially worse on 51 frames and better on 22. Its worst frames are the same as unmasked whirlwind's:
+  `t010D_f124` has 19.01% wrong (19.23% unmasked).
+
 ## 4. Conclusions
 
 - Whirlwind run on unmasked input is about as fast overall as snaphu masked tiled `-S`, and it uses a third of the
@@ -227,6 +259,8 @@ None of the options is a general improvement over the defaults.
 - On the typical frame whirlwind is slightly less accurate than snaphu `-S` (median 0.085% against 0.057% wrong),
   and it is substantially worse on 50 frames against 20 better. Its lower mean comes from one frame where snaphu
   `-S` fails.
+- Masking the input makes whirlwind about 15% slower and slightly more accurate (median 0.072% against 0.085%),
+  but still not as accurate as snaphu `-S`.
 - Whirlwind's default connected components are far too many to use as they are (median 30). Applying snaphu's 1%
   rule gives component counts and areas that match snaphu's.
 - Snaphu `-S` remains the better choice for production, particularly on coastal frames. If whirlwind is used, it
