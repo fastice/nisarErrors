@@ -29,6 +29,9 @@ snaphu study, and unmasked untiled, which is used in production now.
   (Section 3.6).
 - **Settings.** No whirlwind option we tried (Goldstein filtering, interpolation, downsampling) fixes its worst
   frames (Section 3.5).
+- **Running both as a check.** The pixels where snaphu `-S` and whirlwind disagree are 1% of the data but hold
+  73% of snaphu's wrong pixels (99% on interior frames). The 22 frames with more than 1% disagreement hold 92% of
+  snaphu's wrong pixels. The comparison flags errors but cannot say which unwrapper is right (Section 3.7).
 
 Whirlwind therefore does not replace snaphu `-S` for coastal frames. It is a fast option for interior frames,
 where it is twice as fast and the accuracy difference is a few thousandths of a percent of the pixels.
@@ -252,6 +255,36 @@ a median of one.
   is substantially worse on 51 frames and better on 22. Its worst frames are the same as unmasked whirlwind's:
   `t010D_f124` has 19.01% wrong (19.23% unmasked).
 
+### 3.7 Running both unwrappers as a check
+
+If both unwrappers are run, the places where they disagree may show where they are wrong. We compared snaphu `-S`
+with whirlwind (components cut by the 1% rule) on the pixels that are scored and lie in a component of both. These
+pixels are grouped into joint components: the overlap of one snaphu component and one whirlwind component. A pixel
+*disagrees* when the difference between the two solutions, after removing the median difference over its joint
+component, rounds to a nonzero number of cycles. Errors are scored for each unwrapper on its own components, as
+elsewhere. Percentages are over the pixels in a component of both, so they differ slightly from Section 3.1.
+
+| Set | Frames | Disagree, median / mean | Wrong, snaphu `-S`, median / mean | Wrong, whirlwind, median / mean | Snaphu wrong pixels that disagree | Whirlwind wrong pixels that disagree | Snaphu wrong on agreeing pixels, median / mean | Frames with > 1% disagreement |
+|---|---|---|---|---|---|---|---|---|
+| all | 194 | 0.018% / 1.35% | 0.029% / 1.40% | 0.035% / 1.31% | 73% | 72% | 0.012% / 0.52% | 22 |
+| coastal | 114 | 0.047% / 2.09% | 0.130% / 2.21% | 0.158% / 2.19% | 67% | 71% | 0.083% / 0.88% | 20 |
+| interior | 80 | 0.000% / 0.28% | 0.000% / 0.24% | 0.000% / 0.06% | 99% | 96% | 0.000% / 0.01% | 2 |
+
+- **As a pixel mask.** Over all pixels, 1.0% disagree. Dropping them removes 73% of snaphu's wrong pixels, and the
+  share of wrong pixels falls from 0.91% to 0.16% of the remaining pixels. On interior frames almost nothing
+  disagrees, but 99% of snaphu's few errors are in the pixels that do.
+- **As a frame flag.** The 22 frames with more than 1% disagreement hold 92% of snaphu's wrong pixels. Of the 20
+  frames where snaphu is more than 1% wrong, 18 are flagged.
+- **Which one is right.** Where the solutions disagree, the comparison cannot say which unwrapper is right; it
+  can only flag or drop the pixels.
+- **Shared errors.** Errors both unwrappers make the same way are not flagged. On `t166A_f139_20260719` both are
+  63% wrong and only 44% of snaphu's wrong pixels disagree. On `t059D_f122_20261004` snaphu is 13% wrong but only
+  10% of its wrong pixels disagree. Overall, 27% of snaphu's wrong pixels are not flagged.
+- **Masked whirlwind** flags snaphu's errors equally well (73%) but is slower. Unmasked whirlwind is the better
+  partner.
+- **Cost.** Whirlwind adds about 10 h of CPU per 200 frames to snaphu `-S`'s 31 h, about a third more. Both could
+  run on the same frame at the same time.
+
 ## 4. Conclusions
 
 - Whirlwind run on unmasked input is about as fast overall as snaphu masked tiled `-S`, and it uses a third of the
@@ -265,6 +298,9 @@ a median of one.
   rule gives component counts and areas that match snaphu's.
 - Snaphu `-S` remains the better choice for production, particularly on coastal frames. If whirlwind is used, it
   should be used on interior frames, with its components cut by the 1% rule.
+- Running whirlwind alongside snaphu `-S` is a useful, cheap check. The pixels where they disagree are 1% of the
+  data and hold 73% of snaphu's wrong pixels, and frames with more than 1% disagreement hold 92% of them. The
+  disagreement can be used to flag frames or mask pixels, but not to choose between the two solutions.
 
 ## Appendix: files
 
@@ -278,4 +314,5 @@ All files are in `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/diagOce
 | `compArea.py` | component-area distribution (`compArea.png`, `compArea.md`, `compArea/<key>.json`) |
 | `exampleFrames.py <key> <png>` | the example figures (`examples/`) |
 | `flagTest.py` | whirlwind option tests (`flagTest/`, `flagTest.out`) |
+| `compareBoth.py [wU\|wM]` | the agreement check in Section 3.7 (`compareBoth<run>/<key>.json`, `compareBoth<run>.md`) |
 | `summaryAlt.py`, `globalScore.py`, `sameCC.py` | the earlier comparisons: whirlwind masked, scores that ignore components, and scores on snaphu's components |
