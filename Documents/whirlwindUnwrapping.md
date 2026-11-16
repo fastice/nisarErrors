@@ -5,6 +5,11 @@
 
 ## Summary
 
+This test is designed to see whether a different unwrapper, whirlwind, could replace snaphu for unwrapping NISAR
+RUNW products: whether it is faster than the snaphu configurations we use or recommend, and whether it is at least
+as accurate. Because the synthetic frames have a known answer, we can count, frame by frame, the pixels each
+unwrapper puts on the wrong cycle.
+
 [whirlwind](https://github.com/scottstanie/whirlwind-insar) (version 0.10.0) is a multithreaded minimum-cost-flow
 unwrapper written in Rust. We ran it with default settings on all 200 synthetic interferograms, both unmasked and with
 the same residue mask that snaphu `-S` uses. Unless stated otherwise, "whirlwind" below means the unmasked run.
