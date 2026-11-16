@@ -388,7 +388,8 @@ frame. 10 frames change substantially for the better and 7 for the worse (Table 
 To separate the mask from tiling, each of these frames was also unwrapped with the masked input untiled. On six
 of the seven, that run has the same error as the masked tiled run (to within 0.01 percentage points), so the loss
 comes from the mask. On one, `t108A_f139`, it comes from tiling: masked untiled unwrapping gives 0.23%, masked tiled
-`-S` 2.42%. This is one of the frames where the assembly of the tiles fails to converge (Section 3.7).
+`-S` 2.42%. The tile assembly ran to completion on this frame (no early stop, Section 3.7), so the loss is in how the tiles
+were joined, not in a truncated solve.
 
 *Table 3. Synthetic test, all 200 frames, by class. Totals are summed wall-clock times. "Wrong" is the median share
 of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use the rule of
