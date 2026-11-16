@@ -1,0 +1,247 @@
+# Whirlwind as an alternative to snaphu: speed and accuracy on the 200-frame synthetic test
+
+**Status: draft, 2026-11-16.** Uses the same 200 synthetic Antarctica40 frames, inputs and scoring as
+[snaphuTilingMasking.md](snaphuTilingMasking.md) (Sections 2.4 and 3.5 there).
+
+## Summary
+
+[whirlwind](https://github.com/scottstanie/whirlwind-insar) (version 0.10.0) is a multithreaded minimum-cost-flow
+unwrapper written in Rust. We ran it with default settings on the unmasked synthetic interferograms of all 200 frames.
+We compared it with snaphu in two configurations: masked tiled `-S`, which is the recommended configuration from the
+snaphu study, and unmasked untiled, which is used in production now.
+
+- **Speed.** Whirlwind takes 8.7 h of wall time in total, compared with 10.4 h for snaphu `-S` and 74.3 h for
+  untiled snaphu. It uses far less CPU: 9.8 h, compared with 31.3 h for `-S`. The median frame is a little slower
+  than `-S` (98 s against 77 s). Whirlwind is about twice as fast on interior frames but about half as fast on
+  coastal ones.
+- **Accuracy.** Whirlwind is slightly less accurate than snaphu `-S` on the typical frame. The median share of
+  pixels with the wrong cycle count is 0.085%, against 0.057%. Its mean is lower (1.41% against 1.55%), but only
+  because of one frame where snaphu `-S` fails badly (Section 3.3).
+- **Connected components.** Whirlwind's own output has a median of 30 connected components per frame (maximum
+  254), and most of them are tiny. Each component is scored with its own offset, so this extra freedom flatters
+  the score. For a fair comparison, all whirlwind scores here first cut its components with snaphu's own rule,
+  which keeps only components larger than 1% of the frame. After the cut, both unwrappers have a median of one
+  component, and the area held by the largest components is nearly the same (Section 3.4).
+- **Settings.** No whirlwind option we tried (Goldstein filtering, interpolation, downsampling) fixes its worst
+  frames (Section 3.5).
+
+Whirlwind therefore does not replace snaphu `-S` for coastal frames. It is a fast option for interior frames,
+where it is twice as fast and the accuracy difference is a few thousandths of a percent of the pixels.
+
+## 1. Method
+
+| | snaphu untiled | snaphu `-S` | whirlwind |
+|---|---|---|---|
+| Input | unmasked (`synth3/none`) | residue mask 0.25 (`synth3/mask0.25`) | unmasked (`synth3/none`) |
+| Configuration | `BASE_CONF`: SMOOTH, MCF, NCORRLOOKS 139 | 4 x 4 tiles, 200 px overlap, NPROC 16, `-S` | defaults, `--nlooks 139`, 16 rayon threads |
+| Host | petermann / ryder | petermann / ryder | helheim, 10 frames at a time |
+
+**Scoring.** Scoring is the same as for snaphu (`synthTest.wrongCycles`). A pixel is wrong if its difference
+from the truth, after removing the median offset of its connected component, rounds to a nonzero number of
+cycles. Scoring covers the mask0.25 scored set (the residue mask, and only pixels where the truth is present).
+The same scored set is used for every run.
+
+**Component cut.** Before scoring, whirlwind's components smaller than 1% of the whole frame (lines x samples,
+masked pixels included) are set to 0. This is snaphu's `MINCONNCOMPFRAC 0.01` rule.
+
+**Worse and better.** A frame counts as substantially worse or better (`synthSummary.worse` / `better`) when the
+error at least doubles or changes by more than 0.5 percentage points. Changes smaller than 0.01 points are
+ignored.
+
+**Timing caveat.** The snaphu runs were timed on petermann and ryder in the snaphu study. Whirlwind was timed on
+helheim (96 cores) with 10 frames running at once. Whirlwind's median 1-minute load average during a run was 12,
+and its peak memory use was 1.1 GB median and 1.8 GB maximum.
+
+## 2. Speed
+
+| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked |
+|---|---|---|---|
+| Median wall, all | 636 s | 77 s | 98 s |
+| Median wall, coastal (120) | 936 s | 98 s | 182 s |
+| Median wall, interior (80) | 478 s | 53 s | 27 s |
+| Total wall, all | 74.3 h | 10.4 h | 8.7 h |
+| Total CPU, all | 74.3 h | 31.3 h | 9.8 h |
+
+| Whirlwind speedup | vs untiled, median | vs untiled, total | vs `-S`, median | vs `-S`, total |
+|---|---|---|---|---|
+| all | 8.7x | 8.5x | 0.9x | 1.2x |
+| coastal | 5.5x | 6.0x | 0.6x | 0.7x |
+| interior | 16.3x | 24.2x | 2.0x | 4.5x |
+
+Whirlwind's threads help little: CPU time is only 1.1 times wall time. On coastal frames it is limited by the
+same residue-dense ocean and sea-ice noise that the residue mask removes for snaphu.
+
+## 3. Accuracy
+
+### 3.1 Summary
+
+Statistics cover the 193 frames where all three runs have at least one component.
+
+| | snaphu untiled | snaphu `-S` (masked) | whirlwind unmasked |
+|---|---|---|---|
+| Wrong, median, all | 0.059% | 0.057% | 0.085% |
+| Wrong, median, coastal | 0.232% | 0.228% | 0.229% |
+| Wrong, median, interior | 0.001% | 0.000% | 0.006% |
+| Wrong, mean, all | 1.64% | 1.55% | 1.41% |
+| Coverage, median, all | 87.2% | 87.8% | 89.2% |
+| Coverage, median, coastal | 78.0% | 78.1% | 81.5% |
+| Whirlwind substantially worse / better | 49 / 22 | 50 / 20 | |
+
+### 3.2 Why whirlwind is worse more often but has the lower mean
+
+Compared with snaphu `-S`, whirlwind is substantially worse on 50 frames and substantially better on 20 (194
+frames where both runs are scored). Its mean error is nevertheless 0.13 percentage points lower. The two
+statistics measure different things:
+
+- **The worse/better rule is relative.** Many of the frames counted as worse are worse by tiny amounts. Of the 50
+  worse frames, 20 are worse by less than 0.05 points and 35 by less than 0.5 points; the median is +0.075 points
+  and the total is +64.9 points.
+- **The better frames are better by more.** The 20 better frames gain a median of 0.49 points each, −88.9 points in
+  total.
+- **One frame dominates the mean.** On `t022A_f139` snaphu `-S` has 59.1% of pixels wrong and whirlwind 7.8%
+  (Figure 1). That single frame lowers whirlwind's mean by 0.26 points. Without it, whirlwind's mean is 0.13 points
+  *worse* than snaphu `-S`.
+
+The median is therefore the fairer summary, and on the median whirlwind is slightly worse.
+
+These are the frames with the largest differences:
+
+| Frame | Class | snaphu `-S` | whirlwind | Difference (points) | Components, `-S` / whirlwind |
+|---|---|---|---|---|---|
+| `t022A_f139_20261001` | coastal | 59.12% | 7.77% | −51.34 | 1 / 1 |
+| `t166A_f135_20260824` | interior | 12.50% | 0.02% | −12.48 | 3 / 1 |
+| `t059D_f122_20261004` | coastal | 13.67% | 4.28% | −9.39 | 3 / 4 |
+| `t057D_f127_20260724` | coastal | 3.18% | 0.48% | −2.69 | 1 / 1 |
+| `t138A_f141_20260810` | coastal | 2.34% | 8.44% | +6.10 | 4 / 5 |
+| `t060A_f139_20260817` | coastal | 7.39% | 17.18% | +9.79 | 1 / 2 |
+| `t104A_f142_20260925` | coastal | 22.49% | 32.82% | +10.33 | 3 / 6 |
+| `t010D_f124_20260918` | coastal | 2.36% | 19.23% | +16.87 | 2 / 2 |
+
+### 3.3 Examples
+
+Each figure has five panels:
+
+1. The wrapped input.
+2. The snaphu `-S` connected components, numbered by size (blue is the largest).
+3. The snaphu `-S` error in cycles, after removing each component's median offset.
+4. The whirlwind components after the 1% cut.
+5. The whirlwind error in cycles.
+
+Dark gray is not scored. Light gray is scored but in no component.
+
+**Whirlwind better: `t022A_f139_20261001`** (Figure 1). Snaphu `-S` puts most of its single component +1 or −3
+cycles away from the rest. The boundaries of the offset regions are straight vertical lines, which suggests they
+come from the assembly of the tiles. Whirlwind has the same single component and gets almost all of it right; its
+errors are a thin strip of +2 to +3 cycles along the upper edge of the data.
+
+![t022A_f139](images/whirlwind_t022A_f139_20261001.png)
+
+*Figure 1. `t022A_f139_20261001`, the frame that dominates the mean.*
+
+**Whirlwind better: `t166A_f135_20260824`** (Figure 2). Snaphu `-S` connects the lower right of the frame to the
+main component across a narrow unscored band, and it puts that part −3 cycles away. Whirlwind unwraps the frame
+as one component and is wrong on 0.02% of pixels.
+
+![t166A_f135](images/whirlwind_t166A_f135_20260824.png)
+
+*Figure 2. `t166A_f135_20260824`, an interior frame.*
+
+**Whirlwind worse: `t010D_f124_20260918`** (Figure 3). Snaphu `-S` separates the strip along the eastern edge as
+its own component, so that strip's offset relative to the main area is not counted. Whirlwind joins the strip to
+its main component +1 cycle away (+2 at the north end), so the strip counts as wrong.
+
+![t010D_f124](images/whirlwind_t010D_f124_20260918.png)
+
+*Figure 3. `t010D_f124_20260918`, the largest loss for whirlwind.*
+
+**Whirlwind worse: `t060A_f139_20260817`** (Figure 4). Both unwrappers put a block of the ice shelf off by +2 to
++3 cycles. Whirlwind's block is about twice as large.
+
+![t060A_f139](images/whirlwind_t060A_f139_20260817.png)
+
+*Figure 4. `t060A_f139_20260817`.*
+
+In all four frames the error is a whole region offset by a few cycles, not scattered pixels. A small number of
+wrong decisions about how to connect regions decides the outcome, and neither unwrapper makes them consistently
+better than the other.
+
+### 3.4 Area held by the largest components
+
+Figure 5 shows how much of each frame's scored set is held by the k largest components, with one row each for all,
+coastal and interior frames. On the left are the median and quartiles over frames. On the right is the cumulative
+distribution over frames of the share held by the largest one, two and five components.
+
+| Set | Run | Largest, median | 2 largest | 3 largest | 5 largest | 10 largest | Frames where the largest holds < 50% |
+|---|---|---|---|---|---|---|---|
+| all | snaphu masked tiled `-S` | 78.9% | 86.4% | 87.5% | 87.8% | 87.8% | 62 of 200 |
+| all | whirlwind, all components | 80.2% | 88.0% | 89.6% | 90.7% | 91.3% | 51 of 200 |
+| all | whirlwind, < 1% cut | 80.2% | 87.6% | 88.8% | 89.2% | 89.2% | 51 of 200 |
+| coastal | snaphu masked tiled `-S` | 65.0% | 74.5% | 78.1% | 78.1% | 78.1% | 47 of 120 |
+| coastal | whirlwind, all components | 64.9% | 78.2% | 81.7% | 83.4% | 83.7% | 39 of 120 |
+| coastal | whirlwind, < 1% cut | 64.9% | 78.2% | 80.7% | 81.5% | 81.5% | 39 of 120 |
+| interior | snaphu masked tiled `-S` | 93.2% | 95.6% | 95.6% | 95.6% | 95.6% | 15 of 80 |
+| interior | whirlwind, all components | 95.5% | 96.3% | 96.7% | 96.8% | 96.8% | 12 of 80 |
+| interior | whirlwind, < 1% cut | 95.5% | 96.3% | 96.3% | 96.3% | 96.3% | 12 of 80 |
+
+- **Coastal frames.** The median frame has about two thirds of its data in the largest component for both
+  unwrappers. Whirlwind's second and third components hold more than snaphu's, so after the cut it covers
+  81.5% of the scored set against 78.1%. This is the coverage gain in Section 3.1.
+- **Interior frames.** The median frame has one dominant component holding 93% to 96% of the data. On 32 of the
+  80 interior frames for snaphu and 28 for whirlwind, the largest component holds less than 90%.
+- **The cut.** The small components that the cut removes hold only about 2% of the scored pixels on coastal frames
+  and 0.5% on interior frames. After the cut, the two unwrappers have almost the same number of degrees of freedom:
+  whirlwind's accuracy is not bought with more components.
+
+![Component area](images/whirlwind_componentArea.png)
+
+*Figure 5. Share of scored pixels in the k largest connected components: all (top), coastal (middle) and interior (bottom) frames.*
+
+### 3.5 Whirlwind options
+
+We reran four of the worst whirlwind frames with the options that change the solution:
+
+- `--goldstein-alpha 0.7`
+- `--interpolate`
+- both of these together
+- `--downsample 2`
+
+Each run was scored on snaphu `-S`'s components, so that every run has the same pixels and degrees of freedom.
+
+| Frame | Default | Goldstein 0.7 | Interpolate | Goldstein + interpolate | Downsample 2 |
+|---|---|---|---|---|---|
+| `t010D_f124` | 17.7% | 5.0% | 17.1% | 7.3% | 75.9% |
+| `t013A_f144` | 18.7% | 18.9% | 18.8% | 19.3% | 67.6% |
+| `t014A_f143` | 0.7% | 0.6% | 33.9% | 34.2% | 83.7% |
+| `t030D_f122` | 15.5% | 16.5% | 15.5% | 28.8% | 87.0% |
+
+- Goldstein filtering helps on one frame only.
+- Interpolation makes `t014A_f143` much worse.
+- Downsampling is 7 to 23 times faster but breaks each frame into 570 to 900 components that do not fit together.
+
+None of the options is a general improvement over the defaults.
+
+## 4. Conclusions
+
+- Whirlwind run on unmasked input is about as fast overall as snaphu masked tiled `-S`, and it uses a third of the
+  CPU. It is twice as fast on interior frames and half as fast on coastal frames.
+- On the typical frame whirlwind is slightly less accurate than snaphu `-S` (median 0.085% against 0.057% wrong),
+  and it is substantially worse on 50 frames against 20 better. Its lower mean comes from one frame where snaphu
+  `-S` fails.
+- Whirlwind's default connected components are far too many to use as they are (median 30). Applying snaphu's 1%
+  rule gives component counts and areas that match snaphu's.
+- Snaphu `-S` remains the better choice for production, particularly on coastal frames. If whirlwind is used, it
+  should be used on interior frames, with its components cut by the 1% rule.
+
+## Appendix: files
+
+All files are in `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/diagOceanMask/synth3_whirlwind/`.
+
+| File | Contents |
+|---|---|
+| `runAlt.py`, `queueAlt.py` | runs whirlwind on one frame, and on the whole queue using claim files; outputs in `none/<key>/` and `mask0.25/<key>/` |
+| `dropSmall.py frac0.01` | rescoring after the 1% component cut; `dropSmallfrac0.01/<key>.json`, per-frame table in `dropSmallfrac0.01.md` |
+| `timeAccuracy.py` | the speed and accuracy tables in Sections 2 and 3.1 (`timeAccuracy.md`) |
+| `compArea.py` | component-area distribution (`compArea.png`, `compArea.md`, `compArea/<key>.json`) |
+| `exampleFrames.py <key> <png>` | the example figures (`examples/`) |
+| `flagTest.py` | whirlwind option tests (`flagTest/`, `flagTest.out`) |
+| `summaryAlt.py`, `globalScore.py`, `sameCC.py` | the earlier comparisons: whirlwind masked, scores that ignore components, and scores on snaphu's components |
