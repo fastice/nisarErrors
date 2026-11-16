@@ -98,7 +98,9 @@ are:
 The modified build changes 125 of snaphu's roughly 20,200 lines of C (114 lines added, 11 removed, in four
 files). None of the changes alter the unwrapped result: wherever the unmodified release runs to completion, the
 output is byte-identical. We checked the first two changes against the unmodified release on CoSSC data and on 68
-Greenland frames, and the third against the build without it on Antarctic frames here.
+Greenland frames, and the third against the build without it on Antarctic frames here. On 12 frames drawn at
+random from the corrected synthetic test, masked tiled `-S` with stock snaphu 2.0.7 gave byte-identical output on all
+12 and took 1.30 times as long in total (0.88 to 2.15 times per frame).
 The changes are:
 
 - **No delay between tile processes** (1 line). Snaphu pauses before starting each tile process, in proportion to
@@ -383,8 +385,10 @@ frame. 10 frames change substantially for the better and 7 for the worse (Table 
 - Better: `t104A_f142` (36% to 22%), `t151A_f138` (13% to 5.9%), `t076A_f138` (5.7% to 0.17%), `t061A_f142` (5.4% to 0.63%), `t060A_f139` (9.2% to 7.4%), `t111A_f144` (5.6% to 4.1%), `t047A_f141` (1.3% to 0.2%), `t073D_f123` (0.14% to 0.015%), `t087A_f142` (0.036% to 0.016%), `t059D_f123` (0.015% to 0.00031%).
 - Worse: `t059D_f122` (2.4% to 14%), `t108A_f139` (0.23% to 2.4%), `t010D_f124` (0.56% to 2.4%), `t097D_f125` (0.39% to 1.4%), `t170D_f126` (0.0027% to 0.59%), `t033A_f141` (0.064% to 0.35%), `t111A_f144` (0.067% to 0.22%).
 
-Whether these losses come from the mask or from tiling is being checked by unwrapping the masked input untiled
-(Plan).
+To separate the mask from tiling, each of these frames was also unwrapped with the masked input untiled. On six
+of the seven, that run has the same error as the masked tiled run (to within 0.01 percentage points), so the loss
+comes from the mask. On one, `t108A_f139`, it comes from tiling: masked untiled unwrapping gives 0.23%, masked tiled
+`-S` 2.42%. This is one of the frames where the assembly of the tiles fails to converge (Section 3.7).
 
 *Table 3. Synthetic test, all 200 frames, by class. Totals are summed wall-clock times. "Wrong" is the median share
 of scored pixels with the wrong cycle count. "Substantially worse" and "substantially better" use the rule of
@@ -448,7 +452,9 @@ four normal frames ran about 20% slower, because the tiles are larger. In total 
 (12,516 s against 14,224 s), but they are mostly slow frames; weighting the two groups as in the 100-frame set
 (Section 3.5) gives roughly the same total time either way. The one frame that aborted at 200 pixels
 (`t060A_f139`, Section 3.6) runs at 400 pixels. These runs used the synthetic inputs of the earlier version of the test (Section 2.5), which does
-not affect the comparison of the two overlaps on the same input. With 3 x 3 tiles, `t081D_f127` took 1,924 s.
+not affect the comparison of the two overlaps on the same input. With 3 x 3 tiles, `t081D_f127` took 1,924 s. On 12 frames drawn at random from the corrected test, run back to
+back with the 200-pixel setting, 400-pixel overlaps took 1.16 times as long in total (0.83 to 2.04 times per frame),
+so the narrower overlap is the better default.
 
 ## 4. Discussion
 
@@ -514,18 +520,19 @@ some ice fronts. And its noise is calibrated to each frame's residue statistics,
 
 Done: the corrected synthetic test on 200 frames (Sections 3.4 and 3.5, Appendix A). Next:
 
-1. **Attribution.** Unwrap the masked input untiled for the frames the mask made worse, to confirm that the losses
-   come from the mask and not from tiling (running).
-2. **Stock snaphu and tile overlaps.** Time stock snaphu against the modified build on a sample of frames, and
-   repeat the 400-pixel overlap comparison (Section 3.7) on a random sample of the corrected frames.
-3. **Gentler masks.** Compare frames the mask helped (`t076A_f138`, `t061A_f142`, `t151A_f138`) with frames it hurt
+1. **Ionosphere and tide.** A sandbox experiment (`unwrapTest40/nisarSimTest/`) removes a simulation from the NISAR
+   velocity mosaic before unwrapping the real RUNWs; first results show far fewer cycle jumps and better connected
+   components on difficult coastal frames, and that the ambiguity step can misplace floating ice by the tide when
+   it fits separate components to a simulation without tides. To be written up after scoring against the range
+   offsets and a tide model.
+2. **Gentler masks.** Compare frames the mask helped (`t076A_f138`, `t061A_f142`, `t151A_f138`) with frames it hurt
    (`t059D_f122`, `t108A_f139`, `t010D_f124`), and test mask variants, for example filling isolated unmasked blocks
    inside masked areas, masking only residue regions connected to open ocean, or a different thickness rule.
-4. **Truth from the NISAR map.** Simulate the truth from the NISAR velocity mosaic, which covers the ice shelves and
+3. **Truth from the NISAR map.** Simulate the truth from the NISAR velocity mosaic, which covers the ice shelves and
    coastal ice that the MEaSUREs phase-based map lacks, so fewer coastal pixels have to be dropped.
-5. **Production.** Settle the mask rule and the tiling parameters, and add the preprocessing (residue mask, smooth
+4. **Production.** Settle the mask rule and the tiling parameters, and add the preprocessing (residue mask, smooth
    fill of masked and sub-swath pixels) ahead of tiled unwrapping in production.
-6. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
+5. **Real-data check.** Repeat the real-data comparison on a sample of frames with the final preprocessing.
 
 ## Appendix A: synthetic test, all frames
 
