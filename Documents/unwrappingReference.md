@@ -294,14 +294,31 @@ for a reference that fails, and it points to the same frames as the residue coun
 The synthetic test has a known answer, but its noise is simpler than that of real data: it has no ionospheric streaks
 and no real motion that differs from the map. Real data have no truth to score against, so here the map simulation is
 used as a common yardstick. It is not the truth (map error, ionosphere, tide), but it is the same for every method, so
-it gives relative accuracy. Figure 7 shows the difference between each ambiguity-resolved unwrapping and
-the map simulation, before and after the ionosphere correction, and with a 10 km smooth part removed. The smooth part
-is a robust local surface (1 km block medians, median filters at 20 then 10 km with outlier rejection); removing it
-leaves the short-scale differences, where a wrong-cycle patch smaller than about 5 km stands out as ±1 cycle against
-near-zero surroundings. Patches larger than about 10-20 km are absorbed into the surface and are not seen by this test.
+it gives relative accuracy. The differences from the map are compared before and after the ionosphere correction,
+and with a 10 km smooth part removed. The smooth part is a robust local surface (1 km block medians, median filters at
+20 then 10 km with outlier rejection). Removing it leaves the short-scale differences, where a wrong-cycle patch smaller
+than about 5 km stands out as ±1 cycle against near-zero surroundings; patches larger than about 10-20 km are absorbed
+into the surface and are not seen by this test.
 
-Before the ionosphere correction, the full difference is broad and dominated by ionospheric streaks (Figure 7a);
-after it, about 70% of pixels are within a cycle of the map (Figure 7b). With the smooth part removed (Figure 7c, d),
+Figure 7 shows what removing the smooth part does on Byrd, before the ionosphere correction. The difference from the
+map (Figure 7a, d) is dominated by the ionospheric streaks and, for the standard RUNW, by the levels of its separate
+components. The surface takes these out (Figure 7b, e). What is left (Figure 7c, f) is short-scale: striations along the
+Byrd flow band, where the 1 km smoothed map does not resolve the narrow fast flow, thin lines at the edges of the
+streaks, mottling over the grounded ice, and a few compact patches near ±1 cycle, which are the candidates for
+whole-cycle errors. On this frame the same patches appear in both unwrappings, which points to the map rather than to
+either unwrapping. Figure 8 and Table 2 give the results over all frames.
+
+![Figure 7](images/unwrapRef_smoothRemoval.png)
+*Figure 7. What removing the 10 km smooth part does, on Byrd (`t159D_f128`), before the ionosphere correction; cycles,
+black = floating-ice outline. Top row, the standard RUNW (ambiguity-resolved by the current GrIMP workflow): (a) its
+difference from the map simulation, median removed; (b) the 10 km robust local surface of (a); (c) (a) minus (b), with
+17.1% of pixels more than half a cycle from zero and 6.0% more than one cycle. Bottom row, (d)-(f) the same for the
+unwrapping with the smoothed map simulation removed: 21.4% and 8.1%, higher mainly because it also covers the Byrd flow
+band and mouth. After the ionosphere correction the shares fall to 15.0% and 5.3% for the standard RUNW and 18.0% and
+7.1% for the new unwrapping.*
+
+Before the ionosphere correction, the full difference is broad and dominated by ionospheric streaks (Figure 8a);
+after it, about 70% of pixels are within a cycle of the map (Figure 8b). With the smooth part removed (Figure 8c, d),
 the distributions are narrow and the three methods nearly coincide.
 
 *Table 2. Real frames (38 with all three products), pixels common to all three methods, pooled. One cycle is 11.9 cm
@@ -314,8 +331,8 @@ in line of sight.*
 | Standard deviation, smooth part removed, after correction | 0.50 | 0.48 | 0.48 |
 | Within 1/4 / 1/2 / 1 cycle, smooth part removed, after correction | 75 / 88 / 95% | 74 / 87 / 95% | 74 / 87 / 95% |
 
-![Figure 7](images/unwrapRef_vsMap.png)
-*Figure 7. Real frames: each ambiguity-resolved unwrapping minus the map simulation, on pixels common to all three
+![Figure 8](images/unwrapRef_vsMap.png)
+*Figure 8. Real frames: each ambiguity-resolved unwrapping minus the map simulation, on pixels common to all three
 methods, pooled over 38 frames. (a) Before the ionosphere correction, full difference (median removed). (b) After the
 ionosphere correction, full difference. (c) Before the correction, with the 10 km smooth part removed. (d) After the
 correction, with the smooth part removed. Each panel shows the PDF (solid, left axis) and the share of pixels within a
@@ -397,7 +414,8 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `nisarSimTest/runFast.py`, `runFast200.sh` | the real-data pipeline per frame and reference; results in `framesFastSmooth/`, `framesFastOffsets/` |
 | `nisarSimTest/scoreFast.py`, `summarizeFast.py` | per-frame scores (residues, components, agreement, edge test); `scoresFast/` |
 | `nisarSimTest/residueRefs.py`, `figResidueRatios.py` | Table 1, Figures 2 and 4 |
-| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Table 2, Figure 7 |
+| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Table 2, Figure 8 |
+| `nisarSimTest/figSmoothRemoval.py` | Figure 7 |
 | `nisarSimTest/ccRankFast.py`, `diagOceanMask/figCCRankBoth.py` | Figure 5 |
 | `diagOceanMask/synthOffsets.py`, `synthOffsetsSummary.py`, `figSynthAccuracy.py` | the synthetic test with the offsets; results in `synth3_offsets/` and `synth3_offsets_synthetic/`; Figure 6 |
 | `diagOceanMask/offsetsRealism.py` | the check of the synthetic offsets against the real ones |
