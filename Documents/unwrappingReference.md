@@ -338,7 +338,7 @@ throughout. (a) The 31 fast-flow frames: cumulative share of valid ice covered b
 over frames (each point a separate median, every frame weighted equally), for the standard RUNW and the two new unwrappings. (b) The same for the 192 test frames. (c) Synthetic test
 (200 frames): the same for the scored area, for stock untiled snaphu with no mask, masked tiled `-S` with no reference,
 and masked tiled `-S` with the real or synthetic offsets removed. (d) The largest component per frame, for the
-fast-flow frames, the coastal (112) and interior (80) test frames, and the synthetic test (box 25-75% of frames, black line median, magenta line mean, whiskers 10-90%; median / mean at right).*
+fast-flow frames, the coastal (112) and interior (80) test frames, and the synthetic test (box 25-75% of frames, black line median, white line mean, whiskers 10-90%; median / mean at right).*
 
 ### 3.2 Accuracy: are the bigger components noisier?
 
