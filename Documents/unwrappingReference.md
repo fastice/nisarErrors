@@ -51,6 +51,9 @@ Results so far:
   (`t032D`, offsets with 32% gaps) or a poor fit (`t102D`) makes the unwrapping worse. In each case the residue count
   of the reference-removed phase is higher than without it, which suggests choosing the reference per frame by its
   residues (Section 3.3).
+- **Recommendation (provisional).** Unwrap with a reference removed, using the range offsets by default and the 1 km
+  smoothed map as the alternative, never the unsmoothed map; guard against a bad reference by its residue count
+  (Section 4).
 
 ![Figure 1](images/unwrapRef_byrdUnwrapped.png)
 *Figure 1. One interferogram unwrapped three ways: as in the standard RUNW, and with each of the two references
@@ -387,7 +390,28 @@ the fewest, which takes seconds per frame and is decided before unwrapping. On t
 offsets on 27, the smoothed map on 10 and no reference on 4. Not filling large gaps in the offsets is a second
 candidate change.
 
-## 4. Open questions and next steps
+## 4. Recommendation
+
+This section states what the results so far support. It is provisional until the 200-frame real-data run is in, and
+will be revised with it.
+
+1. **Unwrap with a reference removed.** Remove an estimate of the motion before unwrapping with masked tiled `-S`, and
+   add it back afterwards. On the real frames this consolidates the unwrapping (median largest component 53% to
+   80-81% of the valid ice, total 83% to 87%; Section 3.1). In the synthetic test it reduces the wrong pixels rather
+   than hiding them in larger components (mean 1.59% to 0.88% with the real offsets, 0.29% with synthetic offsets;
+   Section 3.2.1).
+2. **Use the range offsets as the default reference.** They leave the fewest residues on 27 of the 41 real frames
+   (Section 2.3), have no seams, and follow this pair's actual motion, including changes since the map was made and the
+   tide. Where both references work, they give almost the same unwrapping (Section 3.2.2), so the choice matters most
+   where one of them fails.
+3. **If the map is used, smooth it first.** Simulate from the mosaic smoothed by 1 km. The unsmoothed mosaic adds
+   residues on 9 of the 11 frames tested and fails badly at seams (Section 2.2).
+4. **Guard against a bad reference.** Before unwrapping, count the residues with each candidate (none, smoothed map,
+   offsets) and use the one that leaves the fewest; if none reduces them, unwrap the phase as is. This takes seconds
+   per frame and would have avoided the failures in Section 3.3, but it has not yet been tested as a rule. Do not fill
+   large gaps in the offsets with `intfloat`; leave them without a reference.
+
+## 5. Open questions and next steps
 
 This section lists what remains to be settled before a reference could be used routinely, and what the running
 200-frame real-data test will add.
