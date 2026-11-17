@@ -386,3 +386,4 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `diagOceanMask/synthOffsets.py`, `synthOffsetsSummary.py`, `figSynthAccuracy.py` | the synthetic test with the offsets; results in `synth3_offsets/` and `synth3_offsets_synthetic/`; Figure 6 |
 | `diagOceanMask/offsetsRealism.py` | the check of the synthetic offsets against the real ones |
 | `nisarSimTest/figDirectUnw.py` | Figure 1 |
+| `nisarSimTest/figMapSeams.py` | Figure 3 |
