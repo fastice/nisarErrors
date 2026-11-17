@@ -167,20 +167,21 @@ The worst cases are seams in the mosaic. On `t152A` (Figure 3a), the simulation 
 the seams but a step of whole cycles remains a step.
 
 The range offsets can add error too. `t022A_f139`, an ice-shelf front cut by rifts, is the frame where they do
-most (1.33 times the residues; Table 1). The offsets themselves are smooth (Figure 3d), but against the standard
-RUNW, once the ionosphere and other variations over more than 10 km are removed, they are off by up to 1-1.5 cycles
-in bands along the rifts parallel to the front (Figure 3e), where the motion changes sharply across a narrow rift
-and the 1 km offsets cannot follow it. The coherence is high on both sides of the rifts (Figure 3f). The frame starts
-with few residues (13,990), so the added ones matter.
+most (1.33 times the residues; Table 1). The offsets themselves are smooth (Figure 3d). Their difference from the
+standard RUNW (Figure 3e) is dominated by the RUNW's separate components, each at its own level, and a smooth
+ionospheric gradient; the offsets' own error shows as sharp changes along the rifts parallel to the front, where the
+motion jumps across a narrow rift and the 1 km offsets cannot follow it (removing the variation over more than
+10 km leaves bands of 1-1.5 cycles there). The coherence is high on both sides of the rifts (Figure 3f). The frame
+starts with few residues (13,990), so the added ones matter.
 
 ![Figure 3](images/unwrapRef_mapSeams.png)
 *Figure 3. Where each reference adds error. Top row, the unsmoothed map simulation on `t152A_f139`: (a) the
 simulation, cycles; (b) the simulation minus the standard RUNW's unwrapped phase, cycles, where the rectangles are seams
 between scenes in the velocity mosaic and the block at lower left is about 40 cycles off; (c) coherence, high
 throughout. Bottom row, the range offsets on `t022A_f139`, an ice-shelf front with rifts: (d) the offsets in phase
-units as removed before unwrapping, cycles; (e) the offsets minus the standard RUNW's unwrapped phase, cycles, with
-its 10 km robust local surface removed (that surface holds about twice the ionosphere and the RUNW's component
-levels), so that the offsets' short-scale error shows, here in bands along the rifts; (f) coherence.*
+units as removed before unwrapping, cycles; (e) the offsets minus the standard RUNW's unwrapped phase, cycles, median
+removed: the blocks are the RUNW's components at their own levels, the gradient is mostly ionosphere, and the
+offsets' error is in the sharp changes along the rifts; (f) coherence.*
 
 ### 2.3 All real frames
 
