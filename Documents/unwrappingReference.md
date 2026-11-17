@@ -28,6 +28,9 @@ more than half a cycle between pixels, which creates residues that the unwrapper
 RUNW therefore breaks fast-flowing areas into many components. Removing a good estimate of the motion before
 unwrapping removes much of that aliasing, so the residual phase has fewer residues and can be unwrapped in larger
 pieces; the estimate is added back afterwards, so the result still agrees with the wrapped phase to whole cycles.
+Figure 1 shows an example on Byrd Glacier: the standard RUNW breaks the fast flow and the shelf into separate
+components (Figure 1a), while with either reference removed the frame unwraps as one component (Figure 1b, c), and
+the two new unwrappings agree to within a whole cycle on all but 0.3% of the pixels (Figure 1d).
 
 Results so far:
 
