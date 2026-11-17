@@ -60,6 +60,10 @@ removed: 83% of the ice in one component. (c) Unwrapped with the range offsets r
 
 ## 1. Method
 
+This section describes how a reference is removed before unwrapping, the two references compared, the frames
+used, and what is done after unwrapping, so that the residue counts and results in Sections 2 and 3 can be read
+against it.
+
 ### 1.1 Unwrapping with a reference removed
 
 Let φ be the wrapped phase of the RUNW and ρ a reference phase on the same grid, an estimate of the line-of-sight
@@ -111,6 +115,10 @@ the map simulation. The same step is applied to the standard RUNW and to the new
 further here.
 
 ## 2. Residues
+
+Residues are what force the unwrapper to cut the phase into components, so the first test of a reference is
+whether removing it reduces them. This section shows the effect on one frame, the need to smooth the map, and the
+counts for all real frames.
 
 ### 2.1 An example
 
@@ -180,6 +188,10 @@ means fewer residues than with no reference; below the dashed line, the offsets 
 2 are drawn at 2 and labelled with their values.*
 
 ## 3. Results
+
+This section tests the two parts of the purpose in turn: whether the unwrapping covers more of the ice in fewer
+components, and whether those larger components are accurate. It ends with the cases where a reference makes the
+unwrapping worse.
 
 ### 3.1 Coverage and component consolidation
 
@@ -326,6 +338,9 @@ candidate change.
 
 ## 4. Open questions and next steps
 
+This section lists what remains to be settled before a reference could be used routinely, and what the running
+200-frame real-data test will add.
+
 - **The 200-frame real-data run.** The same pipeline on the real data of the 200 synthetic-test frames is running;
   Sections 2.3, 3.1 and 3.2.2-3.2.4 will be refreshed with it.
 - **Choosing the reference.** Per frame, as above, or per block, using the reference only where it reduces residues;
@@ -335,6 +350,8 @@ candidate change.
   than only between methods, would check this directly.
 
 ## Appendix: files
+
+The scripts and output directories behind each table and figure, for rerunning or extending them.
 
 Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 
