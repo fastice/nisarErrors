@@ -275,19 +275,26 @@ The synthetic offsets were checked against the real ones on 20 frames: they remo
 the synthetic phase (median 0.93 of the original count, 10-90% 0.53-1.01) as the real offsets remove from the real
 phase (0.91, 0.65-1.02).
 
-#### 3.2.2 Agreement between the two references
+#### 3.2.2 Consistency between the two references
 
-The map and the offsets are independent estimates of the motion, so where the two unwrappings agree they are unlikely
-to share an error. Comparing them pixel by pixel, after removing the most common whole-cycle offset within each joint
-component, they differ on a median 0.04% of their common pixels (90% of frames below 8.4%). The largest
-disagreements, 33-48%, are on three coastal sample frames (`t022A_f139`, `t166A_f139`, `t081D_f127`); on the first two
-the map simulation multiplies the residues (Table 1). This rules out errors that depend on the reference, but not errors both make, for
-example by taking the same path across a decorrelated gap.
+This is a consistency check, not a test of accuracy. The two new unwrappings start from the same wrapped phase and use
+the same unwrapper, but different references, so any difference between them comes from the reference: if one
+reference pulled the unwrapping into wrong cycles, the two would disagree there. Agreement therefore shows that the
+result does not depend on which reference is used. It cannot show that either is right, because an error that comes
+from the data, for example the same wrong path across a decorrelated gap, is made by both.
+
+The two unwrappings were compared pixel by pixel, after removing the most common whole-cycle offset within each pair of
+overlapping components. They differ on a median 0.04% of their common pixels, and on less than 8.4% on 90% of the
+frames. The three frames where they disagree most, by 33-48% (`t022A_f139`, `t166A_f139`, `t081D_f127`), include the
+two where the map simulation multiplies the residues (Table 1). Disagreement between the two is therefore a cheap flag
+for a reference that fails, and it points to the same frames as the residue counts (Section 3.3).
 
 #### 3.2.3 Real frames against the map simulation
 
-The map simulation is not the truth for real data (map error, ionosphere, tide), but it is the same yardstick for every
-method, so it gives relative accuracy. Figure 7 shows the difference between each ambiguity-resolved unwrapping and
+The synthetic test has a known answer, but its noise is simpler than that of real data: it has no ionospheric streaks
+and no real motion that differs from the map. Real data have no truth to score against, so here the map simulation is
+used as a common yardstick. It is not the truth (map error, ionosphere, tide), but it is the same for every method, so
+it gives relative accuracy. Figure 7 shows the difference between each ambiguity-resolved unwrapping and
 the map simulation, before and after the ionosphere correction, and with a 10 km smooth part removed. The smooth part
 is a robust local surface (1 km block medians, median filters at 20 then 10 km with outlier rejection); removing it
 leaves the short-scale differences, where a wrong-cycle patch smaller than about 5 km stands out as ±1 cycle against
