@@ -240,6 +240,11 @@ value at right, whiskers 10-90%).*
 
 ### 3.2 Accuracy: are the bigger components noisier?
 
+Larger components only help if they are right. No single test settles this for real data, so four are used, from
+the most direct to the least: the synthetic test, where the truth is known (3.2.1); agreement between the two
+independent references (3.2.2); the real unwrappings against the map simulation (3.2.3); and the offsets as a check
+on whole-cycle choices that differ from the standard RUNW (3.2.4).
+
 #### 3.2.1 Synthetic test
 
 The synthetic test is the only one with a true answer. It is scored as in `snaphuTilingMasking.md`: within each
