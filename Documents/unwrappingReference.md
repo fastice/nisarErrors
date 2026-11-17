@@ -166,10 +166,18 @@ The worst cases are seams in the mosaic. On `t152A` (Figure 3a), the simulation 
 40 cycles off; the coherence is high throughout (Figure 3c), so the data are good and the steps are in the map. Smoothing softens
 the seams but a step of whole cycles remains a step.
 
-![Figure 3](images/unwrapRef_t152A_mapSeams.png)
-*Figure 3. `t152A_f139`. (a) The unsmoothed map simulation, cycles. (b) The simulation minus the standard RUNW's
-unwrapped phase, cycles; the rectangles are seams between scenes in the velocity mosaic, and the block at lower left is
-about 40 cycles off. (c) Coherence, high throughout.*
+`t022A_f139`, an ice-shelf front cut by rifts (Figure 3d-f), is the worst case, and the one where the offsets add
+residues too (1.33 times; Table 1). The map simulation has the same kind of seams and steps (Figure 3d, e). The
+offsets add their residues along the rifts parallel to the front, where the motion changes sharply across a
+narrow rift and the 1 km offsets cannot follow it. The frame starts with few residues (13,990), so the added ones
+matter.
+
+![Figure 3](images/unwrapRef_mapSeams.png)
+*Figure 3. Two frames where the map simulation is a poor reference. Top row, `t152A_f139`: (a) the unsmoothed map
+simulation, cycles; (b) the simulation minus the standard RUNW's unwrapped phase, cycles, where the rectangles are
+seams between scenes in the velocity mosaic and the block at lower left is about 40 cycles off; (c) coherence, high
+throughout. Bottom row, `t022A_f139`, an ice-shelf front with rifts, where the range offsets also add residues:
+(d)-(f) the same.*
 
 ### 2.3 All real frames
 
