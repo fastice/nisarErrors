@@ -88,8 +88,8 @@ from the solution on all frames.
   simulating, the mosaic is smoothed with a 1 km (5 x 5 pixel) mean over valid pixels. The unsmoothed mosaic was
   tried first and is not recommended (Section 2.2).
 - **Range offsets.** The pair's own range offsets, as produced by the current GrIMP workflow from the RUNW's
-  companion ROFF product: its three offset layers merged, culled and lightly averaged. They are converted to phase units (4π/λ times the offset minus the
-  geometric offset) and smoothed about 1 km. Gaps in the offsets are filled with `intfloat` (weighted distance, search
+  companion ROFF product: its three offset layers merged, culled and lightly smoothed. They are converted to phase
+  units (4π/λ times the offset minus the geometric offset) and smoothed further, to about 1 km. Gaps in the offsets are filled with `intfloat` (weighted distance, search
   up to 100 pixels). The offsets measure the actual motion of this pair, including any change since the map was made
   and the tide, at coarser resolution than the phase.
 
