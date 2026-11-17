@@ -50,11 +50,12 @@ Results so far:
   residues (Section 3.3).
 
 ![Figure 1](images/unwrapRef_byrdUnwrapped.png)
-*Figure 1. Byrd Glacier entering the Ross Ice Shelf (`t159D_f128`, 2026-07-07 to 2026-07-19), unwrapped phase in
-cycles relative to the median on grounded ice; grey lines are component boundaries, black the floating-ice outline.
-The standard RUNW splits the fast flow and the shelf into separate components at arbitrary levels (largest component 43% of
-the ice). With the smoothed map simulation or the range offsets removed before unwrapping, the frame unwraps as one
-component (83-84%); the two unwrappings differ by a whole cycle on 0.28% of their common pixels (lower right).*
+*Figure 1. Byrd Glacier entering the Ross Ice Shelf (`t159D_f128`, 2026-07-07 to 2026-07-19). (a)-(c) Unwrapped
+phase in cycles relative to the median on grounded ice; grey lines are component boundaries, black the floating-ice
+outline. (a) The standard RUNW: it covers 76% of the ice in 4 components of 5% or more, the largest 43%, and splits the
+fast flow and the shelf into separate components at arbitrary levels. (b) Unwrapped with the smoothed map simulation
+removed: 83% of the ice in one component. (c) Unwrapped with the range offsets removed: 84% in one component.
+(d) (b) minus (c) in whole cycles: equal on 99.71% of their common pixels, +1 on 0.20%, −1 on 0.08%.*
 
 ## 1. Method
 
@@ -120,9 +121,10 @@ mosaic's short-scale detail does not match this pair, and the total rises to 1.0
 before simulating removes most of the added residues (0.89 times).
 
 ![Figure 2](images/unwrapRef_byrdResidues.png)
-*Figure 2. Byrd (`t159D_f128`): residue density in 1 km blocks over valid ice, on the same pixels in every panel. Top:
-the wrapped phase with no reference, with the unsmoothed map simulation removed, with the 1 km smoothed map
-simulation removed, and with the range offsets removed. Bottom: change from no reference (red = more residues).*
+*Figure 2. Byrd (`t159D_f128`): residue density in 1 km blocks over valid ice, on the same pixels in every panel.
+(a) The wrapped phase with no reference (342,747 residues). (b) With the unsmoothed map simulation removed (360,783,
+1.05 times). (c) With the 1 km smoothed map simulation removed (306,337, 0.89 times). (d) With the range offsets
+removed (293,846, 0.86 times). (e)-(g) Change of (b)-(d) from (a), residues per pixel; red = more residues.*
 
 ### 2.2 Smoothing the map
 
@@ -152,9 +154,9 @@ is a patchwork of rectangles with steps of one to three cycles along straight li
 the seams but a step of whole cycles remains a step.
 
 ![Figure 3](images/unwrapRef_t152A_mapSeams.png)
-*Figure 3. `t152A_f139`: the unsmoothed map simulation (left, cycles), the simulation minus the standard RUNW's unwrapped
-phase (middle, cycles), and the coherence (right). The rectangles in the middle panel are seams between scenes in the
-velocity mosaic.*
+*Figure 3. `t152A_f139`. (a) The unsmoothed map simulation, cycles. (b) The simulation minus the standard RUNW's
+unwrapped phase, cycles; the rectangles are seams between scenes in the velocity mosaic, and the block at lower left is
+about 40 cycles off. (c) Coherence, high throughout.*
 
 ### 2.3 All real frames
 
@@ -172,7 +174,9 @@ the map-seam frames of Table 1.
 
 ![Figure 4](images/unwrapRef_residueRatios.png)
 *Figure 4. Residues with each reference removed relative to no reference, per frame: smoothed map simulation (x)
-against range offsets (y). Ratios above 2 are drawn at 2 and labelled with their values.*
+against range offsets (y), for the 31 fast-flow frames (circles) and the 10-frame coastal sample (squares). Below 1
+means fewer residues than with no reference; below the dashed line, the offsets leave fewer than the map. Ratios above
+2 are drawn at 2 and labelled with their values.*
 
 ## 3. Results
 
@@ -196,9 +200,12 @@ stock untiled snaphu with no mask (our stand-in for how the standard RUNW is unw
 With either reference removed, the real frames look like the synthetic ones.
 
 ![Figure 5](images/unwrapRef_components.png)
-*Figure 5. Connected components ranked largest to smallest. (a) Real frames, cumulative share of valid ice, median
-over frames. (b) Synthetic test, cumulative share of the scored area. (c) Largest component per frame (box 25-75%,
-line median, whiskers 10-90%). The same colour and marker mean the same method throughout.*
+*Figure 5. Connected components ranked largest to smallest; the same colour and marker mean the same method
+throughout. (a) Real frames (41): cumulative share of valid ice covered by the largest n components, median over
+frames, for the standard RUNW and the two new unwrappings. (b) Synthetic test (200 frames): the same for the scored
+area, for stock untiled snaphu with no mask, masked tiled `-S` with no reference, and masked tiled `-S` with the real
+or synthetic offsets removed. (c) The largest component per frame for all seven (box 25-75%, line median with its
+value at right, whiskers 10-90%).*
 
 ### 3.2 Accuracy: are the bigger components noisier?
 
@@ -217,8 +224,10 @@ between components are not counted), and separately for the largest component al
 | Largest component, median | 81.3% | 84.5% | 84.5% |
 
 ![Figure 6](images/unwrapRef_syntheticAccuracy.png)
-*Figure 6. Synthetic test, 200 frames. Mean share of wrong pixels over frames, (a) all scored pixels and (b) the
-largest component only, by class. (c) Frames with fewer (solid) and more (hatched) wrong pixels than with no reference.*
+*Figure 6. Synthetic test, 200 frames, masked tiled `-S` with no reference, with the real offsets removed and with
+synthetic offsets removed. (a) Mean share of wrong pixels over frames, all scored pixels, for all frames and by class.
+(b) The same for the largest component only. (c) Frames with fewer (solid) and more (hatched) wrong pixels than with no
+reference, by more than 0.05 percentage points.*
 
 Removing the offsets makes the unwrapping more accurate, and the largest components cleaner, on both versions of the
 test. The worst frames gain most: with synthetic offsets, `t166A_f139` falls from 64% wrong pixels to 1.3%, `t022A_f139`
@@ -259,11 +268,12 @@ in line of sight.*
 | Within 1/4 / 1/2 / 1 cycle, smooth part removed, after correction | 75 / 88 / 95% | 74 / 87 / 95% | 74 / 87 / 95% |
 
 ![Figure 7](images/unwrapRef_vsMap.png)
-*Figure 7. Real frames: unwrapped minus the map simulation, pixels common to all three methods, pooled over 38
-frames. Columns: before and after the ionosphere correction. Rows: full difference (median removed), and with the
-10 km smooth part removed. Each panel shows the PDF (solid) and the share of pixels within a given distance (dashed),
-and a table of the shares within 1/4, 1/2 and 1 cycle and the robust σ. Values beyond the axis limits are counted at
-the limit.*
+*Figure 7. Real frames: each ambiguity-resolved unwrapping minus the map simulation, on pixels common to all three
+methods, pooled over 38 frames. (a) Before the ionosphere correction, full difference (median removed). (b) After the
+ionosphere correction, full difference. (c) Before the correction, with the 10 km smooth part removed. (d) After the
+correction, with the smooth part removed. Each panel shows the PDF (solid, left axis) and the share of pixels within a
+given distance of zero (dashed, right axis), and a table of the shares within 1/4, 1/2 and 1 cycle and the robust σ.
+Values beyond the axis limits are counted at the limit.*
 
 On the pixels all three unwrap, the new unwrappings are as close to the map as the standard RUNW processed with the
 current GrIMP workflow. Three caveats:
