@@ -15,11 +15,17 @@ interferometric pair's own range offsets. "Improves" has two parts, and both are
 - **Accuracy.** Are the larger components correct, or are we just getting bigger but noisier components, with
   whole-cycle errors hidden inside them?
 
+**Terms.** *Standard RUNW*: the NISAR L1 RUNW product as delivered, with the unwrapped phase and connected components
+of the NISAR processing system. *Current GrIMP workflow*: our processing of the standard RUNW today, whose ionosphere
+step (the GrIMP offset-phase difference correction) also resolves the whole-cycle offset of each component against the
+map simulation. *New unwrappings*: the standard RUNW's wrapped phase unwrapped again here with a reference removed
+(Section 1.1), then put through the same GrIMP ionosphere step.
+
 ## Summary
 
 Fast ice flow aliases the interferometric phase: across shear margins and in fast, narrow outlets the phase changes by
-more than half a cycle between pixels, which creates residues that the unwrapper has to cut around. Production
-unwrapping therefore breaks fast-flowing areas into many components. Removing a good estimate of the motion before
+more than half a cycle between pixels, which creates residues that the unwrapper has to cut around. The standard
+RUNW therefore breaks fast-flowing areas into many components. Removing a good estimate of the motion before
 unwrapping removes much of that aliasing, so the residual phase has fewer residues and can be unwrapped in larger
 pieces; the estimate is added back afterwards, so the result still agrees with the wrapped phase to whole cycles.
 
@@ -30,14 +36,14 @@ Results so far:
   residues instead, through seams and short-scale errors in the mosaic; smoothing it by 1 km before simulating removes
   most of that, but not seams with steps of whole cycles (Section 2).
 - **Coverage and consolidation.** On the real frames the median largest component grows from 53% of the valid ice
-  in production to 80-81% with either reference, and the total unwrapped area from 83% to 87% (Section 3.1). The
+  in the standard RUNW to 80-81% with either reference, and the total unwrapped area from 83% to 87% (Section 3.1). The
   median frame goes from two components of 5% or more to one.
 - **Accuracy.** In the synthetic test, where the truth is known, the larger components are more accurate, not less:
   with the real offsets as the reference the mean share of wrong pixels in the largest component falls from 1.65% to
   0.89%, and with synthetic offsets that see the same motion as the phase to 0.13% (Section 3.2.1). On the real
   frames the two references, which are independent of each other, give the same unwrapping on a median 99.96% of
-  pixels, and against the map simulation the new unwrappings are as close as production on the pixels all three
-  unwrap (Sections 3.2.2-3.2.3).
+  pixels, and against the map simulation the new unwrappings are as close as the standard RUNW (current GrIMP
+  workflow) on the pixels all three unwrap (Sections 3.2.2-3.2.3).
 - **Where a reference hurts.** A reference with seams (the unsmoothed map, `t152A`), large interpolated gaps
   (`t032D`, offsets with 32% gaps) or a poor fit (`t102D`) makes the unwrapping worse. In each case the residue count
   of the reference-removed phase is higher than without it, which suggests choosing the reference per frame by its
@@ -46,7 +52,7 @@ Results so far:
 ![Figure 1](images/unwrapRef_byrdUnwrapped.png)
 *Figure 1. Byrd Glacier entering the Ross Ice Shelf (`t159D_f128`, 2026-07-07 to 2026-07-19), unwrapped phase in
 cycles relative to the median on grounded ice; grey lines are component boundaries, black the floating-ice outline.
-Production splits the fast flow and the shelf into separate components at arbitrary levels (largest component 43% of
+The standard RUNW splits the fast flow and the shelf into separate components at arbitrary levels (largest component 43% of
 the ice). With the smoothed map simulation or the range offsets removed before unwrapping, the frame unwraps as one
 component (83-84%); the two unwrappings differ by a whole cycle on 0.28% of their common pixels (lower right).*
 
@@ -72,7 +78,7 @@ from the solution on all frames.
 ### 1.2 The two references
 
 - **Map simulation.** The line-of-sight phase simulated from the current NISAR Antarctic velocity mosaic (200 m,
-  multi-year, June 2025 to November 2026), as the production workflow already does for its ambiguity step. Before
+  multi-year, June 2025 to November 2026), as the current GrIMP workflow already does for its ambiguity step. Before
   simulating, the mosaic is smoothed with a 1 km (5 x 5 pixel) mean over valid pixels. The unsmoothed mosaic was
   tried first and is not recommended (Section 2.2).
 - **Range offsets.** The pair's own range offsets, converted to phase units (4π/λ times the offset minus the
@@ -85,7 +91,7 @@ from the solution on all frames.
 - **Real frames (41).** Thirty frames chosen over fast-flowing grounded ice, plus Byrd Glacier, and a ten-frame
   coastal sample used in earlier ionosphere work. The thirty were drawn from all Antarctica40 frame locations: at most
   one third of the frame over open water, at least 300 km² of grounded ice faster than 400 m/yr, and at least two
-  production components each of 5% or more of the frame; the most recent such pair per location, at most two per
+  components in the standard RUNW each of 5% or more of the frame; the most recent such pair per location, at most two per
   track, centres at least 100 km apart, ranked by fast-ice area. They cover the Siple Coast ice streams, Pine Island and
   Thwaites, Recovery and Slessor, Totten and Denman, Evans and Rutford, Lambert, the Peninsula and Byrd.
 - **Synthetic test (200 frames).** The test of `snaphuTilingMasking.md`: the truth is each frame's map simulation, and
@@ -98,8 +104,9 @@ from the solution on all frames.
 ### 1.4 After unwrapping
 
 Where results are given after the ionosphere step, the ionosphere correction is the GrIMP offset-phase difference
-correction, run as in production; it also resolves the whole-cycle offset of each component against the map
-simulation. It is not discussed further here.
+correction, run as in the current GrIMP workflow; it also resolves the whole-cycle offset of each component against
+the map simulation. The same step is applied to the standard RUNW and to the new unwrappings. It is not discussed
+further here.
 
 ## 2. Residues
 
@@ -139,13 +146,13 @@ simulations. Smoothing helps on every frame. On three coastal frames the map sim
 | `t166A_f139` | 20,943 | 12.42 | 4.41 | 1.15 |
 | `t022A_f139` | 13,990 | 18.93 | 7.07 | 1.33 |
 
-The worst cases are seams in the mosaic. On `t152A` (Figure 3), the simulation minus the production unwrapping is a
-patchwork of rectangles with steps of one to three cycles along straight lines, and a block in the lower left about
+The worst cases are seams in the mosaic. On `t152A` (Figure 3), the simulation minus the standard RUNW's unwrapped phase
+is a patchwork of rectangles with steps of one to three cycles along straight lines, and a block in the lower left about
 40 cycles off; the coherence is high throughout, so the data are good and the steps are in the map. Smoothing softens
 the seams but a step of whole cycles remains a step.
 
 ![Figure 3](images/unwrapRef_t152A_mapSeams.png)
-*Figure 3. `t152A_f139`: the unsmoothed map simulation (left, cycles), the simulation minus the production unwrapped
+*Figure 3. `t152A_f139`: the unsmoothed map simulation (left, cycles), the simulation minus the standard RUNW's unwrapped
 phase (middle, cycles), and the coherence (right). The rectangles in the middle panel are seams between scenes in the
 velocity mosaic.*
 
@@ -171,11 +178,11 @@ against range offsets (y). Ratios above 2 are drawn at 2 and labelled with their
 
 ### 3.1 Coverage and component consolidation
 
-Figure 5 ranks each frame's components by size. On the real frames (Figure 5a), production's median largest component
-is 53% of the valid ice and it needs about eight components to reach its total of 83%; with either reference the
+Figure 5 ranks each frame's components by size. On the real frames (Figure 5a), the standard RUNW's median largest
+component is 53% of the valid ice and it needs about eight components to reach its total of 83%; with either reference the
 largest component is 80-81% and the total, 87%, is reached by the third component.
 
-| Real frames (41), median | Production | Map smoothed 1 km | Range offsets |
+| Real frames (41), median | Standard RUNW | Map smoothed 1 km | Range offsets |
 |---|---|---|---|
 | Largest component (share of valid ice) | 53% | 81% | 80% |
 | Largest component, 25-75% of frames | 27-77% | 29-95% | 28-95% |
@@ -185,7 +192,7 @@ largest component is 80-81% and the total, 87%, is reached by the third componen
 In the synthetic test (Figure 5b) every configuration already reaches its total within two or three components: the
 synthetic phase has no ionospheric streaks and no real motion that the map gets wrong, which are what fragment the
 real interferograms. The ordering is the same, but the gains are smaller: the median largest component is 75% for
-stock untiled snaphu with no mask, 81% for masked tiled `-S`, and 84.5% with the real or synthetic offsets removed.
+stock untiled snaphu with no mask (our stand-in for how the standard RUNW is unwrapped), 81% for masked tiled `-S`, and 84.5% with the real or synthetic offsets removed.
 With either reference removed, the real frames look like the synthetic ones.
 
 ![Figure 5](images/unwrapRef_components.png)
@@ -244,7 +251,7 @@ near-zero surroundings. Patches larger than about 10-20 km are absorbed into the
 *Table 2. Real frames (38 with all three products), pixels common to all three methods, pooled. One cycle is 11.9 cm
 in line of sight.*
 
-| | Production | Map smoothed 1 km | Range offsets |
+| | Standard RUNW, current GrIMP workflow | Map smoothed 1 km | Range offsets |
 |---|---|---|---|
 | Robust σ, full difference, before / after ionosphere correction | 2.05 / 0.76 cycles | 2.08 / 0.77 | 2.08 / 0.75 |
 | Robust σ, 10 km smooth part removed, before / after | 0.18 / 0.12 | 0.18 / 0.12 | 0.18 / 0.12 |
@@ -258,31 +265,33 @@ frames. Columns: before and after the ionosphere correction. Rows: full differen
 and a table of the shares within 1/4, 1/2 and 1 cycle and the robust σ. Values beyond the axis limits are counted at
 the limit.*
 
-On the pixels all three unwrap, the new unwrappings are as close to the map as production. Three caveats:
+On the pixels all three unwrap, the new unwrappings are as close to the map as the standard RUNW processed with the
+current GrIMP workflow. Three caveats:
 
-- **Production has more freedom.** Each of its separate components is levelled to the map in the ambiguity step, so
+- **The standard RUNW has more freedom.** Each of its separate components is levelled to the map in the GrIMP ambiguity step, so
   where it is in pieces it is pulled towards the map by construction. A single large component has one whole-cycle
-  offset and cannot be pulled that way. Production's slightly narrower core after correction (per-frame median robust
+  offset and cannot be pulled that way. The standard RUNW's slightly narrower core after correction (per-frame median robust
   σ 0.15 against 0.18 cycles) and its slightly smaller far tail are consistent with that.
 - **The tails are mostly map error.** About 5% of pixels are more than a cycle off for all three methods. The
   histograms are smooth, with no secondary peaks at ±1 or ±2 cycles, and on Byrd, the frame examined in detail, the
   far departures are in narrow fast flow and shear margins that the 1 km smoothed map does not resolve.
-- **The new unwrappings cover more.** On their own pixels, about 25 points more of the ice than production, the new
+- **The new unwrappings cover more.** On their own pixels, about 25 points more of the ice than the standard RUNW, the new
   unwrappings depart more often (after correction, more than one cycle on 7.2-7.3% of pixels against 5.4%), because
-  the added area is the harder ground that production does not unwrap.
+  the added area is the harder ground that the standard RUNW leaves unwrapped.
 
 #### 3.2.4 Whole-cycle choices against the offsets
 
-Where a new unwrapping and production differ by a whole number of cycles after the ambiguity step, the offsets can be
+Where a new unwrapping and the standard RUNW differ by a whole number of cycles, both after the GrIMP ambiguity step, the offsets can be
 used to judge which is right: in each region of difference, the step in (phase − offsets) from a 2 km band outside the
 region, where the two agree, to a 2 km band inside it, skipping 0.5 km next to the edge where the offsets blur.
 Since the ionosphere is smooth, the right solution should show the smaller step. A solution is counted only if its
 step is under one cycle and at least half a cycle smaller than the other's.
 
-On the 41 frames (smoothed-map run against production), 14.4 million pixels support the new unwrapping and 3.3 million
-production, 4.9 million and 0.6 million of them on floating ice; 40.5 million are undecided, mostly because strong
+On the 41 frames (smoothed-map run against the standard RUNW), 14.4 million pixels support the new unwrapping and
+3.3 million the standard RUNW, 4.9 million and 0.6 million of them on floating ice; 40.5 million are undecided, mostly because strong
 ionospheric streaks change the phase by several cycles across the bands. Sixteen frames favour the new unwrapping, five
-production, and twenty are tied. On Byrd, production's shelf components sit at the map's level while the new
+the standard RUNW, and twenty are tied. On Byrd, the standard RUNW's shelf components, levelled by the GrIMP
+ambiguity step, sit at the map's level while the new
 unwrapping, which reaches the shelf continuously through the data, puts them 1-3 cycles higher; the range offsets,
 which measure this pair's motion independently of both, agree with the new unwrapping.
 
