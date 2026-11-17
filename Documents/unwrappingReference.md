@@ -140,12 +140,12 @@ counts for all real frames.
 
 ### 2.1 An example
 
-Figure 3 shows Byrd Glacier. Without a reference (Figure 2a), the residues lie along the shear margins of the Byrd flow and along
+Figure 3 shows Byrd Glacier. Without a reference (Figure 3a), the residues lie along the shear margins of the Byrd flow and along
 decorrelated rifts and streaks. Removing the range offsets clears the outer edges of the shear margins, where the
-phase aliases; the residues it adds elsewhere are outnumbered, and the total falls to 0.86 times (Figure 2d, g). The unsmoothed map simulation clears
+phase aliases; the residues it adds elsewhere are outnumbered, and the total falls to 0.86 times (Figure 3d, g). The unsmoothed map simulation clears
 the same margins but adds residues inside the flow band, in stripes parallel to flow, and in patches on the grounded ice: the
-mosaic's short-scale detail does not match this pair, and the total rises to 1.05 times (Figure 2b, e). Smoothing the mosaic by 1 km
-before simulating brings the total below that with no reference (0.89 times; Figure 2c, f).
+mosaic's short-scale detail does not match this pair, and the total rises to 1.05 times (Figure 3b, e). Smoothing the mosaic by 1 km
+before simulating brings the total below that with no reference (0.89 times; Figure 3c, f).
 
 ![Figure 3](images/unwrapRef_byrdResidues.png)
 *Figure 3. Byrd (`t159D_f128`): residue density in 1 km blocks over valid ice, on the same pixels in every panel.
@@ -175,18 +175,18 @@ simulations. Smoothing helps on every frame. On three coastal frames the map sim
 | `t166A_f139` | 20,943 | 12.42 | 4.41 | 1.15 |
 | `t022A_f139` | 13,990 | 18.93 | 7.07 | 1.33 |
 
-The worst cases are seams in the mosaic. On `t152A` (Figure 3a), the simulation minus the standard RUNW's unwrapped phase
-(Figure 3b) is a patchwork of rectangles with steps of one to three cycles along straight lines, and a block in the lower left about
-40 cycles off; the coherence on the ice has a median of 0.60 and is above 0.5 on 90% of it (Figure 3c), so the data are good and
+The worst cases are seams in the mosaic. On `t152A` (Figure 4a), the simulation minus the standard RUNW's unwrapped phase
+(Figure 4b) is a patchwork of rectangles with steps of one to three cycles along straight lines, and a block in the lower left about
+40 cycles off; the coherence on the ice has a median of 0.60 and is above 0.5 on 90% of it (Figure 4c), so the data are good and
 the steps are in the map. Smoothing softens
 the seams but a step of whole cycles remains a step.
 
 The range offsets can add error too. `t022A_f139`, an ice-shelf front cut by rifts, is the frame where they do
-most (1.33 times the residues; Table 1). The offsets themselves are smooth (Figure 3d). Their difference from the
-standard RUNW (Figure 3e) is dominated by the RUNW's separate components, each at its own level, and a smooth
+most (1.33 times the residues; Table 1). The offsets themselves are smooth (Figure 4d). Their difference from the
+standard RUNW (Figure 4e) is dominated by the RUNW's separate components, each at its own level, and a smooth
 ionospheric gradient; the offsets' own error shows as steps along the rifts parallel to the front, where the motion
 changes across the rift over a shorter distance than the offsets' 1 km smoothing (removing the variation over more
-than 10 km leaves bands of 1-1.5 cycles there). The coherence on the ice has a median of 0.53 (Figure 3f). The frame
+than 10 km leaves bands of 1-1.5 cycles there). The coherence on the ice has a median of 0.53 (Figure 4f). The frame
 starts with 13,990 residues (0.4% of its 3.9 million valid ice pixels), so the 4,600 the offsets add are a 33%
 increase.
 
@@ -228,7 +228,7 @@ unwrapping worse.
 
 ### 3.1 Coverage and component consolidation
 
-Figure 6 ranks each frame's components by size. On the real frames (Figure 5a), the standard RUNW's median largest
+Figure 6 ranks each frame's components by size. On the real frames (Figure 6a), the standard RUNW's median largest
 component is 53% of the valid ice and it needs about eight components to reach its total of 83%; with either reference the
 largest component is 80-81% and the total, 87%, is reached by the third component.
 
@@ -239,12 +239,12 @@ largest component is 80-81% and the total, 87%, is reached by the third componen
 | All components | 83% | 87% | 87% |
 | Components of 5% or more | 2 | 1 | 1 |
 
-In the synthetic test (Figure 5b) every configuration already reaches its total within two or three components: the
+In the synthetic test (Figure 6b) every configuration already reaches its total within two or three components: the
 synthetic phase has no ionospheric streaks and no real motion that the map gets wrong, which are what fragment the
 real interferograms. The ordering is the same, but the gains are smaller: the median largest component is 75% for
 stock untiled snaphu with no mask (our stand-in for how the standard RUNW is unwrapped), 81% for masked tiled
 `-S`, and 84.5% with the real or synthetic offsets removed. The largest component varies widely between frames
-in every case: its 25-75% range is 27-95% on the real frames and 47-96% in the synthetic test (Figure 5c).
+in every case: its 25-75% range is 27-95% on the real frames and 47-96% in the synthetic test (Figure 6c).
 With either reference removed, the real frames look like the synthetic ones.
 
 ![Figure 6](images/unwrapRef_components.png)
@@ -283,8 +283,8 @@ synthetic offsets removed. (a) Mean share of wrong pixels over frames, all score
 reference, by more than 0.05 percentage points.*
 
 Removing the offsets makes the unwrapping more accurate, and the largest components cleaner, on both versions of the
-test (Figure 6a, b), and improves more frames than it worsens: 49 against 12 with the real offsets and 73 against 9 with synthetic
-offsets (Figure 6c). The worst frames gain most: with synthetic offsets, `t166A_f139` falls from 64% wrong pixels to 1.3%, `t022A_f139`
+test (Figure 7a, b), and improves more frames than it worsens: 49 against 12 with the real offsets and 73 against 9 with synthetic
+offsets (Figure 7c). The worst frames gain most: with synthetic offsets, `t166A_f139` falls from 64% wrong pixels to 1.3%, `t022A_f139`
 from 59% to 0.8% and `t059D_f122` from 13.7% to 1.2%.
 
 The two versions bracket the real case. The real offsets are a harsh reference here, because the synthetic truth is
@@ -319,8 +319,8 @@ than about 5 km stands out as ±1 cycle against near-zero surroundings; patches 
 into the surface and are not seen by this test.
 
 Figure 8 shows what removing the smooth part does on Byrd, before the ionosphere correction. The difference from the
-map (Figure 7a, d) is dominated by the ionospheric streaks and, for the standard RUNW, by the levels of its separate
-components. The surface takes these out (Figure 7b, e). What is left (Figure 7c, f) is short-scale: striations along the
+map (Figure 8a, d) is dominated by the ionospheric streaks and, for the standard RUNW, by the levels of its separate
+components. The surface takes these out (Figure 8b, e). What is left (Figure 8c, f) is short-scale: striations along the
 Byrd flow band, where the fast flow has detail finer than the map's 1 km smoothing, thin lines at the edges of the
 streaks, mottling of about ±0.5 cycle over the grounded ice, and isolated patches near ±1 cycle, smaller than
 10 km by construction, which are the candidates for
@@ -336,8 +336,8 @@ unwrapping with the smoothed map simulation removed: 21.4% and 8.1%, higher main
 band and mouth. After the ionosphere correction the shares fall to 15.0% and 5.3% for the standard RUNW and 18.0% and
 7.1% for the new unwrapping.*
 
-Before the ionosphere correction, the full difference is broad and dominated by ionospheric streaks (Figure 8a);
-after it, about 70% of pixels are within a cycle of the map (Figure 8b). With the smooth part removed (Figure 8c, d),
+Before the ionosphere correction, the full difference is broad and dominated by ionospheric streaks (Figure 9a);
+after it, about 70% of pixels are within a cycle of the map (Figure 9b). With the smooth part removed (Figure 9c, d),
 the robust σ is 0.12-0.18 cycles and differs between the three methods by at most 0.01 cycle.
 
 *Table 2. Real frames (38 with all three products), pixels common to all three methods, pooled. One cycle is 11.9 cm
