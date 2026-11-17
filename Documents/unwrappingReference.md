@@ -41,8 +41,10 @@ Results:
   where they cover more than 95% of the ice, otherwise the 1 km smoothed map, and never the unsmoothed map (Section 4).
 - **Residues and consolidation.** On the 223 real frames, removing either reference reduces the residues on 142-145
   frames (median 0.97 of the original count) and raises the median largest component from 68% to 79-80% of the valid
-  ice, and the total unwrapped from 82% to 86-87% (Sections 2.3 and 3.1). The gain is concentrated in fast flow: on the
-  31 fast-flow frames the residues fall by a median 20-23% and the largest component rises from 55% to 80-81%; on the
+  ice (area-weighted, from 65% to 70-71% of all the valid ice), and the total unwrapped from 82% to 86-87% (73% to
+  75-76% area-weighted; Sections 2.3 and 3.1). The gain is concentrated in fast flow: on the
+  31 fast-flow frames the residues fall by a median 20-23% and the largest component rises from 55% to 80-81% (49% to
+  61% area-weighted); on the
   coastal test frames it rises from 51% to 65%, and on the interior test frames, which the standard RUNW already
   unwraps as nearly one component, from 96% to 97%.
 - **Which reference.** The offsets leave the fewest residues on 67 of the 131 real frames whose offsets cover more than
@@ -271,27 +273,38 @@ unwrapping worse.
 
 ### 3.1 Coverage and component consolidation
 
-Figure 6 ranks each frame's components by size, and Table 5 gives the medians, for all 223 real frames and by set.
-Over all of them the standard RUNW's median largest component is 68% of the valid ice and the new unwrappings' 79-80%;
-the total unwrapped rises from 82% to 86-87%. On the 31 fast-flow frames (Figure 6a) the standard RUNW's median largest
-component is 55%, and its curve reaches its total of 80% only at about the fourth component; with either reference the
-largest component is 80-81% and the total, 88%, is reached by the third. On the 192 test frames (Figure 6b) the curves
-are closer, 72% against 79% for the largest component and 82% against 86% in all, because the gain is on the coast:
-there the largest component rises from 51% to 65%, while the interior frames are near one component (96-97%) with or
-without a reference (Figure 6d).
+Figure 6 ranks each frame's components by size, and Table 5 summarizes it in two ways. The *median over frames* treats
+every frame equally: half the frames have more of their ice in their largest component than the median, half less. The
+*area-weighted* share sums over frames: it is the share of all the valid ice in the set that lies in its frame's
+largest component (or in any component), so a frame with twice the ice counts twice. The two differ because the
+shares are skewed: many frames, mostly interior, have 95-100% of their ice in one component, and a tail of coastal and
+fast-flow frames has far less. The median falls among the good frames; the area-weighted share is pulled down by the
+tail, and is the better measure of how much of the ice ends up in one piece.
 
-*Table 5. Connected components on the real frames, medians over frames, as shares of the valid ice.*
+Over all 223 real frames, the median largest component rises from 68% of the valid ice in the standard RUNW to
+79-80% with either reference, but the area-weighted share only from 65% to 70-71%; the total unwrapped rises from
+82% to 86-87% as a median and from 73% to 75-76% area-weighted. The gain is largest on the 31 fast-flow frames
+(Figure 6a): the median largest component rises from 55% to 80-81%, and the area-weighted share from 49% to 61%. The
+standard RUNW's curve reaches its total of 80% only at about the fourth component; with either reference the total,
+88%, is reached by the third. On the 192 test frames (Figure 6b) the curves are closer (median 72% against 79%,
+area-weighted 69% against 73%), because the gain is on the coast: there the median largest component rises from 51%
+to 65% and the area-weighted share from 55% to 59-60%, while the interior frames are near one component (median
+96-97%) with or without a reference (Figure 6d).
+
+*Table 5. Connected components on the real frames, as shares of the valid ice: median over frames / area-weighted.*
 
 | | Standard RUNW | Map smoothed 1 km | Range offsets |
 |---|---|---|---|
-| All real frames (223): largest component (25-75% of frames) | 68% (38-95%) | 80% (44-97%) | 79% (41-97%) |
-| All: all components; components of 5% or more | 82%; 1 | 86%; 1 | 87%; 1 |
-| Fast-flow (31): largest component (25-75%) | 55% (26-76%) | 81% (28-97%) | 80% (27-96%) |
-| Fast-flow: all components; components of 5% or more | 80%; 2 | 88%; 1 | 88%; 1 |
-| Test (192): largest component (25-75%) | 72% (41-96%) | 79% (47-97%) | 79% (44-97%) |
-| Test: all components | 82% | 86% | 86% |
-| Test, coastal (112) / interior (80): largest component | 51% / 96% | 65% / 97% | 65% / 97% |
-| Test, coastal / interior: all components | 72% / 96% | 76% / 98% | 76% / 98% |
+| All real frames (223): largest component | 68% / 65% | 80% / 71% | 79% / 70% |
+| All: all components | 82% / 73% | 86% / 76% | 87% / 75% |
+| All: largest component, 25-75% of frames | 38-95% | 44-97% | 41-97% |
+| Fast-flow (31): largest component | 55% / 49% | 81% / 61% | 80% / 61% |
+| Fast-flow: all components | 80% / 64% | 88% / 68% | 88% / 67% |
+| Fast-flow: components of 5% or more, median | 2 | 1 | 1 |
+| Test (192): largest component | 72% / 69% | 79% / 73% | 79% / 73% |
+| Test: all components | 82% / 76% | 86% / 78% | 86% / 77% |
+| Test, coastal (112): largest component | 51% / 55% | 65% / 60% | 65% / 59% |
+| Test, interior (80): largest component | 96% / 84% | 97% / 87% | 97% / 86% |
 
 In the synthetic test (Figure 6c) every configuration already reaches its total within two or three components: the
 synthetic phase has no ionospheric streaks and no real motion that the map gets wrong, which are what fragment the
@@ -303,7 +316,7 @@ synthetic ones. The largest component varies widely between frames in every case
 ![Figure 6](images/unwrapRef_components.png)
 *Figure 6. Connected components ranked largest to smallest; the same colour and marker mean the same method
 throughout. (a) The 31 fast-flow frames: cumulative share of valid ice covered by the largest n components, median
-over frames, for the standard RUNW and the two new unwrappings. (b) The same for the 192 test frames. (c) Synthetic test
+over frames (each point a separate median, every frame weighted equally), for the standard RUNW and the two new unwrappings. (b) The same for the 192 test frames. (c) Synthetic test
 (200 frames): the same for the scored area, for stock untiled snaphu with no mask, masked tiled `-S` with no reference,
 and masked tiled `-S` with the real or synthetic offsets removed. (d) The largest component per frame, for the
 fast-flow frames, the coastal (112) and interior (80) test frames, and the synthetic test (box 25-75%, line median with
@@ -427,7 +440,7 @@ where the map resolves the flow least well.
 methods, pooled over the 218 real frames with all three products (188 test, 30 fast-flow). (a) Before the ionosphere
 correction, full difference (median removed). (b) After the ionosphere correction, full difference. (c) Before the
 correction, with the 10 km smooth part removed. (d) After the correction, with the smooth part removed. Each panel shows
-the PDF (solid, left axis) and the share of pixels within a given distance of zero (dashed, right axis), and a table of
+the PDF (solid, left axis) and the share of pixels within a given distance of zero (dashed, right axis), pooled over pixels so that larger frames weigh more, and a table of
 the shares within 1/4, 1/2 and 1 cycle and the robust σ. Values beyond the axis limits are counted at the limit.*
 
 On the pixels all three unwrap, the new unwrappings are as close to the map as the standard RUNW processed with the
@@ -498,7 +511,8 @@ a rule, only its choices counted.
 
 1. **Unwrap with a reference removed.** Remove an estimate of the motion before unwrapping with masked tiled `-S`, and
    add it back afterwards. Over the 223 real frames this consolidates the unwrapping (median largest component 68% to
-   79-80% of the valid ice; Section 3.1), most where flow is fast (55% to 80-81% on the fast-flow frames), and in the synthetic test it reduces the wrong pixels rather
+   79-80% of the valid ice, 65% to 70-71% area-weighted; Section 3.1), most where flow is fast (55% to 80-81%, and 49%
+   to 61% area-weighted, on the fast-flow frames), and in the synthetic test it reduces the wrong pixels rather
    than hiding them in larger components (mean 1.59% to 0.88% with the real offsets, 0.29% with synthetic offsets;
    Section 3.2.1). On the test frames the gain is smaller (largest component 72% to 79%) and is on the coast (51% to
    65%); interior frames gain 1 point because they already unwrap as one component.
