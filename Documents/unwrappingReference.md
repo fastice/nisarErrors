@@ -66,19 +66,19 @@ against it.
 
 ### 1.1 Unwrapping with a reference removed
 
-Let φ be the wrapped phase of the RUNW and ρ a reference phase on the same grid, an estimate of the line-of-sight
-motion in phase units. We unwrap the residual wrap(φ − ρ) and add ρ back:
+Let φ be the wrapped phase of the RUNW and φ_ref a reference phase on the same grid, an estimate of the line-of-sight
+motion in phase units. We unwrap the residual wrap(φ − φ_ref) and add φ_ref back:
 
-    U = unwrap(wrap(φ − ρ)) + ρ
+    U = unwrap(wrap(φ − φ_ref)) + φ_ref
 
-Because ρ is added back exactly, U − φ is a whole number of cycles at every pixel: the reference changes how the
-phase is unwrapped, not what the wrapped phase is. Where ρ is close to the motion, the residual is smooth (ionosphere,
-reference error, noise) and has few residues; where ρ is wrong on short scales, the residual can have more residues
+Because φ_ref is added back exactly, U − φ is a whole number of cycles at every pixel: the reference changes how the
+phase is unwrapped, not what the wrapped phase is. Where φ_ref is close to the motion, the residual is smooth (ionosphere,
+reference error, noise) and has few residues; where φ_ref is wrong on short scales, the residual can have more residues
 than φ itself.
 
 The unwrapper is the masked tiled `-S` configuration of `snaphuTilingMasking.md`: the modified snaphu 2.0.7 with
 4 x 4 tiles, `-S`, and residue-dense regions masked and smoothly filled. The residue mask is computed on the
-residual, after ρ is removed. Pixels outside the Antarctic ice mask (open water, sea ice, mélange) are excluded
+residual, after φ_ref is removed. Pixels outside the Antarctic ice mask (open water, sea ice, mélange) are excluded
 from the solution on all frames.
 
 ### 1.2 The two references
