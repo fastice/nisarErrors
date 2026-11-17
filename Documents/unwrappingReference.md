@@ -205,7 +205,7 @@ means fewer residues than with no reference; below the dashed line, the offsets 
 
 ## 3. Results
 
-This section tests the two parts of the purpose in turn: whether the unwrapping covers more of the ice in fewer
+This section tests the two parts of the objective in turn: whether the unwrapping covers more of the ice in fewer
 components, and whether those larger components are accurate. It ends with the cases where a reference makes the
 unwrapping worse.
 
