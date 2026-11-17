@@ -50,7 +50,8 @@ Results so far:
   residues (Section 3.3).
 
 ![Figure 1](images/unwrapRef_byrdUnwrapped.png)
-*Figure 1. Byrd Glacier entering the Ross Ice Shelf (`t159D_f128`, 2026-07-07 to 2026-07-19). (a)-(c) Unwrapped
+*Figure 1. One interferogram unwrapped three ways: as in the standard RUNW, and with each of the two references
+removed before unwrapping. Byrd Glacier entering the Ross Ice Shelf (`t159D_f128`, 2026-07-07 to 2026-07-19). (a)-(c) Unwrapped
 phase in cycles relative to the median on grounded ice; grey lines are component boundaries, black the floating-ice
 outline. (a) The standard RUNW: it covers 76% of the ice in 4 components of 5% or more, the largest 43%, and splits the
 fast flow and the shelf into separate components at arbitrary levels. (b) Unwrapped with the smoothed map simulation
