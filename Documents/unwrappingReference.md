@@ -241,8 +241,9 @@ value at right, whiskers 10-90%).*
 ### 3.2 Accuracy: are the bigger components noisier?
 
 Larger components only help if they are right. No single test settles this for real data, so the synthetic test,
-where the truth is known, comes first (3.2.1), followed by a consistency check between the two references (3.2.2); the real unwrappings against the map simulation (3.2.3); and the offsets as a check
-on whole-cycle choices that differ from the standard RUNW (3.2.4).
+where the truth is known, comes first (3.2.1). It is followed by a consistency check between the two references
+(3.2.2), the real unwrappings against the map simulation (3.2.3), and the offsets as a check on the whole-cycle
+choices that differ from the standard RUNW (3.2.4).
 
 #### 3.2.1 Synthetic test
 
