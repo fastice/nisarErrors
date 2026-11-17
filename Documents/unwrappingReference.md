@@ -175,7 +175,7 @@ motion jumps across a narrow rift and the 1 km offsets cannot follow it (removin
 starts with few residues (13,990), so the added ones matter.
 
 ![Figure 3](images/unwrapRef_mapSeams.png)
-*Figure 3. Where each reference adds error. Top row, the unsmoothed map simulation on `t152A_f139`: (a) the
+*Figure 3. Where each reference adds error; (a), (b), (d) and (e) are masked to the Antarctic ice mask, as unwrapped. Top row, the unsmoothed map simulation on `t152A_f139`: (a) the
 simulation, cycles; (b) the simulation minus the standard RUNW's unwrapped phase, cycles, where the rectangles are seams
 between scenes in the velocity mosaic and the block at lower left is about 40 cycles off; (c) coherence, high
 throughout. Bottom row, the range offsets on `t022A_f139`, an ice-shelf front with rifts: (d) the offsets in phase
