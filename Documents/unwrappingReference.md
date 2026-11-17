@@ -46,7 +46,8 @@ Results:
   31 fast-flow frames the residues fall by a median 20-23% and the largest component rises from 55% to 80-81% (49% to
   61% area-weighted); on the
   coastal test frames it rises from 51% to 65%, and on the interior test frames, which the standard RUNW already
-  unwraps as nearly one component, from 96% to 97%.
+  unwraps as nearly one component, from 96% to 97%. Frames fragmented by decorrelation (median coherence 0.14) gain
+  little; the gain is on frames whose phase is coherent but aliased by fast flow (Table 6).
 - **Which reference.** The offsets leave the fewest residues on 67 of the 131 real frames whose offsets cover more than
   95% of the ice, against 36 for the smoothed map; on the 92 frames with larger gaps in the offsets the smoothed map
   is better (55 against 20). The unsmoothed map adds residues on 9 of 11 frames tested, through seams and short-scale
@@ -306,6 +307,24 @@ to 65% and the area-weighted share from 55% to 59-60%, while the interior frames
 | Test, coastal (112): largest component | 51% / 55% | 65% / 60% | 65% / 59% |
 | Test, interior (80): largest component | 96% / 84% | 97% / 87% | 97% / 86% |
 
+The gain depends on why a frame is fragmented (Table 6). Grouped by the standard RUNW's largest component, the
+frames in the middle, with 30-90% of their ice in the largest component, gain most: a median 5-6 points, and a
+quarter of them 12-24 points or more. Their coherence is moderate (median 0.28-0.47), so the phase is there but
+aliased where the flow is fast, and the reference removes the aliasing. The most fragmented frames, with less than 30%
+in the largest component, gain a median 1 point: their ice is mostly decorrelated (median coherence 0.14, 88% of the
+ice below 0.3, 104 residues per 1,000 pixels), and no reference restores the phase. Frames already at 90% or more,
+mostly interior, gain nothing.
+
+*Table 6. Gain in the largest component with a reference removed, by the standard RUNW's largest component; all 223
+real frames. Gains are in percentage points of the frame's valid ice; coherence is over the frame's valid ice.*
+
+| Standard RUNW's largest component | Frames (fast-flow / coastal / interior) | Median gain, smoothed map / offsets (25-75% of frames, map) | Median coherence | Ice with coherence < 0.3 | Residues per 1,000 pixels |
+|---|---|---|---|---|---|
+| < 30% | 48 (12 / 30 / 6) | +1 / +1 (+1 to +5) | 0.14 | 88% | 104 |
+| 30-60% | 54 (7 / 34 / 13) | +6 / +6 (+2 to +24) | 0.28 | 53% | 36 |
+| 60-90% | 49 (11 / 29 / 9) | +5 / +5 (+1 to +12) | 0.47 | 23% | 21 |
+| ≥ 90% | 72 (1 / 19 / 52) | 0 / 0 (0 to +1) | 0.54 | 13% | 3 |
+
 In the synthetic test (Figure 6c) every configuration already reaches its total within two or three components: the
 synthetic phase has no ionospheric streaks and no real motion that the map gets wrong, which are what fragment the
 real interferograms. The ordering is the same, but the gains are smaller: the median largest component is 75% for
@@ -395,7 +414,7 @@ Byrd flow band, where the fast flow has detail finer than the map's 1 km smoothi
 streaks, mottling of about ±0.5 cycle over the grounded ice, and isolated patches near ±1 cycle, smaller than
 10 km by construction, which are the candidates for
 whole-cycle errors. On this frame the same patches appear in both unwrappings, which points to the map rather than to
-either unwrapping. Figure 9 gives the results over all the real frames, and Tables 6 and 7 for the two sets.
+either unwrapping. Figure 9 gives the results over all the real frames, and Tables 7 and 8 for the two sets.
 
 ![Figure 8](images/unwrapRef_smoothRemoval.png)
 *Figure 8. What removing the 10 km smooth part does, on Byrd (`t159D_f128`), before the ionosphere correction; cycles,
@@ -409,10 +428,10 @@ band and mouth. After the ionosphere correction the shares fall to 15.0% and 5.3
 Over the 218 real frames with all three products, the full difference before the ionosphere correction is broad and
 dominated by ionospheric streaks, with under half the pixels within a cycle of the map (Figure 9a); after it, 78-79%
 are (Figure 9b). With the smooth part removed (Figure 9c, d), the robust σ is 0.12 cycles before the correction and
-0.06-0.07 after (Table 6). The fast-flow frames depart further from the map than the test frames (Table 7), as expected
+0.06-0.07 after (Table 7). The fast-flow frames depart further from the map than the test frames (Table 8), as expected
 where the map resolves the flow least well.
 
-*Table 6. All real frames with all three products (218), pixels common to all three methods, pooled. One cycle is
+*Table 7. All real frames with all three products (218), pixels common to all three methods, pooled. One cycle is
 11.9 cm in line of sight.*
 
 | | Standard RUNW, current GrIMP workflow | Map smoothed 1 km | Range offsets |
@@ -422,7 +441,7 @@ where the map resolves the flow least well.
 | Within 1/4 / 1/2 / 1 cycle, smooth part removed, after correction | 82 / 91 / 96% | 80 / 91 / 97% | 80 / 91 / 97% |
 | More than 4 cycles from the map, full difference, after correction | 2.3% | 3.0% | 2.9% |
 
-*Table 7. By set: fast-flow frames (30 of the 31 with all three products) and test frames (188 of the 192).*
+*Table 8. By set: fast-flow frames (30 of the 31 with all three products) and test frames (188 of the 192).*
 
 | | Standard RUNW, current GrIMP workflow | Map smoothed 1 km | Range offsets |
 |---|---|---|---|
@@ -450,7 +469,7 @@ current GrIMP workflow. Three caveats:
   step, so where it is in pieces it is pulled towards the map by construction. A single component covering most of the
   frame has one whole-cycle offset and cannot be pulled that way. After correction, the standard RUNW's narrower core
   (per-frame median robust σ 0.14 against 0.16 cycles over all frames) and smaller far tail (2.3% against 2.9-3.0% of
-  pixels more than 4 cycles from the map) are consistent with that, on both sets (Table 7).
+  pixels more than 4 cycles from the map) are consistent with that, on both sets (Table 8).
 - **The tails look like map error.** After correction, 3-5% of pixels are more than a cycle off for all three
   methods. The
   histograms are smooth, with no secondary peaks at ±1 or ±2 cycles, and on Byrd, the frame examined in detail, the
@@ -555,10 +574,11 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `nisarSimTest/runFast.py`, `runFast200.sh` | the real-data pipeline per frame and reference; results in `framesFastSmooth/`, `framesFastOffsets/` |
 | `nisarSimTest/scoreFast.py`, `summarizeFast.py` | per-frame scores (residues, components, agreement, edge test); `scoresFast/` |
 | `nisarSimTest/residueRefs.py` | Table 2, Figure 3 |
+| `nisarSimTest/cohIce.py` | the coherence of each frame's valid ice (Table 6) |
 | `nisarSimTest/gapIce.py` | the share of each frame's valid ice with no offsets (Table 4) |
 | `nisarSimTest/figResidueRatios.py` | Figure 5 |
-| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Tables 6 and 7, Figure 9 |
-| `nisarSimTest/aggregateRef.py` | the numbers for all real frames and by set (Tables 3, 5, 6, 7) |
+| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Tables 7 and 8, Figure 9 |
+| `nisarSimTest/aggregateRef.py` | the numbers for all real frames and by set (Tables 3, 5, 6, 7, 8) |
 | `nisarSimTest/figSmoothRemoval.py` | Figure 8 |
 | `nisarSimTest/ccRankFast.py`, `diagOceanMask/figCCRankBoth223.py` | Figure 6 (by set) |
 | `diagOceanMask/synthOffsets.py`, `synthOffsetsSummary.py`, `figSynthAccuracy.py` | the synthetic test with the offsets; results in `synth3_offsets/` and `synth3_offsets_synthetic/`; Figure 7 |
