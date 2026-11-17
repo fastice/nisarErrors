@@ -1,10 +1,10 @@
 # Unwrapping NISAR interferograms with a reference removed: velocity map or range offsets
 
 **Status: draft, 2026-11-17.** All runs described here are complete (Section 1.5 lists what was run on which
-frames). The real-data results are for 231 Antarctica40 frames, 223 of them scored: the 200 frames of the synthetic
-test of `snaphuTilingMasking.md` (the *test frames*, 120 coastal and 80 interior; 192 scored) and 31 frames chosen for
-fast flow (the *fast-flow frames*). Results are given for all of them together, and broken down by set (fast-flow,
-coastal test, interior test) where the sets differ.
+frames). The real-data results are for 223 Antarctica40 frames: 192 of the frames of the synthetic test of
+`snaphuTilingMasking.md` (the *test frames*, 112 coastal and 80 interior) and 31 frames chosen for fast flow (the
+*fast-flow frames*). Results are given for all 223 together, and broken down by set (fast-flow, coastal test,
+interior test) where the sets differ.
 
 ## Purpose
 
@@ -107,16 +107,17 @@ has not been tested.
 
 ### 1.3 Data
 
-- **Test frames (200).** The frames of the synthetic test of `snaphuTilingMasking.md`, drawn to represent the coast
-  (120) and the interior (80) of the Antarctica40 project. They are used twice: as the synthetic test (below), and with
-  their real data, unwrapped with both references like the fast-flow frames.
+- **Test frames (192).** Frames of the synthetic test of `snaphuTilingMasking.md`, drawn to represent the coast (112)
+  and the interior (80) of the Antarctica40 project. Their real data are unwrapped with both references like the
+  fast-flow frames.
 - **Fast-flow frames (31).** Thirty frames chosen over fast-flowing grounded ice, plus Byrd Glacier. The thirty were
   drawn from all Antarctica40 frame locations: at most one third of the frame over open water, at least 300 km² of
   grounded ice faster than 400 m/yr, and at least two components in the standard RUNW each of 5% or more of the frame;
   the most recent such pair per location, at most two per track, centres at least 100 km apart, ranked by fast-ice
   area. They cover the Siple Coast ice streams, Pine Island and Thwaites, Recovery and Slessor, Totten and Denman,
   Evans and Rutford, Lambert, the Peninsula and Byrd. None of them is a test frame.
-- **Synthetic test.** On the test frames, the truth is each frame's map simulation, and the noisy interferogram is the
+- **Synthetic test (200 frames).** The full synthetic test of `snaphuTilingMasking.md`, which includes the test
+  frames. The truth is each frame's map simulation, and the noisy interferogram is the
   truth plus noise matched to the frame's coherence and residue density. For this study the same noisy interferograms
   were unwrapped with two references: the frame's **real** range offsets, which differ from the synthetic truth by the
   real map error and ionosphere as well as their own noise (a harder case than real data, where phase and offsets see
@@ -126,9 +127,9 @@ has not been tested.
 Figure 2 shows where the frames are.
 
 ![Figure 2](images/unwrapRef_frameMap.png)
-*Figure 2. The frames used, over ice speed from the NISAR multi-year Antarctic mosaic (June 2025 to November 2026),
-polar stereographic projection. Thin outlines: the 200 test frames, coastal (blue) and interior (orange); dashed, the
-8 whose real data were not unwrapped (Section 1.5). Thick green outlines: the 31 fast-flow frames, including Byrd.*
+*Figure 2. The 223 real frames, over ice speed from the NISAR multi-year Antarctic mosaic (June 2025 to November
+2026), polar stereographic projection. Thin outlines: the 192 test frames, coastal (blue, 112) and interior (orange,
+80). Thick green outlines: the 31 fast-flow frames, including Byrd.*
 
 ### 1.4 After unwrapping
 
@@ -146,16 +147,13 @@ all residue counts are on the same valid ice pixels for every reference within a
 
 | Set | Frames | Run | Scored |
 |---|---|---|---|
-| Synthetic test | 200 test frames | the synthetic interferograms unwrapped with masked tiled `-S` and no reference, with the real offsets removed, and with the synthetic offsets removed | 200 |
-| Test frames, real data | 200 (120 coastal, 80 interior) | the standard RUNW's wrapped phase unwrapped with masked tiled `-S`, once with the 1 km smoothed map simulation removed and once with the range offsets removed, then the GrIMP ionosphere step on each | 192 |
+| Synthetic test | 200 (including the test frames) | the synthetic interferograms unwrapped with masked tiled `-S` and no reference, with the real offsets removed, and with the synthetic offsets removed | 200 |
+| Test frames, real data | 192 (112 coastal, 80 interior) | the standard RUNW's wrapped phase unwrapped with masked tiled `-S`, once with the 1 km smoothed map simulation removed and once with the range offsets removed, then the GrIMP ionosphere step on each | 192 |
 | Fast-flow frames, real data | 31 | as for the test frames' real data | 31 |
 | Unsmoothed map | 11 (Byrd and 10 coastal test frames) | residues only, with the unsmoothed map simulation removed | 11 |
 
-The 8 test frames not scored (`t115D_f127` ×2, `t173D_f127` ×2, `t080A_f139`, `t057D_f127`, `t102D_f122`,
-`t138A_f139`) were skipped by the runner because the map simulation is missing on more than 10% of their coherent
-pixels; neither new unwrapping was made for them. The offsets runs did not need the map and could be repeated without
-that check. The comparison with the map (Section 3.2.3) uses the 218 real frames (188 test, 30 fast-flow) on which the
-standard RUNW also has a corrected product.
+The comparison with the map (Section 3.2.3) uses the 218 real frames (188 test, 30 fast-flow) on which the standard
+RUNW also has a corrected product.
 
 ## 2. Residues
 
@@ -522,8 +520,6 @@ a rule, only its choices counted.
 
 This section lists what remains to be settled before a reference could be used routinely.
 
-- **The 8 skipped test frames.** Their offsets runs could be made without the check on the map simulation (Section 1.5),
-  which would test the offsets where the map has no coverage.
 - **Testing the selection rule.** Items 2 and 4 of Section 4 are based on residue counts; unwrapping each frame with the
   option they choose and scoring it as in Section 3 would test them as a rule, including whether a choice per block
   instead of per frame does better.
