@@ -340,6 +340,18 @@ over frames (each point a separate median, every frame weighted equally), for th
 and masked tiled `-S` with the real or synthetic offsets removed. (d) The largest component per frame, for the
 fast-flow frames, the coastal (112) and interior (80) test frames, and the synthetic test (box 25-75% of frames, black line median, white line mean, whiskers 10-90%; median / mean at right).*
 
+Figure 7 counts the frames by how many components hold at least 1% of their valid ice. Over all 223 real frames
+(Figure 7a), 94 are unwrapped as one such component in the standard RUNW, and 125-127 with either reference; frames
+with five or more fall from 28 to 5-6. The shift is largest on the fast-flow frames (Figure 7b): only 2 of the 31 are
+one component in the standard RUNW, against 14 with either reference, and the median number of components falls from
+3 to 2. The coastal test frames (Figure 7c) move from 35 to 46-50 frames with one component, and the interior test
+frames (Figure 7d), most of which are one component already (57 of 80), to 63-65.
+
+![Figure 7](images/unwrapRef_ccCount.png)
+*Figure 7. Number of frames by how many connected components each hold at least 1% of the frame's valid ice, for the
+standard RUNW and the two new unwrappings. (a) All 223 real frames. (b) The 31 fast-flow frames. (c) The 112 coastal
+test frames. (d) The 80 interior test frames. Numbers above the bars are frame counts.*
+
 ### 3.2 Accuracy: are the bigger components noisier?
 
 Larger components only help if they are right. No single test settles this for real data, so the synthetic test,
@@ -361,15 +373,15 @@ between components are not counted), and separately for the largest component al
 | Frames with fewer / more wrong pixels (by > 0.05 points) | | 49 / 12 | 73 / 9 |
 | Largest component, median | 81.3% | 84.5% | 84.5% |
 
-![Figure 7](images/unwrapRef_syntheticAccuracy.png)
-*Figure 7. Synthetic test, 200 frames, masked tiled `-S` with no reference, with the real offsets removed and with
+![Figure 8](images/unwrapRef_syntheticAccuracy.png)
+*Figure 8. Synthetic test, 200 frames, masked tiled `-S` with no reference, with the real offsets removed and with
 synthetic offsets removed. (a) Mean share of wrong pixels over frames, all scored pixels, for all frames and by class.
 (b) The same for the largest component only. (c) Frames with fewer (solid) and more (hatched) wrong pixels than with no
 reference, by more than 0.05 percentage points.*
 
 Removing the offsets makes the unwrapping more accurate, and the largest components cleaner, on both versions of the
-test (Figure 7a, b), and improves more frames than it worsens: 49 against 12 with the real offsets and 73 against 9 with synthetic
-offsets (Figure 7c). The worst frames gain most: with synthetic offsets, `t166A_f139` falls from 64% wrong pixels to 1.3%, `t022A_f139`
+test (Figure 8a, b), and improves more frames than it worsens: 49 against 12 with the real offsets and 73 against 9 with synthetic
+offsets (Figure 8c). The worst frames gain most: with synthetic offsets, `t166A_f139` falls from 64% wrong pixels to 1.3%, `t022A_f139`
 from 59% to 0.8% and `t059D_f122` from 13.7% to 1.2%.
 
 The two versions bracket the real case. The real offsets are a harsh reference here, because the synthetic truth is
@@ -406,17 +418,17 @@ and with a 10 km smooth part removed. The smooth part is a robust local surface 
 than about 5 km stands out as ±1 cycle against near-zero surroundings; patches larger than about 10-20 km are absorbed
 into the surface and are not seen by this test.
 
-Figure 8 shows what removing the smooth part does on Byrd, before the ionosphere correction. The difference from the
-map (Figure 8a, d) is dominated by the ionospheric streaks and, for the standard RUNW, by the levels of its separate
-components. The surface takes these out (Figure 8b, e). What is left (Figure 8c, f) is short-scale: striations along the
+Figure 9 shows what removing the smooth part does on Byrd, before the ionosphere correction. The difference from the
+map (Figure 9a, d) is dominated by the ionospheric streaks and, for the standard RUNW, by the levels of its separate
+components. The surface takes these out (Figure 9b, e). What is left (Figure 9c, f) is short-scale: striations along the
 Byrd flow band, where the fast flow has detail finer than the map's 1 km smoothing, thin lines at the edges of the
 streaks, mottling of about ±0.5 cycle over the grounded ice, and isolated patches near ±1 cycle, smaller than
 10 km by construction, which are the candidates for
 whole-cycle errors. On this frame the same patches appear in both unwrappings, which points to the map rather than to
-either unwrapping. Figure 9 gives the results over all the real frames, and Tables 7 and 8 for the two sets.
+either unwrapping. Figure 10 gives the results over all the real frames, and Tables 7 and 8 for the two sets.
 
-![Figure 8](images/unwrapRef_smoothRemoval.png)
-*Figure 8. What removing the 10 km smooth part does, on Byrd (`t159D_f128`), before the ionosphere correction; cycles,
+![Figure 9](images/unwrapRef_smoothRemoval.png)
+*Figure 9. What removing the 10 km smooth part does, on Byrd (`t159D_f128`), before the ionosphere correction; cycles,
 black = floating-ice outline. Top row, the standard RUNW (ambiguity-resolved by the current GrIMP workflow): (a) its
 difference from the map simulation, median removed; (b) the 10 km robust local surface of (a); (c) (a) minus (b), with
 17.1% of pixels more than half a cycle from zero and 6.0% more than one cycle. Bottom row, (d)-(f) the same for the
@@ -425,8 +437,8 @@ band and mouth. After the ionosphere correction the shares fall to 15.0% and 5.3
 7.1% for the new unwrapping.*
 
 Over the 218 real frames with all three products, the full difference before the ionosphere correction is broad and
-dominated by ionospheric streaks, with under half the pixels within a cycle of the map (Figure 9a); after it, 78-79%
-are (Figure 9b). With the smooth part removed (Figure 9c, d), the robust σ is 0.12 cycles before the correction and
+dominated by ionospheric streaks, with under half the pixels within a cycle of the map (Figure 10a); after it, 78-79%
+are (Figure 10b). With the smooth part removed (Figure 10c, d), the robust σ is 0.12 cycles before the correction and
 0.06-0.07 after (Table 7). The fast-flow frames depart further from the map than the test frames (Table 8), as expected
 where the map resolves the flow least well.
 
@@ -453,8 +465,8 @@ where the map resolves the flow least well.
 | Test: within 1/4 / 1/2 / 1 cycle, smooth part removed, after | 83 / 92 / 97% | 82 / 91 / 97% | 82 / 91 / 97% |
 | Test: more than 4 cycles from the map, full difference, after | 2.1% | 2.5% | 2.5% |
 
-![Figure 9](images/unwrapRef_vsMap.png)
-*Figure 9. Real frames: each ambiguity-resolved unwrapping minus the map simulation, on pixels common to all three
+![Figure 10](images/unwrapRef_vsMap.png)
+*Figure 10. Real frames: each ambiguity-resolved unwrapping minus the map simulation, on pixels common to all three
 methods, pooled over the 218 real frames with all three products (188 test, 30 fast-flow). (a) Before the ionosphere
 correction, full difference (median removed). (b) After the ionosphere correction, full difference. (c) Before the
 correction, with the 10 km smooth part removed. (d) After the correction, with the smooth part removed. Each panel shows
@@ -576,12 +588,13 @@ Work directory `/Volumes/insar4/ian/Data/NISAR/Antarctica/unwrapTest40/`:
 | `nisarSimTest/cohIce.py` | the coherence of each frame's valid ice (Table 6) |
 | `nisarSimTest/gapIce.py` | the share of each frame's valid ice with no offsets (Table 4) |
 | `nisarSimTest/figResidueRatios.py` | Figure 5 |
-| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Tables 7 and 8, Figure 9 |
+| `nisarSimTest/scoreVsSimJumps.py`, `figVsSimPdfCdf4.py` | Tables 7 and 8, Figure 10 |
 | `nisarSimTest/aggregateRef.py` | the numbers for all real frames and by set (Tables 3, 5, 6, 7, 8) |
-| `nisarSimTest/figSmoothRemoval.py` | Figure 8 |
+| `nisarSimTest/figSmoothRemoval.py` | Figure 9 |
 | `nisarSimTest/ccRankFast.py`, `diagOceanMask/figCCRankBoth223.py` | Figure 6 (by set) |
-| `diagOceanMask/synthOffsets.py`, `synthOffsetsSummary.py`, `figSynthAccuracy.py` | the synthetic test with the offsets; results in `synth3_offsets/` and `synth3_offsets_synthetic/`; Figure 7 |
+| `diagOceanMask/synthOffsets.py`, `synthOffsetsSummary.py`, `figSynthAccuracy.py` | the synthetic test with the offsets; results in `synth3_offsets/` and `synth3_offsets_synthetic/`; Figure 8 |
 | `diagOceanMask/offsetsRealism.py` | the check of the synthetic offsets against the real ones |
 | `nisarSimTest/figDirectUnw.py` | Figure 1 |
+| `nisarSimTest/figCCCount.py` | Figure 7 |
 | `nisarSimTest/figMapSeams.py` | Figure 4 |
 | `diagOceanMask/figFrameMapRef.py` | Figure 2 |
